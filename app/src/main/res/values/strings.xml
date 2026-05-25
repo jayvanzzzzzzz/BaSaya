@@ -1,3 +1,33 @@
 <resources>
     <string name="app_name">BaSaya</string>
+    <string name="register"><u>Wala pang account? Mag register kana boi</u></string>
+    <string name="app_title">BaSaya</string>
+    <string name="kumusta_kaibigan_nhanda_kanabang_mag_basa">Kumusta kaibigan!\nHanda kanabang mag basa?</string>
+    <string name="email">Email</string>
+    <string name="ilagay_ang_iyong_user_id">Ilagay ang iyong user ID</string>
+    <string name="password">Password</string>
+    <string name="ilagay_ang_iyong_password">Ilagay ang iyong password</string>
+    <string name="mag_login">Mag Login</string>
+    <string name="gumawa_ng_account">Gumawa ng account</string>
+    <string name="gumawa_ng_bagong_account">Gumawa ng Bagong Account</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="first_name">First Name</string>
+    <string name="ilagay_ang_iyong_first_name">Ilagay ang iyong first name</string>
+    <string name="middle_name">Middle Name</string>
+    <string name="ilagay_ang_iyong_middle_name">Ilagay ang iyong middle name</string>
+    <string name="ilagay_ang_iyong_last_name">Ilagay ang iyong last name</string>
+    <string name="last_name">Last Name</string>
+    <string name="gender">Gender</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="mm_dd_yyyy">MM/DD/YYYY</string>
+    <string name="account_information">Account Information</string>
+    <string name="ilagay_ang_iyong_email">Ilagay ang iyong email</string>
+    <string name="ilagay_ang_iyong_username">Ilagay ang iyong username</string>
+    <string name="mag_register">Mag-Register</string>
+    <string name="may_account_na_mag_login">May account na? Mag-Login</string>
+    <string-array name="gender_options">
+        <item>Piliin ang Gender</item>
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
 </resources>
