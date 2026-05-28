@@ -1,4 +1,4 @@
-package com.example.basaya.UI
+package com.example.basaya.ui
 
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -21,7 +21,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.model.User
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
 

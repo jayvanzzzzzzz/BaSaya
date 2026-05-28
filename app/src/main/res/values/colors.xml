@@ -4,4 +4,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="hint">#888888</color>
     <color name="main_text_color">#555555</color>
+    <color name="main_blue">#0066CC</color>
+    <color name="gray">#7F8C8D</color>
+    <color name="toolbar_bar_color">#D6E6FF</color>
+    <color name="muted">#37474F</color>
+    <color name="background_color">#F8FAFF</color>
 </resources>

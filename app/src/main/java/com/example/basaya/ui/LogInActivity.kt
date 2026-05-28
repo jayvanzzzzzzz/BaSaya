@@ -1,4 +1,4 @@
-package com.example.basaya.UI
+package com.example.basaya.ui
 
 import android.content.Intent
 import android.graphics.Paint
@@ -14,7 +14,7 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.basaya.R
-import com.example.basaya.UI.RegisterActivity
+import com.example.basaya.data.auth.AuthHelper
 import com.google.firebase.auth.FirebaseAuth
 
 class LogInActivity : AppCompatActivity() {
@@ -22,7 +22,7 @@ class LogInActivity : AppCompatActivity() {
     private lateinit var imgBgBookLeft: ImageView
     private lateinit var imgBgBookRight: ImageView
 
-    private lateinit var etUserId: EditText
+    private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
 
     private lateinit var btnLogin : AppCompatButton
@@ -39,6 +39,8 @@ class LogInActivity : AppCompatActivity() {
             insets
         }
 
+        val authHelper = AuthHelper()
+
         imgBgBookLeft = findViewById(R.id.imgBgBookLeft)
         imgBgBookRight = findViewById(R.id.imgBgBookRight)
 
@@ -51,23 +53,28 @@ class LogInActivity : AppCompatActivity() {
 
 
         btnLogin.setOnClickListener {
-            val auth = FirebaseAuth.getInstance()
 
-            etUserId = findViewById(R.id.etUserId)
+            etEmail = findViewById(R.id.etEmail)
             etPassword = findViewById(R.id.etPassword)
 
-            val userId = etUserId.text.toString()
+            val email = etEmail.text.toString()
             val password = etPassword.text.toString()
 
-            auth.signInWithEmailAndPassword(userId, password)
-                .addOnCompleteListener(this) { task ->
+            authHelper.login(email, password) { success, result ->
+                if (success) {
+                    val uid = result
 
-                    if (task.isSuccessful) {
-                        Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
+
+                    val intent = Intent(this@LogInActivity, MainActivity::class.java)
+                    intent.putExtra("uid", uid)
+                    startActivity(intent)
+                    finish()
+
+                } else {
+                    Toast.makeText(this, "Login Failed: $result", Toast.LENGTH_SHORT).show()
                 }
+            }
         }
 
         tvRegister = findViewById(R.id.tvRegister)

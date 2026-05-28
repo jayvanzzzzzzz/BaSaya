@@ -4,7 +4,7 @@
     <string name="app_title">BaSaya</string>
     <string name="kumusta_kaibigan_nhanda_kanabang_mag_basa">Kumusta kaibigan!\nHanda kanabang mag basa?</string>
     <string name="email">Email</string>
-    <string name="ilagay_ang_iyong_user_id">Ilagay ang iyong user ID</string>
+    <string name="ilagay_ang_iyong_email">Ilagay ang iyong email</string>
     <string name="password">Password</string>
     <string name="ilagay_ang_iyong_password">Ilagay ang iyong password</string>
     <string name="mag_login">Mag Login</string>
@@ -21,7 +21,6 @@
     <string name="date_of_birth">Date of Birth</string>
     <string name="mm_dd_yyyy">MM/DD/YYYY</string>
     <string name="account_information">Account Information</string>
-    <string name="ilagay_ang_iyong_email">Ilagay ang iyong email</string>
     <string name="ilagay_ang_iyong_username">Ilagay ang iyong username</string>
     <string name="mag_register">Mag-Register</string>
     <string name="may_account_na_mag_login">May account na? Mag-Login</string>
@@ -30,4 +29,16 @@
         <item>Male</item>
         <item>Female</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="home">Home</string>
+    <string name="progress">Progress</string>
+    <string name="account">Account</string>
+    <string name="more_options">More options</string>
+    <string name="notifications">Notifications</string>
+    <string name="profile">Profile</string>
+    <string name="mga_gawain">Mga Gawain</string>
+    <string name="name">Name</string>
+    <string name="maghanap_dito_ng_paksa">Maghanap dito ng paksa...</string>
+    <string name="masiglang_araw_ng_pagbabasa">Masiglang Araw ng Pagbabasa!</string>
 </resources>

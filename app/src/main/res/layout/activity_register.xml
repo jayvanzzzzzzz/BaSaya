@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/login_background_gradient"
-    tools:context=".UI.RegisterActivity">
+    tools:context=".ui.RegisterActivity">
 
   <!-- Decorative Book Left (matches login) -->
   <ImageView
@@ -122,6 +122,7 @@
           android:layout_marginBottom="20dp"
           android:background="@drawable/bg_input_field"
           android:hint="@string/ilagay_ang_iyong_first_name"
+          android:textSize="15sp"
           android:inputType="textPersonName"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
@@ -146,6 +147,7 @@
           android:layout_marginBottom="20dp"
           android:background="@drawable/bg_input_field"
           android:hint="@string/ilagay_ang_iyong_middle_name"
+          android:textSize="15sp"
           android:inputType="textPersonName"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
@@ -170,6 +172,7 @@
           android:layout_marginBottom="20dp"
           android:background="@drawable/bg_input_field"
           android:hint="@string/ilagay_ang_iyong_last_name"
+          android:textSize="15sp"
           android:inputType="textPersonName"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
@@ -192,6 +195,7 @@
           android:layout_width="match_parent"
           android:layout_height="55dp"
           android:layout_marginBottom="20dp"
+          android:textSize="15sp"
           android:background="@drawable/bg_spinner_white"
           android:spinnerMode="dropdown"/>
 
@@ -213,6 +217,7 @@
           android:background="@drawable/bg_input_field"
           android:drawableStart="@drawable/ic_calendar"
           android:drawablePadding="12dp"
+          android:textSize="15sp"
           android:hint="@string/mm_dd_yyyy"
           android:inputType="none"
           android:focusable="false"
@@ -276,6 +281,7 @@
           android:drawableStart="@drawable/ic_email"
           android:drawablePadding="12dp"
           android:hint="@string/ilagay_ang_iyong_email"
+          android:textSize="15sp"
           android:inputType="textEmailAddress"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
@@ -307,6 +313,7 @@
           android:paddingEnd="16dp"
           android:textColor="@color/main_text_color"
           android:textColorHint="@color/hint"
+          android:textSize="15sp"
           tools:ignore="Autofill" />
 
       <!-- Password -->
@@ -333,6 +340,7 @@
           android:paddingEnd="16dp"
           android:textColor="@color/main_text_color"
           android:textColorHint="@color/hint"
+          android:textSize="15sp"
           tools:ignore="Autofill" />
 
       <!-- Confirm Password -->
@@ -359,6 +367,7 @@
           android:paddingEnd="16dp"
           android:textColor="@color/main_text_color"
           android:textColorHint="@color/hint"
+          android:textSize="15sp"
           tools:ignore="Autofill" />
 
       <!-- Register Button -->
@@ -370,11 +379,11 @@
           android:drawableEnd="@drawable/ic_right_arrow"
           android:paddingStart="24dp"
           android:paddingEnd="24dp"
+          android:fontFamily="@font/quicksand_medium"
           android:text="@string/mag_register"
           android:textAllCaps="false"
           android:textColor="#0066CC"
-          android:textSize="18sp"
-          android:textStyle="bold" />
+          android:textSize="18sp" />
 
       <!-- Back to Login -->
       <TextView
