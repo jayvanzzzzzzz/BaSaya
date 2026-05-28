@@ -77,15 +77,15 @@ Android App + Web Admin
 
 -- SIMPLE OVERALL SYSTEM VIEW --
 
-            🌐 WEB ADMIN
+             WEB ADMIN
          (Manage Lessons/Data)
                     │
                     ▼
-        ☁️ DATABASE / BACKEND
+         DATABASE / BACKEND
      (Firebase / API Server)
                     ▲
                     │
-📱 ANDROID APP (USERS)
+ ANDROID APP (USERS)
  (View Lessons / Submit / Learn)
 
 
