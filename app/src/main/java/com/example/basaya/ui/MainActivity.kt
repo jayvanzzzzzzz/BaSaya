@@ -19,7 +19,6 @@ import com.google.firebase.auth.FirebaseAuth
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.basaya.data.auth.AuthHelper
 import com.google.firebase.firestore.FirebaseFirestore
@@ -84,8 +83,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        Log.d("DEBUG", "setupUI called")
-        Log.d("DEBUG", "tvName view: ${findViewById<TextView>(R.id.tvName)}")
 
         tvName = findViewById(R.id.tvName)
         tvName.text = "..."
@@ -155,6 +152,6 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.frameLayout, fragment)
-            .commit()
+            .commitAllowingStateLoss()
     }
 }

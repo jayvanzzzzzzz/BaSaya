@@ -15,7 +15,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
-import com.google.firebase.auth.FirebaseAuth
 
 class LogInActivity : AppCompatActivity() {
 
@@ -62,6 +61,7 @@ class LogInActivity : AppCompatActivity() {
 
             authHelper.login(email, password) { success, result ->
                 if (success) {
+
                     val uid = result
 
                     Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
@@ -72,7 +72,9 @@ class LogInActivity : AppCompatActivity() {
                     finish()
 
                 } else {
+
                     Toast.makeText(this, "Login Failed: $result", Toast.LENGTH_SHORT).show()
+
                 }
             }
         }

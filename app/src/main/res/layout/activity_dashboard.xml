@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/main"
+    android:background="#F0F2F7">
+
+    <View
+        android:id="@+id/statusBarBg"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/toolbar_bar_color" />
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/toolbar_bar_color"
+        android:paddingStart="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lesson Title"
+            android:textColor="@color/main_blue"
+            android:textSize="18sp"
+            android:fontFamily="@font/lexend"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lesson Description"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="14dp" />
+
+    </LinearLayout>
+
+    <!-- Body -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Piliin ang gawain"
+                android:textColor="#1A1F36"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Row 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
+
+                <!-- Lecture Card -->
+                <androidx.cardview.widget.CardView android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="5dp"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="#EEEDFE"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_icon_purple"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_book"
+                                app:tint="#3C3489" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MODULE"
+                            android:textColor="#534AB7"
+                            android:textSize="9sp"
+                            android:letterSpacing="0.08"
+                            android:layout_marginTop="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Lecture"
+                            android:textColor="#26215C"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Read lessons and materials"
+                            android:textColor="#534AB7"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12 topics"
+                            android:textColor="#3C3489"
+                            android:textSize="10sp"
+                            android:background="@drawable/bg_pill_purple"
+                            android:paddingStart="9dp"
+                            android:paddingEnd="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp"
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Game Card -->
+                <androidx.cardview.widget.CardView android:layout_width="0dp"
+                    android:id="@+id/gameCard"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="5dp"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#E1F5EE"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_icon_teal"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_puzzle"
+                                app:tint="#085041" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:letterSpacing="0.08"
+                            android:text="PLAY"
+                            android:textColor="#0F6E56"
+                            android:textSize="9sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Game"
+                            android:textColor="#04342C"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Word puzzles and crosswords"
+                            android:textColor="#0F6E56"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_pill_teal"
+                            android:paddingStart="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="9dp"
+                            android:paddingBottom="3dp"
+                            android:text="8 levels"
+                            android:textColor="#085041"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- Row 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Activity Card -->
+                <androidx.cardview.widget.CardView android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="5dp"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="#FAECE7"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_icon_coral"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_pencil"
+                                app:tint="#712B13" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PRACTICE"
+                            android:textColor="#993C1D"
+                            android:textSize="9sp"
+                            android:letterSpacing="0.08"
+                            android:layout_marginTop="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Activity"
+                            android:textColor="#4A1B0C"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Hands-on exercises and drills"
+                            android:textColor="#993C1D"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5 tasks"
+                            android:textColor="#712B13"
+                            android:textSize="10sp"
+                            android:background="@drawable/bg_pill_coral"
+                            android:paddingStart="9dp"
+                            android:paddingEnd="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp"
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Quiz Card -->
+                <androidx.cardview.widget.CardView android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="5dp"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="#E6F1FB"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_icon_blue"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_clipboard_check"
+                                app:tint="#0C447C" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ASSESS"
+                            android:textColor="#185FA5"
+                            android:textSize="9sp"
+                            android:letterSpacing="0.08"
+                            android:layout_marginTop="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quiz"
+                            android:textColor="#042C53"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Test your knowledge and score"
+                            android:textColor="#185FA5"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20 items"
+                            android:textColor="#0C447C"
+                            android:textSize="10sp"
+                            android:background="@drawable/bg_pill_blue"
+                            android:paddingStart="9dp"
+                            android:paddingEnd="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp"
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

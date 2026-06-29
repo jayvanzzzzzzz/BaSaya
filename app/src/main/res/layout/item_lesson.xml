@@ -8,7 +8,7 @@
     android:layout_marginVertical="8dp"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="20dp"
-    app:cardElevation="0dp"
+    app:cardElevation="4dp"
     app:cardPreventCornerOverlap="true">
 
     <!-- Outer ripple wrapper -->
@@ -16,8 +16,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
         android:orientation="vertical">
 
         <!-- ─── TOP IMAGE SECTION ─── -->
