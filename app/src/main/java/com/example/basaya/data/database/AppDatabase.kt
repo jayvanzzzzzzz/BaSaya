@@ -6,8 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.basaya.data.dao.CrosswordLevelDao
 import com.example.basaya.data.dao.GameProgressDao
+import com.example.basaya.data.dao.LectureDao
 import com.example.basaya.data.dao.LessonDao
 import com.example.basaya.data.entity.CrosswordProgress
+import com.example.basaya.data.entity.LectureEntity
 import com.example.basaya.data.entity.LessonEntity
 import com.example.basaya.data.entity.CrosswordLevelEntity
 
@@ -15,25 +17,27 @@ import com.example.basaya.data.entity.CrosswordLevelEntity
     entities = [
         CrosswordProgress::class,
         LessonEntity::class,
-        CrosswordLevelEntity::class
+        CrosswordLevelEntity::class,
+        LectureEntity::class
     ],
-    version = 2
+    version = 4
 )
-abstract class GameDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
 
     abstract fun gameProgressDao(): GameProgressDao
     abstract fun lessonDao(): LessonDao
     abstract fun crosswordLevelDao(): CrosswordLevelDao
+    abstract fun lectureDao(): LectureDao
 
     companion object {
         @Volatile
-        private var INSTANCE: GameDatabase? = null
+        private var INSTANCE: AppDatabase? = null
 
-        fun getDatabase(context: Context): GameDatabase {
+        fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
-                    GameDatabase::class.java,
+                    AppDatabase::class.java,
                     "game_database"
                 )
                     .fallbackToDestructiveMigration()

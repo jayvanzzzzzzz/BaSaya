@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Speaker shape and the X mark combined -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M12,4 L7,9 H3 v6 h4 l5,5 V4 z M21.5,9.41 L20.09,8 L17.5,10.59 L14.91,8 L13.5,9.41 L16.09,12 L13.5,14.59 L14.91,16 L17.5,13.41 L20.09,16 L21.5,14.59 L18.91,12 L21.5,9.41 z"/>
+
+</vector>

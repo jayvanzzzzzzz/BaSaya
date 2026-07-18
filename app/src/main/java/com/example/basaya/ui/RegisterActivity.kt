@@ -4,12 +4,14 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -18,10 +20,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
+import com.example.basaya.data.repository.UserRepository
 import com.example.basaya.model.User
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class RegisterActivity : AppCompatActivity() {
@@ -30,6 +35,8 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var imgBgBookRight: ImageView
 
     private lateinit var btnRegister: AppCompatButton
+    private lateinit var progressRegister: ProgressBar
+    private var originalButtonText: CharSequence = ""
 
     private lateinit var tvBackToLogin: TextView
 
@@ -81,6 +88,8 @@ class RegisterActivity : AppCompatActivity() {
         authHelper = AuthHelper()
 
         btnRegister = findViewById(R.id.btnRegister)
+        progressRegister = findViewById(R.id.progressRegister)
+        originalButtonText = btnRegister.text
 
         btnRegister.setOnClickListener {
 
@@ -134,13 +143,18 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            //check if username exist
-            db.collection("users")
-                .whereEqualTo("username", username)
-                .get()
-                .addOnSuccessListener { documents ->
+            setLoading(true)
 
-                    if (!documents.isEmpty) {
+            val normalizedUsername = username.trim().lowercase()
+
+            //check if username exist
+            db.collection("usernames")
+                .document(normalizedUsername)
+                .get()
+                .addOnSuccessListener { document ->
+
+                    if (document.exists()) {
+                        setLoading(false)
                         Toast.makeText(
                             this,
                             "Username already exists",
@@ -153,6 +167,7 @@ class RegisterActivity : AppCompatActivity() {
                     authHelper.register(email, password) { success, result ->
 
                         if (!success) {
+                            setLoading(false)
                             Toast.makeText(
                                 this,
                                 result ?: "Registration Failed",
@@ -164,6 +179,7 @@ class RegisterActivity : AppCompatActivity() {
                         val uid = result
 
                         if (uid.isNullOrEmpty()) {
+                            setLoading(false)
                             Toast.makeText(this, "Registration Failed", Toast.LENGTH_SHORT).show()
                             return@register
                         }
@@ -188,22 +204,40 @@ class RegisterActivity : AppCompatActivity() {
                             .set(userData)
                             .addOnSuccessListener {
 
-                                Toast.makeText(
-                                    this,
-                                    "Registration Successful!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                // reserve the username only after user doc is confirmed saved
+                                db.collection("usernames")
+                                    .document(normalizedUsername)
+                                    .set(mapOf("uid" to uid))
 
-                                startActivity(
-                                    Intent(
-                                        this,
-                                        LogInActivity::class.java
+                                // 👇 assign default lessons to this new user
+                                val userRepository = UserRepository()
+                                lifecycleScope.launch {
+                                    try {
+                                        userRepository.assignRandomLesson(uid)
+                                    } catch (e: Exception) {
+                                        Log.e("REGISTER_DEBUG", "Failed to assign random lesson", e)
+                                    }
+
+                                    setLoading(false)
+
+                                    Toast.makeText(
+                                        this@RegisterActivity,
+                                        "Registration Successful!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    startActivity(
+                                        Intent(
+                                            this@RegisterActivity,
+                                            LogInActivity::class.java
+                                        )
                                     )
-                                )
 
-                                finish()
+                                    finish()
+                                }
                             }
                             .addOnFailureListener {
+                                setLoading(false)
                                 Toast.makeText(
                                     this,
                                     "Failed to save user data",
@@ -212,6 +246,10 @@ class RegisterActivity : AppCompatActivity() {
                             }
                     }
 
+                }
+                .addOnFailureListener {
+                    setLoading(false)
+                    Toast.makeText(this, "Something went wrong. Try again.", Toast.LENGTH_SHORT).show()
                 }
         }
 
@@ -265,6 +303,18 @@ class RegisterActivity : AppCompatActivity() {
 
         spinnerGender.adapter = adapter
 
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        btnRegister.isEnabled = !isLoading
+
+        if (isLoading) {
+            btnRegister.text = ""
+            progressRegister.visibility = View.VISIBLE
+        } else {
+            btnRegister.text = originalButtonText
+            progressRegister.visibility = View.GONE
+        }
     }
 
     private fun showDatePicker() {

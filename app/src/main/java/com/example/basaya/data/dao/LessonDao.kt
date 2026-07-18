@@ -13,4 +13,7 @@ interface LessonDao {
 
     @Query("SELECT * FROM lessons ORDER BY `order` ASC")
     suspend fun getAllLessons(): List<LessonEntity>
+
+    @Query("SELECT * FROM lessons WHERE userId = :userId ORDER BY `order` ASC")
+    suspend fun getLessonsForUser(userId: String): List<LessonEntity>
 }

@@ -1,5 +1,6 @@
 package com.example.basaya.ui.game
 
+import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
@@ -12,16 +13,20 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import com.example.basaya.R
 import com.example.basaya.data.mock.CrosswordMockData
-import com.example.basaya.data.database.GameDatabase
+import com.example.basaya.data.database.AppDatabase
 
 
 class CrosswordCompleteScreen : AppCompatActivity() {
     private lateinit var btnNext: Button
+    private lateinit var lessonId: String
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_crossword_complete_screen)
+
+        lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
         val title = findViewById<TextView>(R.id.tvLessonTitle)
         val levelBox = findViewById<LinearLayout>(R.id.currentLevel)
@@ -47,7 +52,9 @@ class CrosswordCompleteScreen : AppCompatActivity() {
         if (currentLevel < allLevels) {
             btnNext.setOnClickListener {
                 val intent =
-                    Intent(this@CrosswordCompleteScreen, CrosswordActivity::class.java)
+                    Intent(this@CrosswordCompleteScreen, CrosswordActivity::class.java).apply {
+                        putExtra("LESSON_ID", lessonId)   // 👈 add this
+                    }
                 val options =
                     ActivityOptions.makeCustomAnimation(this@CrosswordCompleteScreen, 0, 0)
                 startActivity(intent, options.toBundle())

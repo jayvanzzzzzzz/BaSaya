@@ -12,7 +12,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BaSaya">
         <activity
-            android:name=".ui.lecture.LectureActivity"
+            android:name=".ui.quiz.QuizCompleteScreen"
+            android:exported="false" />
+        <activity
+            android:name=".ui.quiz.QuizActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.LectureActivity"
             android:exported="false" />
         <activity
             android:name=".ui.game.CrosswordCompleteScreen"

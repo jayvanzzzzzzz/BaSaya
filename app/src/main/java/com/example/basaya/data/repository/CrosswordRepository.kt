@@ -1,7 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
-import com.example.basaya.data.database.GameDatabase
+import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.CrosswordLevelEntity
 import com.example.basaya.model.CrosswordGameLevel
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,7 +9,7 @@ import kotlinx.coroutines.tasks.await
 
 class CrosswordRepository(private val context: Context) {
 
-    private val db = GameDatabase.getDatabase(context)
+    private val db = AppDatabase.getDatabase(context)
     private val firestore = FirebaseFirestore.getInstance()
 
     suspend fun syncLevels(lessonId:String){

@@ -141,19 +141,42 @@
             android:paddingEnd="16dp"
             tools:ignore="Autofill" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnLogin"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:background="@drawable/bg_login_button"
-            android:drawableEnd="@drawable/ic_right_arrow"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:text="@string/mag_login"
-            android:textAllCaps="false"
-            android:textColor="@color/main_blue"
-            android:fontFamily="@font/quicksand_medium"
-            android:textSize="18sp" />
+            android:layout_height="55dp">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnLogin"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_login_button"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:text="@string/mag_login"
+                android:textAllCaps="false"
+                android:textColor="@color/main_blue"
+                android:fontFamily="@font/quicksand_medium"
+                android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/imgLoginArrow"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="24dp"
+                android:src="@drawable/ic_right_arrow"
+                tools:ignore="ContentDescription" />
+
+            <ProgressBar
+                android:id="@+id/progressLogin"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="23dp"
+                android:indeterminateTint="@color/main_blue"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
     </LinearLayout>
 

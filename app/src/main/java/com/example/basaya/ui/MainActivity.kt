@@ -28,11 +28,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvName: TextView
     private var isUserReady = false
 
-    // ✅ Keep a reference so we can remove it in onDestroy
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        auth = FirebaseAuth.getInstance()
+
+        // check auth state BEFORE inflating any layout
+        if (auth.currentUser == null) {
+            startActivity(Intent(this, LogInActivity::class.java))
+            finish()
+            return
+        }
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -53,14 +61,11 @@ class MainActivity : AppCompatActivity() {
         WindowInsetsControllerCompat(window, window.decorView)
             .isAppearanceLightStatusBars = true
 
-        auth = FirebaseAuth.getInstance()
-
         //  Define listener separately so it can be removed later
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
 
             if (user == null) {
-                // ✅ Guard before starting a new Activity
                 if (!isDestroyed && !isFinishing) {
                     startActivity(Intent(this@MainActivity, LogInActivity::class.java))
                     finish()
@@ -76,10 +81,11 @@ class MainActivity : AppCompatActivity() {
         auth.addAuthStateListener(authStateListener)
     }
 
-    // ✅ Remove the listener when the Activity is destroyed
     override fun onDestroy() {
         super.onDestroy()
-        auth.removeAuthStateListener(authStateListener)
+        if (::authStateListener.isInitialized) {
+            auth.removeAuthStateListener(authStateListener)
+        }
     }
 
     private fun setupUI() {
@@ -147,7 +153,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFragment(fragment: Fragment) {
-        // Never commit transactions on a dead Activity
         if (isDestroyed || isFinishing) return
 
         supportFragmentManager.beginTransaction()

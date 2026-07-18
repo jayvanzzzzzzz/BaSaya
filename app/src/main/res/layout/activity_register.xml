@@ -123,7 +123,7 @@
           android:background="@drawable/bg_input_field"
           android:hint="@string/ilagay_ang_iyong_first_name"
           android:textSize="15sp"
-          android:inputType="textPersonName"
+          android:inputType="textCapWords"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
           android:textColor="@color/main_text_color"
@@ -147,8 +147,8 @@
           android:layout_marginBottom="20dp"
           android:background="@drawable/bg_input_field"
           android:hint="@string/ilagay_ang_iyong_middle_name"
+          android:inputType="textCapWords"
           android:textSize="15sp"
-          android:inputType="textPersonName"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
           android:textColor="@color/main_text_color"
@@ -173,7 +173,7 @@
           android:background="@drawable/bg_input_field"
           android:hint="@string/ilagay_ang_iyong_last_name"
           android:textSize="15sp"
-          android:inputType="textPersonName"
+          android:inputType="textCapWords"
           android:paddingStart="16dp"
           android:paddingEnd="16dp"
           android:textColor="@color/main_text_color"
@@ -371,19 +371,34 @@
           tools:ignore="Autofill" />
 
       <!-- Register Button -->
-      <androidx.appcompat.widget.AppCompatButton
-          android:id="@+id/btnRegister"
+      <!-- Register Button -->
+      <FrameLayout
           android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:background="@drawable/bg_login_button"
-          android:drawableEnd="@drawable/ic_right_arrow"
-          android:paddingStart="24dp"
-          android:paddingEnd="24dp"
-          android:fontFamily="@font/quicksand_medium"
-          android:text="@string/mag_register"
-          android:textAllCaps="false"
-          android:textColor="#0066CC"
-          android:textSize="18sp" />
+          android:layout_height="55dp">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnRegister"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_login_button"
+            android:drawableEnd="@drawable/ic_right_arrow"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:text="@string/mag_register"
+            android:textAllCaps="false"
+            android:textColor="#0066CC"
+            android:textSize="18sp" />
+
+        <ProgressBar
+            android:id="@+id/progressRegister"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:indeterminateTint="#0066CC" />
+
+      </FrameLayout>
 
       <!-- Back to Login -->
       <TextView

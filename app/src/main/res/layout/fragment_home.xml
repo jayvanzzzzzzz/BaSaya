@@ -76,4 +76,75 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_lesson"/>
 
+    <TextView
+        android:id="@+id/tvEmptyLessons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:padding="32dp"
+        android:text="📝\nYour teacher has not assigned a lesson yet.\nCheck back soon."
+        android:textSize="16sp"
+        android:textColor="@color/gray"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/topSection"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Loading state -->
+    <!-- Loading state -->
+    <LinearLayout
+        android:id="@+id/loadingContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/topSection"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingHorizontal="8dp">
+
+            <View
+                android:id="@+id/dot1"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/dot_circle" />
+
+            <View
+                android:id="@+id/dot2"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/dot_circle" />
+
+            <View
+                android:id="@+id/dot3"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:background="@drawable/dot_circle" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvLoadingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Loading lessons..."
+            android:textSize="14sp"
+            android:textColor="@color/gray"/>
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

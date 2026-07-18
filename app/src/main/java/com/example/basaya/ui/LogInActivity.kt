@@ -15,6 +15,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
+import android.animation.ObjectAnimator
+import android.util.Log
+import android.view.animation.LinearInterpolator
+import android.view.View
+import android.widget.ProgressBar
 
 class LogInActivity : AppCompatActivity() {
 
@@ -27,6 +32,10 @@ class LogInActivity : AppCompatActivity() {
     private lateinit var btnLogin : AppCompatButton
     private lateinit var tvRegister: TextView
 
+    private lateinit var imgLoginArrow: ImageView
+    private lateinit var progressLogin: ProgressBar
+
+    private var arrowSpinAnimator: ObjectAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +58,14 @@ class LogInActivity : AppCompatActivity() {
         imgBgBookRight.startAnimation(floatingAnim)
 
         btnLogin = findViewById(R.id.btnLogin)
+        imgLoginArrow = findViewById(R.id.imgLoginArrow)
+        progressLogin = findViewById(R.id.progressLogin)
 
+        arrowSpinAnimator = ObjectAnimator.ofFloat(imgLoginArrow, View.ROTATION, 0f, 360f).apply {
+            duration = 800
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = LinearInterpolator()
+        }
 
         btnLogin.setOnClickListener {
 
@@ -59,10 +75,18 @@ class LogInActivity : AppCompatActivity() {
             val email = etEmail.text.toString()
             val password = etPassword.text.toString()
 
-            authHelper.login(email, password) { success, result ->
-                if (success) {
+            if(email.isBlank() || password.isBlank()){
+                Toast.makeText(this, "Please input email and password field.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-                    val uid = result
+            setLoading(true)
+
+            authHelper.login(email, password) { success, result ->
+                setLoading(false)
+
+                if (success) {
+                    val uid = result ?: return@login
 
                     Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
 
@@ -70,11 +94,14 @@ class LogInActivity : AppCompatActivity() {
                     intent.putExtra("uid", uid)
                     startActivity(intent)
                     finish()
-
                 } else {
+                    Log.d("LOGIN_DEBUG", "Login failed: $result")
 
-                    Toast.makeText(this, "Login Failed: $result", Toast.LENGTH_SHORT).show()
-
+                    Toast.makeText(
+                        this,
+                        "Email/username or password is incorrect.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -88,6 +115,18 @@ class LogInActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
     }
+
+    private fun setLoading(isLoading: Boolean) {
+        btnLogin.isEnabled = !isLoading
+
+        imgLoginArrow.visibility = if (isLoading) View.GONE else View.VISIBLE
+        progressLogin.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        arrowSpinAnimator?.cancel()
+    }
+
 }

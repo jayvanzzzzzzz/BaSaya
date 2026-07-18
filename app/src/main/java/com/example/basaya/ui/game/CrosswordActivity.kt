@@ -26,7 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.mock.CrosswordMockData
 import com.example.basaya.data.entity.CrosswordProgress
-import com.example.basaya.data.database.GameDatabase
+import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.repository.CrosswordRepository
 import com.example.basaya.model.CrosswordGameLevel
 import kotlinx.coroutines.delay
@@ -38,7 +38,7 @@ class CrosswordActivity : AppCompatActivity() {
     private lateinit var lessonId: String
 
     private val db by lazy {
-        GameDatabase.getDatabase(this@CrosswordActivity)
+        AppDatabase.getDatabase(this@CrosswordActivity)
     }
 
     private var findWord = mutableListOf<String>()
@@ -168,9 +168,7 @@ class CrosswordActivity : AppCompatActivity() {
                     .shuffled()
 
             container.post {
-
                 lineView = LineView(this@CrosswordActivity)
-
                 container.addView(
                     lineView,
                     ConstraintLayout.LayoutParams(
@@ -182,12 +180,18 @@ class CrosswordActivity : AppCompatActivity() {
                 val centerX = container.width / 2f
                 val centerY = container.height / 2f
 
-                val radius = 200f
+                val density = resources.displayMetrics.density
+                val letterSizePx = (56 * density).toInt() // pick a dp size you like
+
+                // radius = half the smaller container dimension, minus half a letter bubble
+                // so bubbles don't clip outside the container edge
+                val inset = 10f * resources.displayMetrics.density
+                val radius = (minOf(container.width, container.height) / 2f) - (letterSizePx / 2f) - inset
+
                 val angleStep = 360.0 / letters.size
 
-
                 for (i in letters.indices) {
-                    val angleRad = Math.toRadians(i * angleStep - 90) // -90 starts from top
+                    val angleRad = Math.toRadians(i * angleStep - 90)
 
                     val x = centerX + (radius * cos(angleRad)).toFloat()
                     val y = centerY + (radius * sin(angleRad)).toFloat()
@@ -195,8 +199,7 @@ class CrosswordActivity : AppCompatActivity() {
                     val letterView = TextView(this@CrosswordActivity).apply {
                         text = letters[i]
                         textSize = 40f
-
-                        layoutParams = ViewGroup.LayoutParams(140, 140)
+                        layoutParams = ViewGroup.LayoutParams(letterSizePx, letterSizePx)
                         gravity = Gravity.CENTER
                         setBackgroundColor(android.graphics.Color.TRANSPARENT)
                         setTextColor(android.graphics.Color.BLACK)
@@ -492,6 +495,7 @@ class CrosswordActivity : AppCompatActivity() {
                             delay(2000)
                             val intent = Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
                                 putExtra("NEXT_LEVEL", currentLevelNumber)
+                                putExtra("LESSON_ID", lessonId)
                             }
                             val options =
                                 ActivityOptions.makeCustomAnimation(this@CrosswordActivity, 0, 0)
