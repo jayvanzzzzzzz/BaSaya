@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F3F6FA">
+
+    <View
+        android:id="@+id/statusBarBg"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/toolbar_bar_color" />
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/toolbar_bar_color"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/tvPageTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_page_tag"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="PAHINA 1/3"
+            android:textColor="@color/main_blue"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06" />
+
+        <TextView
+            android:id="@+id/tvActivityTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="PAGSASANAY: HANAPIN ANG PANGNGALAN"
+            android:textColor="#1B2430"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvInstruction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Piliin ang mga salitang pangngalan sa pangungusap."
+            android:textColor="@color/gray"
+            android:textSize="13sp" />
+
+
+        <!-- Perforated page track -->
+        <LinearLayout
+            android:id="@+id/llProgressBars"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal" />
+
+    </LinearLayout>
+
+    <!-- Body -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:padding="24dp">
+
+            <!-- Worksheet card, slightly askew -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:rotation="-1"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="6dp">
+
+                <com.google.android.flexbox.FlexboxLayout
+                    android:id="@+id/chipsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="22dp"
+                    app:alignItems="baseline"
+                    app:flexWrap="wrap"
+                    app:justifyContent="flex_start" />
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Sticky-note feedback, hidden until checked -->
+            <LinearLayout
+                android:id="@+id/feedbackContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:layout_gravity="start"
+                android:orientation="vertical"
+                android:rotation="1.5"
+                android:visibility="gone"
+                android:background="@drawable/bg_sticky_note"
+                android:elevation="3dp"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvFeedback"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="#1B2430" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Footer button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAction"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:text="Suriin ang Sagot"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:enabled="false"
+        app:backgroundTint="@color/main_blue"
+        app:rippleColor="@color/toolbar_bar_color"
+        app:cornerRadius="18dp"
+        app:elevation="2dp" />
+
+</LinearLayout>

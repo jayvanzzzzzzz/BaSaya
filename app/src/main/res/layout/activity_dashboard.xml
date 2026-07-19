@@ -22,20 +22,23 @@
         android:paddingStart="20dp">
 
         <TextView
+            android:id="@+id/tvLessonTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Lesson Title"
             android:textColor="@color/main_blue"
-            android:textSize="18sp"
+            android:textSize="22sp"
             android:fontFamily="@font/lexend"
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvLessonDesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Lesson Description"
             android:textColor="@color/gray"
-            android:textSize="12sp"
+            android:textSize="14sp"
+            android:paddingEnd="9dp"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="14dp" />
 
@@ -124,6 +127,7 @@
                             android:layout_marginTop="2dp" />
 
                         <TextView
+                            android:id="@+id/tvLectureCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="12 topics"
@@ -195,6 +199,7 @@
                             android:textSize="11sp" />
 
                         <TextView
+                            android:id="@+id/tvGameCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
@@ -218,6 +223,7 @@
 
                 <!-- Activity Card -->
                 <androidx.cardview.widget.CardView android:layout_width="0dp"
+                    android:id="@+id/activityCard"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="5dp"
@@ -271,6 +277,7 @@
                             android:layout_marginTop="2dp" />
 
                         <TextView
+                            android:id="@+id/tvActivityCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="5 tasks"
@@ -348,6 +355,7 @@
                                 android:layout_marginTop="2dp" />
 
                             <TextView
+                                android:id="@+id/tvQuizCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="20 items"

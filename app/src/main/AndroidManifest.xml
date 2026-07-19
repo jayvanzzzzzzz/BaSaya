@@ -12,6 +12,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BaSaya">
         <activity
+            android:name=".ui.activity.PracticeCompleteScreen"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activity.PracticeCompleteScreenActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activity.PracticeActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.quiz.QuizCompleteScreen"
             android:exported="false" />
         <activity

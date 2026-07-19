@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F3F6FA">
+
+    <View
+        android:id="@+id/statusBarBg"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#F3F6FA" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="28dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Paper card, graded and stamped -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:rotation="-1"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="6dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="32dp"
+                    android:paddingTop="52dp">
+
+                    <TextView
+                        android:id="@+id/tvActivityTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PAGSASANAY: HANAPIN ANG PANGNGALAN"
+                        android:textColor="#1B2430"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:letterSpacing="0.02" />
+
+                    <TextView
+                        android:id="@+id/tvRemark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Mahusay! Handa ka na sa susunod na hakbang."
+                        android:textColor="#6B7280"
+                        android:textSize="13sp"
+                        android:gravity="center" />
+
+                    <!-- Stat tags -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvScoreFraction"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_stat_tag"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:paddingTop="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="8 / 10"
+                            android:textColor="#1B2430"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Stamp, overlapping top-right corner -->
+            <FrameLayout
+                android:id="@+id/stampContainer"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="-14dp"
+                android:layout_marginEnd="8dp"
+                android:rotation="-10">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_stamp_ring" />
+
+                <View
+                    android:layout_width="78dp"
+                    android:layout_height="78dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_stamp_ring_inner" />
+
+                <TextView
+                    android:id="@+id/tvStampLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="TAPOS!"
+                    android:textColor="@color/main_blue"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.04" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- CTA -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDone"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:text="Tapos na"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/main_blue"
+        app:rippleColor="@color/toolbar_bar_color"
+        app:cornerRadius="18dp"
+        app:elevation="2dp" />
+
+</LinearLayout>
