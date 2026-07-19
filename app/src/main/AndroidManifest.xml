@@ -15,9 +15,6 @@
             android:name=".ui.activity.PracticeCompleteScreen"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.PracticeCompleteScreenActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.activity.PracticeActivity"
             android:exported="false" />
         <activity
