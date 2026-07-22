@@ -131,27 +131,87 @@
         android:id="@+id/frameLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavCard"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/bottomNavCard"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_bottom_nav"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:elevation="16dp"
-        app:itemIconSize="24dp"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemRippleColor="@color/nav_ripple"
-        app:itemTextColor="@color/nav_item_color"
-        app:labelVisibilityMode="labeled"
+        android:layout_height="72dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="10dp"
+        app:cardBackgroundColor="@color/nav_card_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Sliding pill indicator, animated in Kotlin -->
+            <View
+                android:id="@+id/navIndicator"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_nav_indicator" />
+
+            <LinearLayout
+                android:id="@+id/navItemsRow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <LinearLayout
+                    android:id="@+id/navHome"
+                    style="@style/NavItemStyle">
+                    <ImageView
+                        android:id="@+id/iconHome"
+                        style="@style/NavIconStyle"
+                        android:src="@drawable/ic_home" />
+                    <TextView
+                        android:id="@+id/labelHome"
+                        style="@style/NavLabelStyle"
+                        android:text="Mga Aralin" />
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/navProgress"
+                    style="@style/NavItemStyle">
+                    <ImageView
+                        android:id="@+id/iconPractice"
+                        style="@style/NavIconStyle"
+                        android:src="@drawable/ic_progress" />
+                    <TextView
+                        android:id="@+id/labelPractice"
+                        style="@style/NavLabelStyle"
+                        android:text="Progreso" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/navProfile"
+                    style="@style/NavItemStyle">
+                    <ImageView
+                        android:id="@+id/iconProfile"
+                        style="@style/NavIconStyle"
+                        android:src="@drawable/ic_account_info" />
+                    <TextView
+                        android:id="@+id/labelProfile"
+                        style="@style/NavLabelStyle"
+                        android:text="Account" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

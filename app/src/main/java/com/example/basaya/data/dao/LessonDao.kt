@@ -16,4 +16,7 @@ interface LessonDao {
 
     @Query("SELECT * FROM lessons WHERE userId = :userId ORDER BY `order` ASC")
     suspend fun getLessonsForUser(userId: String): List<LessonEntity>
+
+    @Query("DELETE FROM lessons WHERE userId = :userId")
+    suspend fun deleteLessonsForUser(userId: String)
 }

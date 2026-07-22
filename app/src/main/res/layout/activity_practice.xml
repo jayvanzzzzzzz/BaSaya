@@ -70,68 +70,110 @@
     </LinearLayout>
 
     <!-- Body -->
-    <ScrollView
+    <!-- Body -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:layout_weight="1">
 
-        <LinearLayout
+        <com.example.basaya.ui.widget.DotGridView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:clipChildren="false"
-            android:clipToPadding="false"
-            android:padding="24dp">
+            android:layout_height="match_parent" />
 
-            <!-- Worksheet card, slightly askew -->
-            <androidx.cardview.widget.CardView
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:rotation="-1"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="4dp"
-                app:cardElevation="6dp">
+                android:orientation="vertical"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:padding="24dp">
 
-                <com.google.android.flexbox.FlexboxLayout
-                    android:id="@+id/chipsContainer"
+                <!-- Worksheet card, taped to the desk -->
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="22dp"
-                    app:alignItems="baseline"
-                    app:flexWrap="wrap"
-                    app:justifyContent="flex_start" />
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
-            </androidx.cardview.widget.CardView>
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:rotation="-1"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:cardCornerRadius="4dp"
+                        app:cardElevation="6dp">
 
-            <!-- Sticky-note feedback, hidden until checked -->
-            <LinearLayout
-                android:id="@+id/feedbackContainer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:layout_gravity="start"
-                android:orientation="vertical"
-                android:rotation="1.5"
-                android:visibility="gone"
-                android:background="@drawable/bg_sticky_note"
-                android:elevation="3dp"
-                android:padding="16dp">
+                        <com.google.android.flexbox.FlexboxLayout
+                            android:id="@+id/chipsContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="22dp"
+                            app:alignItems="baseline"
+                            app:flexWrap="wrap"
+                            app:justifyContent="flex_start" />
 
-                <TextView
-                    android:id="@+id/tvFeedback"
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Tape, top-left -->
+                    <View
+                        android:layout_width="64dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="top|start"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="0dp"
+                        android:rotation="-8"
+                        android:elevation="8dp"
+                        android:background="@drawable/bg_washi_tape_yellow" />
+
+                    <!-- Tape, top-right -->
+                    <View
+                        android:layout_width="64dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="top|end"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="4dp"
+                        android:rotation="7"
+                        android:elevation="8dp"
+                        android:background="@drawable/bg_washi_tape_blue" />
+
+                </FrameLayout>
+
+                <!-- Sticky-note feedback, hidden until checked -->
+                <LinearLayout
+                    android:id="@+id/feedbackContainer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:textSize="14sp"
-                    android:lineSpacingExtra="2dp"
-                    android:textColor="#1B2430" />
+                    android:layout_marginTop="22dp"
+                    android:layout_gravity="start"
+                    android:orientation="vertical"
+                    android:rotation="1.5"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_sticky_note"
+                    android:elevation="3dp"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvFeedback"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="2dp"
+                        android:textColor="#1B2430" />
+
+                </LinearLayout>
 
             </LinearLayout>
+        </ScrollView>
 
-        </LinearLayout>
-    </ScrollView>
+    </FrameLayout>
 
     <!-- Footer button -->
     <com.google.android.material.button.MaterialButton

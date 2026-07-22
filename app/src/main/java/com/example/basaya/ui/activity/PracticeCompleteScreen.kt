@@ -34,20 +34,16 @@ class PracticeCompleteScreen : AppCompatActivity() {
         findViewById<TextView>(R.id.tvScoreFraction).text = "$score / $total"
 
         val tvRemark = findViewById<TextView>(R.id.tvRemark)
-        val tvStampLabel = findViewById<TextView>(R.id.tvStampLabel)
 
         when {
             percent >= 80 -> {
                 tvRemark.text = "Mahusay! Handa ka na sa susunod na hakbang."
-                tvStampLabel.text = "TAPOS!"
             }
             percent >= 50 -> {
                 tvRemark.text = "Magaling! Konting ulit pa lang."
-                tvStampLabel.text = "AYOS!"
             }
             else -> {
                 tvRemark.text = "Magpatuloy! Balikan ang aralin at subukan muli."
-                tvStampLabel.text = "SUBUKAN"
             }
         }
 

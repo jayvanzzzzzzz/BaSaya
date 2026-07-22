@@ -27,6 +27,7 @@ import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.model.Lecture
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import androidx.activity.OnBackPressedCallback
 
 class LectureActivity : AppCompatActivity() {
 
@@ -50,8 +51,8 @@ class LectureActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
     private val progressSegments = mutableListOf<View>()
 
-    private val colorIncomplete = Color.parseColor("#D9D9D9")
-    private val colorComplete = Color.parseColor("#2196F3")
+    private val colorIncomplete = Color.parseColor("#E4E7EC")
+    private val colorComplete = Color.parseColor("#2D63D7")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +64,12 @@ class LectureActivity : AppCompatActivity() {
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showConfirmDialog()
+            }
+        })
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
@@ -78,6 +85,7 @@ class LectureActivity : AppCompatActivity() {
         ibSpeaker.setImageResource(R.drawable.ic_speaker_on)
         ibSpeaker.setOnClickListener {
             if (speakerOn) {
+                stopAudio()
                 ibSpeaker.setImageResource(R.drawable.ic_speaker_mute)
                 speakerOn = false
             } else {
@@ -139,22 +147,14 @@ class LectureActivity : AppCompatActivity() {
         progressSegments.clear()
 
         val pageCount = lecture.pages.size
-        val gapPx = (4 * resources.displayMetrics.density).toInt()
+        val gapPx = (5 * resources.displayMetrics.density).toInt()
         val barHeightPx = (6 * resources.displayMetrics.density).toInt()
 
         for (i in 0 until pageCount) {
             val segment = View(this)
-            val topMarginPx = (35 * resources.displayMetrics.density).toInt()
-
             val params = LinearLayout.LayoutParams(0, barHeightPx, 1f).apply {
-                setMargins(
-                    if (i != 0) gapPx else 0,
-                    topMarginPx,
-                    0,
-                    0
-                )
+                setMargins(if (i != 0) gapPx else 0, 0, 0, 0)
             }
-
             segment.layoutParams = params
             segment.background = makeBarDrawable(colorIncomplete)
             llProgressBars.addView(segment)
@@ -229,9 +229,11 @@ class LectureActivity : AppCompatActivity() {
                 "&#8226; $sentence",
                 HtmlCompat.FROM_HTML_MODE_LEGACY
             )
+            setTextColor(Color.parseColor("#344054"))
             textSize = 18f
+            setLineSpacing(8f, 1f)
             gravity = Gravity.START
-            setPadding(0, 0, 0, 24)
+            setPadding(0, 0, 0, (28 * resources.displayMetrics.density).toInt())
         }
         sentenceContainer.addView(tv)
     }

@@ -2,6 +2,7 @@ package com.example.basaya.ui.game
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -24,13 +25,16 @@ import android.app.ActivityOptions
 import androidx.core.animation.doOnEnd
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
-import com.example.basaya.data.mock.CrosswordMockData
 import com.example.basaya.data.entity.CrosswordProgress
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.repository.CrosswordRepository
 import com.example.basaya.model.CrosswordGameLevel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class CrosswordActivity : AppCompatActivity() {
 
@@ -73,14 +77,12 @@ class CrosswordActivity : AppCompatActivity() {
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
-        //fetch the current level words
         lifecycleScope.launch {
-            // sync and load from Firestore to Room
             val repo = CrosswordRepository(this@CrosswordActivity)
             repo.syncLevels(lessonId)
             allGameLevels = repo.getLevels(lessonId)
 
-            val progress = db.gameProgressDao().getProgress()
+            val progress = db.crosswordProgressDao().getProgress(lessonId)
             val currentLevelNumber = progress?.currentLevel ?: 1
 
             currentLevel = allGameLevels.firstOrNull { it.level == currentLevelNumber }
@@ -88,7 +90,7 @@ class CrosswordActivity : AppCompatActivity() {
 
             wordContainer = findViewById(R.id.wordContainer)
 
-            //create boxes for word
+            //box generation
             currentLevelWords?.forEach { word ->
 
                 val row = LinearLayout(this@CrosswordActivity).apply {
@@ -104,15 +106,12 @@ class CrosswordActivity : AppCompatActivity() {
 
                     val tv = TextView(this@CrosswordActivity).apply {
 
-                        val size = (40 * resources.displayMetrics.density).toInt()
+                        val size = (30 * resources.displayMetrics.density).toInt()
 
                         text = ""
                         gravity = Gravity.CENTER
-
                         textSize = 24f
-
                         includeFontPadding = false
-
                         elevation = 12f
 
                         layoutParams = LinearLayout.LayoutParams(
@@ -138,13 +137,11 @@ class CrosswordActivity : AppCompatActivity() {
 
             }
 
-            // restore found words
             val savedFoundWords = progress?.foundWords ?: ""
             if (savedFoundWords.isNotEmpty()) {
                 findWord.addAll(savedFoundWords.split(","))
             }
 
-            // restore UI for already found words
             findWord.forEach { foundWord ->
                 val wordIndex = currentLevelWords?.indexOf(foundWord) ?: -1
                 if (wordIndex != -1) {
@@ -162,11 +159,11 @@ class CrosswordActivity : AppCompatActivity() {
                 }
             }
 
-            //circle touchpad for letters
             val letters =
                 currentLevelWords?.maxByOrNull { it.length }?.map { it.toString() }.orEmpty()
                     .shuffled()
 
+            //line view and letter generation
             container.post {
                 lineView = LineView(this@CrosswordActivity)
                 container.addView(
@@ -181,10 +178,8 @@ class CrosswordActivity : AppCompatActivity() {
                 val centerY = container.height / 2f
 
                 val density = resources.displayMetrics.density
-                val letterSizePx = (56 * density).toInt() // pick a dp size you like
+                val letterSizePx = (56 * density).toInt()
 
-                // radius = half the smaller container dimension, minus half a letter bubble
-                // so bubbles don't clip outside the container edge
                 val inset = 10f * resources.displayMetrics.density
                 val radius = (minOf(container.width, container.height) / 2f) - (letterSizePx / 2f) - inset
 
@@ -220,6 +215,8 @@ class CrosswordActivity : AppCompatActivity() {
         tempTv = findViewById(R.id.tempTv)
         tempTv.visibility = View.INVISIBLE
 
+
+        //touch controls
         container.setOnTouchListener { _, event ->
 
             val touchX = event.x
@@ -234,30 +231,22 @@ class CrosswordActivity : AppCompatActivity() {
                     if (touchLetter != null) {
 
                         isSelecting = true
-
                         selectedLetters.clear()
                         selectedLetters.add(touchLetter)
-
                         lineView.selectedPoints.clear()
 
                         val centerX = touchLetter.x + touchLetter.width / 2f
                         val centerY = touchLetter.y + touchLetter.height / 2f
 
                         lineView.selectedPoints.add(centerX to centerY)
-
                         lineView.invalidate()
 
                         touchLetter.isSelected = true
-
                         touchLetter.background =
                             ContextCompat.getDrawable(this, R.drawable.blue_circle_background)
 
-                        val word = selectedLetters.joinToString("") {
-                            it.text.toString()
-                        }
-
+                        val word = selectedLetters.joinToString("") { it.text.toString() }
                         tempTv.text = word
-
                         tempTv.visibility = View.VISIBLE
                     }
 
@@ -273,9 +262,7 @@ class CrosswordActivity : AppCompatActivity() {
 
                     val touchedLetter = findTouchLetter(touchX, touchY)
 
-                    if (touchedLetter != null &&
-                        !selectedLetters.contains(touchedLetter)
-                    ) {
+                    if (touchedLetter != null && !selectedLetters.contains(touchedLetter)) {
 
                         selectedLetters.add(touchedLetter)
 
@@ -284,14 +271,10 @@ class CrosswordActivity : AppCompatActivity() {
 
                         lineView.selectedPoints.add(centerX to centerY)
 
-                        val word = selectedLetters.joinToString("") {
-                            it.text.toString()
-                        }
-
+                        val word = selectedLetters.joinToString("") { it.text.toString() }
                         tempTv.text = word
 
                         touchedLetter.isSelected = true
-
                         touchedLetter.background =
                             ContextCompat.getDrawable(this, R.drawable.blue_circle_background)
                     }
@@ -299,17 +282,8 @@ class CrosswordActivity : AppCompatActivity() {
 
                 MotionEvent.ACTION_UP -> {
 
-                    val word = selectedLetters.joinToString("") {
-                        it.text.toString()
-                    }
+                    val word = selectedLetters.joinToString("") { it.text.toString() }
 
-                    // Validate word here
-                    // Toast.makeText(this, word, Toast.LENGTH_SHORT).show()
-
-                    //words {"ALAWS", "WALA"}
-                    //wordLetterBox {{"A,L,A,W,S"},{"W,A,L,A"}}
-
-                    //check the word
                     if (currentLevelWords?.contains(word) == true) {
                         val wordIndex = currentLevelWords?.indexOf(word) ?: -1
                         if (wordIndex == -1) return@setOnTouchListener false
@@ -317,32 +291,19 @@ class CrosswordActivity : AppCompatActivity() {
 
                         val handler = android.os.Handler(mainLooper)
 
-                        //box animation
                         boxes.forEachIndexed { i, box ->
 
                             handler.postDelayed({
 
-                                //box animation to put the word in the box
                                 if (box.text == null || box.text == "") {
                                     box.animate()
-                                        .scaleX(1.4f)
-                                        .scaleY(1.4f)
-                                        .setDuration(120)
+                                        .scaleX(1.4f).scaleY(1.4f).setDuration(120)
                                         .withEndAction {
-                                            box.animate()
-                                                .scaleX(0.9f)
-                                                .scaleY(0.9f)
-                                                .setDuration(80)
+                                            box.animate().scaleX(0.9f).scaleY(0.9f).setDuration(80)
                                                 .withEndAction {
-                                                    box.animate()
-                                                        .scaleX(1f)
-                                                        .scaleY(1f)
-                                                        .setDuration(80)
-                                                        .start()
-                                                }
-                                                .start()
-                                        }
-                                        .start()
+                                                    box.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+                                                }.start()
+                                        }.start()
                                 }
 
                                 box.text = word[i].toString()
@@ -354,71 +315,42 @@ class CrosswordActivity : AppCompatActivity() {
                                 box.typeface =
                                     ResourcesCompat.getFont(this@CrosswordActivity, R.font.lexend)
 
+                            }, i * 100L)
 
-                            }, i * 100L) // delay increases per box
-
-                            //box animation if the word already exist
                             if (!box.text.isNullOrEmpty()) {
-
                                 repeat(2) { index ->
                                     box.postDelayed({
                                         box.animate()
-                                            .scaleX(1.4f)
-                                            .scaleY(1.4f)
-                                            .setDuration(120)
+                                            .scaleX(1.4f).scaleY(1.4f).setDuration(120)
                                             .withEndAction {
-                                                box.animate()
-                                                    .scaleX(0.9f)
-                                                    .scaleY(0.9f)
-                                                    .setDuration(80)
+                                                box.animate().scaleX(0.9f).scaleY(0.9f).setDuration(80)
                                                     .withEndAction {
-                                                        box.animate()
-                                                            .scaleX(1f)
-                                                            .scaleY(1f)
-                                                            .setDuration(80)
-                                                            .start()
-                                                    }
-                                                    .start()
-                                            }
-                                            .start()
+                                                        box.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+                                                    }.start()
+                                            }.start()
                                     }, index * 300L)
                                 }
                             }
 
                             tempTv.animate()
-                                .scaleX(1.4f)
-                                .scaleY(1.4f)
-                                .setDuration(120).withStartAction {
+                                .scaleX(1.4f).scaleY(1.4f).setDuration(120)
+                                .withStartAction {
                                     tempTv.setTextColor(
-                                        ContextCompat.getColor(
-                                            this@CrosswordActivity,
-                                            R.color.green
-                                        )
+                                        ContextCompat.getColor(this@CrosswordActivity, R.color.green)
                                     )
                                 }
                                 .withEndAction {
                                     tempTv.animate()
-                                        .scaleX(0.9f)
-                                        .scaleY(0.9f)
-                                        .setDuration(80)
+                                        .scaleX(0.9f).scaleY(0.9f).setDuration(80)
                                         .withEndAction {
-                                            tempTv.animate()
-                                                .scaleX(1f)
-                                                .scaleY(1f)
-                                                .setDuration(80)
-                                                .start()
+                                            tempTv.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
                                             tempTv.visibility = View.INVISIBLE
                                             tempTv.text = ""
                                             tempTv.setTextColor(
-                                                ContextCompat.getColor(
-                                                    this@CrosswordActivity,
-                                                    R.color.black
-                                                )
+                                                ContextCompat.getColor(this@CrosswordActivity, R.color.black)
                                             )
-                                        }
-                                        .start()
-                                }
-                                .start()
+                                        }.start()
+                                }.start()
                         }
 
                     } else {
@@ -426,88 +358,99 @@ class CrosswordActivity : AppCompatActivity() {
                         tempTv.setTextColor(ContextCompat.getColor(this@CrosswordActivity, R.color.red))
 
                         ObjectAnimator.ofFloat(
-                            tempTv,
-                            "translationX",
+                            tempTv, "translationX",
                             0f, -20f, 20f, -15f, 15f, -8f, 8f, 0f
                         ).apply {
                             duration = 350
                             interpolator = LinearInterpolator()
                             doOnEnd {
                                 tempTv.setTextColor(
-                                    ContextCompat.getColor(
-                                        this@CrosswordActivity,
-                                        R.color.black
-                                    )
+                                    ContextCompat.getColor(this@CrosswordActivity, R.color.black)
                                 )
                                 tempTv.visibility = View.INVISIBLE
                                 tempTv.text = ""
                             }
                             start()
                         }
-
                     }
 
-                    //save word
-                    if (currentLevelWords?.contains(word) == true) {
-                        if (!findWord.contains(word)) { // check word if already in the list
-                            findWord.add(word)
-
-                            // only save to DB when it's a new word
-                            lifecycleScope.launch {
-                                val progress = db.gameProgressDao().getProgress()
-                                val currentFound = progress?.foundWords ?: ""
-                                val foundList = if (currentFound.isEmpty()) mutableListOf()
-                                else currentFound.split(",").toMutableList()
-
-                                if (!foundList.contains(word)) {
-                                    foundList.add(word)
-                                }
-
-                                db.gameProgressDao().saveProgress(
-                                    CrosswordProgress(
-                                        currentLevel = progress?.currentLevel ?: 1,
-                                        completedLevel = progress?.completedLevel ?: 0,
-                                        foundWords = foundList.joinToString(",")
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    //check if complete
-                    val completed = findWord.sorted() == currentLevelWords?.sorted()
-
-                    if (completed) {
+                    // save newly found word
+                    if (currentLevelWords?.contains(word) == true && !findWord.contains(word)) {
+                        findWord.add(word)
 
                         lifecycleScope.launch {
-                            val progress = db.gameProgressDao().getProgress()
-                            val currentLevelNumber = progress?.currentLevel ?: 1
-                            val nextLevel = currentLevelNumber + 1
+                            val progress = db.crosswordProgressDao().getProgress(lessonId)
+                            val currentFound = progress?.foundWords ?: ""
+                            val foundList = if (currentFound.isEmpty()) mutableListOf()
+                            else currentFound.split(",").toMutableList()
 
-                            //save progress
-                            db.gameProgressDao().saveProgress(
+                            if (!foundList.contains(word)) {
+                                foundList.add(word)
+                            }
+
+                            db.crosswordProgressDao().saveProgress(
                                 CrosswordProgress(
-                                    currentLevel = nextLevel,
-                                    completedLevel = 1,
-                                    foundWords = ""
+                                    lessonId = lessonId,
+                                    currentLevel = progress?.currentLevel ?: 1,
+                                    completedLevel = progress?.completedLevel ?: 0,
+                                    foundWords = foundList.joinToString(",")
                                 )
                             )
-                            delay(2000)
-                            val intent = Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
-                                putExtra("NEXT_LEVEL", currentLevelNumber)
-                                putExtra("LESSON_ID", lessonId)
-                            }
-                            val options =
-                                ActivityOptions.makeCustomAnimation(this@CrosswordActivity, 0, 0)
-                            startActivity(intent, options.toBundle())
-                            finish()
-                        }
 
+                            // check completion AFTER this word is saved
+                            val completed = findWord.sorted() == currentLevelWords?.sorted()
+
+                            if (completed) {
+                                val currentLevelNumber = progress?.currentLevel ?: 1
+                                val nextLevel = currentLevelNumber + 1
+                                val totalLevels = allGameLevels.size
+
+                                db.crosswordProgressDao().saveProgress(
+                                    CrosswordProgress(
+                                        lessonId = lessonId,
+                                        currentLevel = nextLevel,
+                                        completedLevel = 1,
+                                        foundWords = ""
+                                    )
+                                )
+
+                                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                                if (uid != null) {
+                                    try {
+                                        FirebaseFirestore.getInstance()
+                                            .collection("users")
+                                            .document(uid)
+                                            .collection("assignedLessons")
+                                            .document(lessonId)
+                                            .update(
+                                                mapOf(
+                                                    "gameScore" to currentLevelNumber,
+                                                    "gameTotal" to totalLevels,
+                                                    "gameFinished" to (currentLevelNumber >= totalLevels),
+                                                    "gameCompletedAt" to FieldValue.serverTimestamp()
+                                                )
+                                            )
+                                            .await()
+                                    } catch (e: Exception) {
+                                        Log.e("CrosswordActivity", "Failed to sync game progress", e)
+                                    }
+                                }
+
+                                delay(2000)
+                                val intent = Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
+                                    putExtra("NEXT_LEVEL", currentLevelNumber)
+                                    putExtra("LESSON_ID", lessonId)
+                                }
+                                val options =
+                                    ActivityOptions.makeCustomAnimation(this@CrosswordActivity, 0, 0)
+                                startActivity(intent, options.toBundle())
+                                finish()
+                            }
+                        }
                     }
 
                     selectedLetters.forEach {
                         it.isSelected = false
-
                         it.setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     }
 
@@ -534,7 +477,6 @@ class CrosswordActivity : AppCompatActivity() {
 
             val centerX = letter.x + letter.width / 2f
             val centerY = letter.y + letter.height / 2f
-
             val radius = letter.width / 2f
 
             val distance = kotlin.math.sqrt(

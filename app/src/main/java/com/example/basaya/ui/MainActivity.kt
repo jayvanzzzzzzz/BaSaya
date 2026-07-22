@@ -4,23 +4,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.example.basaya.R
+import com.example.basaya.controller.BottomNavController
+import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.ui.fragment.HomeFragment
 import com.example.basaya.ui.fragment.ProfileFragment
 import com.example.basaya.ui.fragment.ProgressFragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
-import android.widget.ImageButton
-import android.widget.PopupMenu
-import androidx.core.content.ContextCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import com.example.basaya.data.auth.AuthHelper
 import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : AppCompatActivity() {
@@ -30,12 +33,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
+    private val homeFragment by lazy { HomeFragment() }
+    private val progressFragment by lazy { ProgressFragment() }
+    private val profileFragment by lazy { ProfileFragment() }
+    private var activeFragment: Fragment? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         auth = FirebaseAuth.getInstance()
 
-        // check auth state BEFORE inflating any layout
         if (auth.currentUser == null) {
             startActivity(Intent(this, LogInActivity::class.java))
             finish()
@@ -49,10 +56,8 @@ class MainActivity : AppCompatActivity() {
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-
             statusBarBg.layoutParams.height = statusBarHeight
             statusBarBg.requestLayout()
-
             insets
         }
 
@@ -61,7 +66,6 @@ class MainActivity : AppCompatActivity() {
         WindowInsetsControllerCompat(window, window.decorView)
             .isAppearanceLightStatusBars = true
 
-        //  Define listener separately so it can be removed later
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
 
@@ -78,6 +82,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val btnNotif = findViewById<ImageButton>(R.id.btnNotification).setOnClickListener {
+            showConfirmDialog()
+        }
+
         auth.addAuthStateListener(authStateListener)
     }
 
@@ -89,12 +97,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-
         tvName = findViewById(R.id.tvName)
         tvName.text = "..."
 
         val authHelper = AuthHelper()
-
         val uid = authHelper.getCurrentUser()?.uid
 
         if (uid != null) {
@@ -106,32 +112,56 @@ class MainActivity : AppCompatActivity() {
                     tvName.text = doc.getString("firstName") ?: ""
                 }
                 .addOnFailureListener { e ->
-                    Log.e("HomeFragment", "Failed to fetch user", e)
+                    Log.e("MainActivity", "Failed to fetch user", e)
                 }
         }
 
-        loadFragment(HomeFragment())
+        supportFragmentManager.beginTransaction().apply {
+            add(R.id.frameLayout, profileFragment, "profile").hide(profileFragment)
+            add(R.id.frameLayout, progressFragment, "progress").hide(progressFragment)
+            add(R.id.frameLayout, homeFragment, "home")
+        }.commitAllowingStateLoss()
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
+        activeFragment = homeFragment
 
-        bottomNav.setOnItemSelectedListener {
-            when (it.itemId) {
-                R.id.home -> {
-                    loadFragment(HomeFragment())
-                    true
-                }
-                R.id.progress -> {
-                    loadFragment(ProgressFragment())
-                    true
-                }
-                R.id.accountInfo -> {
-                    loadFragment(ProfileFragment())
-                    true
-                }
-                else -> false
+        setupBottomNav()
+        setupToolbarMenu()
+    }
+
+    private fun setupBottomNav() {
+        val navIndicator = findViewById<View>(R.id.navIndicator)
+
+        val navHome = findViewById<LinearLayout>(R.id.navHome)
+        val iconHome = findViewById<ImageView>(R.id.iconHome)
+        val labelHome = findViewById<TextView>(R.id.labelHome)
+
+        val navProgress = findViewById<LinearLayout>(R.id.navProgress)
+        val iconProgress = findViewById<ImageView>(R.id.iconPractice)
+        val labelProgress = findViewById<TextView>(R.id.labelPractice)
+
+        val navProfile = findViewById<LinearLayout>(R.id.navProfile)
+        val iconProfile = findViewById<ImageView>(R.id.iconProfile)
+        val labelProfile = findViewById<TextView>(R.id.labelProfile)
+
+        BottomNavController(
+            indicator = navIndicator,
+            items = listOf(
+                BottomNavController.NavItem(navHome, iconHome, labelHome),
+                BottomNavController.NavItem(navProgress, iconProgress, labelProgress),
+                BottomNavController.NavItem(navProfile, iconProfile, labelProfile)
+            )
+        ) { index ->
+            val target = when (index) {
+                0 -> homeFragment
+                1 -> progressFragment
+                2 -> profileFragment
+                else -> homeFragment
             }
+            switchTo(target)
         }
+    }
 
+    private fun setupToolbarMenu() {
         val btnMoreOptions = findViewById<ImageButton>(R.id.btnMoreOptions)
 
         btnMoreOptions.setOnClickListener { view ->
@@ -147,16 +177,33 @@ class MainActivity : AppCompatActivity() {
                     else -> false
                 }
             }
-
             popup.show()
         }
     }
 
-    private fun loadFragment(fragment: Fragment) {
+    private fun switchTo(fragment: Fragment) {
+        if (fragment === activeFragment) return
         if (isDestroyed || isFinishing) return
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.frameLayout, fragment)
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            .hide(activeFragment!!)
+            .show(fragment)
             .commitAllowingStateLoss()
+
+        activeFragment = fragment
+    }
+
+    private fun showConfirmDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Wala papo")
+            .setMessage("Mga 1 week pa.")
+            .setPositiveButton("Oki") { _, _ ->
+            }
+            .setCancelable(false)
+            .show()
     }
 }

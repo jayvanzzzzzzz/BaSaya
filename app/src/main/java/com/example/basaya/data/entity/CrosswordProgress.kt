@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "game_progress")
 data class CrosswordProgress(
     @PrimaryKey
-    val id: Int = 1,
+    val lessonId: String,
     val currentLevel: Int?,
     val completedLevel: Int = 0,
     val foundWords: String = ""

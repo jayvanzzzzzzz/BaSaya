@@ -1,49 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:gravity="center"
-    android:background="#F0F2F7"
-    android:padding="32dp"
+    android:background="#F3F6FA"
     tools:context=".ui.quiz.QuizCompleteScreen">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🎉"
-        android:textSize="48sp" />
+    <View
+        android:id="@+id/statusBarBg"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#F3F6FA" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Quiz Complete!"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="@color/main_blue" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="28dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-    <TextView
-        android:id="@+id/tvScore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="0 / 0"
-        android:textSize="36sp"
-        android:textStyle="bold"
-        android:textColor="#1A1F36" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:rotation="1"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="6dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="32dp"
+                    android:paddingTop="20dp">
+
+                    <TextView
+                        android:id="@+id/tvQuizTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PANGGALAN - PAGSUSULIT"
+                        android:textColor="#1B2430"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:letterSpacing="0.02" />
+
+                    <!-- Red-pen circled score -->
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp">
+
+                        <View
+                            android:layout_width="120dp"
+                            android:layout_height="86dp"
+                            android:layout_gravity="center"
+                            android:rotation="-4"
+                            android:background="@drawable/circle_red_pen" />
+
+                        <TextView
+                            android:id="@+id/tvScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:paddingTop="8dp"
+                            android:text="0 / 0"
+                            android:textSize="26sp"
+                            android:textStyle="bold"
+                            android:textColor="#D93A3A" />
+
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvRemark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Mahusay! Tuloy-tuloy ang iyong pag-unlad."
+                        android:textColor="#6B7280"
+                        android:textSize="13sp"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:id="@+id/tvScorePercent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:background="@drawable/bg_stat_tag"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="80%"
+                        android:textColor="@color/main_blue"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Tape, top-left -->
+            <View
+                android:layout_width="64dp"
+                android:layout_height="22dp"
+                android:layout_gravity="top|start"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="4dp"
+                android:rotation="-9"
+                android:elevation="8dp"
+                android:background="@drawable/bg_washi_tape_blue" />
+
+            <!-- Tape, top-right -->
+            <View
+                android:layout_width="64dp"
+                android:layout_height="22dp"
+                android:layout_gravity="top|end"
+                android:layout_marginEnd="14dp"
+                android:layout_marginTop="8dp"
+                android:rotation="10"
+                android:elevation="8dp"
+                android:background="@drawable/bg_washi_tape_yellow" />
+
+        </FrameLayout>
+
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDone"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginTop="32dp"
-        android:text="Done"
+        android:layout_margin="16dp"
+        android:text="Tapos na"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
         app:backgroundTint="@color/main_blue"
-        app:cornerRadius="18dp" />
+        app:rippleColor="@color/toolbar_bar_color"
+        app:cornerRadius="18dp"
+        app:elevation="2dp" />
 
 </LinearLayout>

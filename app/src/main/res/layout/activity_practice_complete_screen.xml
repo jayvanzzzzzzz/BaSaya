@@ -4,148 +4,175 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F3F6FA">
+    android:background="#F7F9FC"
+    android:orientation="vertical">
 
     <View
         android:id="@+id/statusBarBg"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="#F3F6FA" />
+        android:background="#F7F9FC" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="28dp"
         android:clipChildren="false"
-        android:clipToPadding="false">
+        android:clipToPadding="false"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp">
 
-        <!-- Paper card, graded and stamped -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.12"
+            android:text="NATAPOS NA ANG GAWAIN"
+            android:textColor="#64748B"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipChildren="false"
             android:clipToPadding="false">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:rotation="-1"
                 app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="4dp"
-                app:cardElevation="6dp">
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#DDE7F5"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="32dp"
-                    android:paddingTop="52dp">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvActivityTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PAGSASANAY: HANAPIN ANG PANGNGALAN"
-                        android:textColor="#1B2430"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:letterSpacing="0.02" />
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="188dp"
+                        android:background="@drawable/bg_activity_result_hero"
+                        android:padding="24dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_result_badge"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp"
+                            android:text="PAGSASANAY NATAPOS"
+                            android:textColor="@android:color/white"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <TextView
+                            android:id="@+id/tvActivityTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:layout_marginEnd="20dp"
+                            android:layout_marginBottom="28dp"
+                            android:text="HANAPIN ANG PANGNGALAN"
+                            android:textColor="@android:color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                    </FrameLayout>
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="86dp" />
 
                     <TextView
                         android:id="@+id/tvRemark"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="28dp"
                         android:text="Mahusay! Handa ka na sa susunod na hakbang."
-                        android:textColor="#6B7280"
-                        android:textSize="13sp"
-                        android:gravity="center" />
+                        android:textColor="#334155"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-                    <!-- Stat tags -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
+                    <TextView
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/tvScoreFraction"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_stat_tag"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:paddingTop="8dp"
-                            android:paddingBottom="8dp"
-                            android:text="8 / 10"
-                            android:textColor="#1B2430"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
+                        android:layout_marginTop="7dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="24dp"
+                        android:paddingBottom="26dp"
+                        android:text="Ipagpatuloy ang pagsasanay upang mas tumibay ang iyong kaalaman."
+                        android:textColor="#7C8AA0"
+                        android:textSize="13sp" />
 
                 </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            </androidx.cardview.widget.CardView>
-
-            <!-- Stamp, overlapping top-right corner -->
+            <!-- Floating score -->
             <FrameLayout
-                android:id="@+id/stampContainer"
-                android:layout_width="92dp"
-                android:layout_height="92dp"
-                android:layout_gravity="top|end"
-                android:layout_marginTop="-14dp"
-                android:layout_marginEnd="8dp"
-                android:rotation="-10">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_stamp_ring" />
-
-                <View
-                    android:layout_width="78dp"
-                    android:layout_height="78dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_stamp_ring_inner" />
+                android:layout_width="146dp"
+                android:layout_height="170dp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="112dp">
 
                 <TextView
+                    android:id="@+id/tvScoreFraction"
+                    android:layout_width="136dp"
+                    android:layout_height="136dp"
+                    android:layout_gravity="top|center_horizontal"
+                    android:background="@drawable/bg_score_orb"
+                    android:gravity="center"
+                    android:text="8 / 10"
+                    android:textColor="#174C8D"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+            </FrameLayout>
+
+            <!-- Retains your Kotlin IDs -->
+            <FrameLayout
+                android:id="@+id/stampContainer"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="18dp"
+                android:layout_marginEnd="18dp">
+
+                <ImageView
                     android:id="@+id/tvStampLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="TAPOS!"
-                    android:textColor="@color/main_blue"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.04" />
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_completion_check"
+                    android:contentDescription="Activity completed"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_result_check" />
 
             </FrameLayout>
 
         </FrameLayout>
-
     </LinearLayout>
 
-    <!-- CTA -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDone"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_margin="16dp"
-        android:text="Tapos na"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="Bumalik sa aralin"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:backgroundTint="@color/main_blue"
-        app:rippleColor="@color/toolbar_bar_color"
-        app:cornerRadius="18dp"
-        app:elevation="2dp" />
+        app:backgroundTint="#174C8D"
+        app:cornerRadius="16dp"
+        app:elevation="0dp"
+        app:rippleColor="#335D91" />
 
 </LinearLayout>

@@ -22,5 +22,23 @@ class QuizCompleteScreen : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnDone).setOnClickListener {
             finish()
         }
+
+        val percent = if (total > 0) {
+            (score * 100) / total
+        } else {
+            0
+        }
+
+        findViewById<TextView>(R.id.tvScorePercent).text = "$percent%"
+
+        val remark = when {
+            percent == 100 -> "Napakahusay! Perpekto ang iyong iskor!"
+            percent >= 90 -> "Napakahusay! Ipagpatuloy mo!"
+            percent >= 75 -> "Mahusay! Magpatuloy sa pag-aaral."
+            percent >= 50 -> "Maganda ang iyong pagsisikap. Subukan muli upang mas mapabuti."
+            else -> "Huwag panghinaan ng loob. Mag-aral pa at subukan muli."
+        }
+
+        findViewById<TextView>(R.id.tvRemark).text = remark
     }
 }

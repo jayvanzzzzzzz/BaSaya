@@ -1,9 +1,10 @@
 package com.example.basaya.ui
 
-import android.content.ClipDescription
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +23,7 @@ import com.example.basaya.ui.game.CrosswordActivity
 import com.example.basaya.ui.quiz.QuizActivity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -30,6 +32,11 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var quizCard: CardView
     private lateinit var activityCard: CardView
     private lateinit var quizLockOverlay: LinearLayout
+
+    private var gameIsFinished = false
+    private var activityIsFinished = false
+    private var quizIsFinished = false
+    private var lectureFinished = false
 
     private lateinit var lectureRepository: LectureRepository
     private lateinit var lessonId: String
@@ -41,6 +48,11 @@ class DashboardActivity : AppCompatActivity() {
 
     private lateinit var tvLessonTitle: TextView
     private lateinit var tvLessonDescription: TextView
+
+    private lateinit var lectureCompletedBadge: LinearLayout
+    private lateinit var gameCompletedBadge: LinearLayout
+    private lateinit var activityCompletedBadge: LinearLayout
+    private lateinit var quizCompletedBadge: LinearLayout
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
 
@@ -68,6 +80,11 @@ class DashboardActivity : AppCompatActivity() {
         activityCard = findViewById(R.id.activityCard)
         quizLockOverlay = findViewById(R.id.quizLockOverlay)
 
+        lectureCompletedBadge = findViewById(R.id.lectureCompletedBadge)
+        gameCompletedBadge = findViewById(R.id.gameCompletedBadge)
+        activityCompletedBadge = findViewById(R.id.activityCompletedBadge)
+        quizCompletedBadge = findViewById(R.id.quizCompletedBadge)
+
         tvLectureCount = findViewById(R.id.tvLectureCount)
         tvGameCount = findViewById(R.id.tvGameCount)
         tvActivityCount = findViewById(R.id.tvActivityCount)
@@ -76,9 +93,6 @@ class DashboardActivity : AppCompatActivity() {
         loadContentCounts()
 
         lectureRepository = LectureRepository(this)
-
-        tvLessonTitle = findViewById(R.id.tvLessonTitle)
-        tvLessonDescription = findViewById(R.id.tvLessonDesc)
 
         tvLessonTitle = findViewById(R.id.tvLessonTitle)
         tvLessonDescription = findViewById(R.id.tvLessonDesc)
@@ -101,41 +115,79 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         gameCard.setOnClickListener {
-            val intent = Intent(this@DashboardActivity, CrosswordActivity::class.java).apply {
-                putExtra("LESSON_ID", lessonId)
+            if (gameIsFinished) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Larong Nakumpleto")
+                    .setMessage("Nakumpleto mo na ang larong ito. Hindi na ito maaaring ulitin.")
+                    .setPositiveButton("OK", null)
+                    .show()
+            } else {
+                val intent = Intent(this@DashboardActivity, CrosswordActivity::class.java).apply {
+                    putExtra("LESSON_ID", lessonId)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
         }
 
         lectureCard.setOnClickListener {
-            val intent = Intent(this@DashboardActivity, LectureActivity::class.java).apply {
-                putExtra("LESSON_ID", lessonId)
+            if (lectureFinished) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Aralin na Nakumpleto")
+                    .setMessage("Nakumpleto mo na ang araling ito. Maaari mo pa rin itong basahin muli anumang oras.")
+                    .setPositiveButton("Basahin Muli") { _, _ ->
+                        val intent = Intent(this, LectureActivity::class.java).apply {
+                            putExtra("LESSON_ID", lessonId)
+                        }
+                        startActivity(intent)
+                    }
+                    .setNegativeButton("Isara", null)
+                    .show()
+            } else {
+                val intent = Intent(this, LectureActivity::class.java).apply {
+                    putExtra("LESSON_ID", lessonId)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
         }
 
         // quiz starts locked
         quizCard.isClickable = false
         quizCard.setOnClickListener {
-            val intent = Intent(this@DashboardActivity, QuizActivity::class.java).apply {
-                putExtra("LESSON_ID", lessonId)
+            if (quizIsFinished) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Pagsusulit na Nakumpleto")
+                    .setMessage("Natapos mo na ang pagsusulit. Hindi na ito maaaring ulitin.")
+                    .setPositiveButton("OK", null)
+                    .show()
+            } else {
+                val intent = Intent(this@DashboardActivity, QuizActivity::class.java).apply {
+                    putExtra("LESSON_ID", lessonId)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
         }
 
         activityCard.setOnClickListener {
-            val intent = Intent(this@DashboardActivity, PracticeActivity::class.java).apply {
-                putExtra("LESSON_ID", lessonId)
+            if (activityIsFinished) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Gawaing Nakumpleto")
+                    .setMessage("Nakumpleto mo na ang gawaing ito. Hindi na ito maaaring ulitin.")
+                    .setPositiveButton("OK", null)
+                    .show()
+            } else {
+                val intent = Intent(this@DashboardActivity, PracticeActivity::class.java).apply {
+                    putExtra("LESSON_ID", lessonId)
+                }
+                startActivity(intent)
             }
-
-            startActivity(intent)
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // re-check every time this screen becomes visible
+        // re-check every time this screen open
         checkQuizUnlockState()
+        loadCompletionState()
     }
 
     private fun checkQuizUnlockState() {
@@ -152,6 +204,84 @@ class DashboardActivity : AppCompatActivity() {
             } else {
                 quizCard.isClickable = false
                 quizLockOverlay.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun loadCompletionState() {
+        if (lessonId.isBlank()) return
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        lifecycleScope.launch {
+            try {
+                val doc = firestore
+                    .collection("users")
+                    .document(uid)
+                    .collection("assignedLessons")
+                    .document(lessonId)
+                    .get()
+                    .await()
+
+                // Lecture check only not close
+                lectureFinished = doc.getBoolean("lectureFinished") ?: false
+                lectureCompletedBadge.visibility =
+                    if (lectureFinished) View.VISIBLE else View.GONE
+
+                val gameFinished = doc.getBoolean("gameFinished") ?: false
+                gameIsFinished = gameFinished
+
+                if (gameFinished) {
+                    gameCompletedBadge.visibility = View.VISIBLE
+                    gameCard.alpha = 0.85f
+
+                    val gameScore = doc.getLong("gameScore")
+                    val gameTotal = doc.getLong("gameTotal")
+                    if (gameScore != null && gameTotal != null) {
+                        tvGameCount.text = "Antas • $gameScore/$gameTotal"
+                    }
+                } else {
+                    gameCompletedBadge.visibility = View.GONE
+                    gameCard.alpha = 1f
+                }
+
+                // Activity: locked once finished
+                val activityFinished = doc.getBoolean("activityFinished") ?: false
+                activityIsFinished = activityFinished
+
+                if (activityFinished) {
+                    activityCompletedBadge.visibility = View.VISIBLE
+                    activityCard.alpha = 0.85f
+
+                    val activityScore = doc.getLong("activityScore")
+                    val activityTotal = doc.getLong("activityTotal")
+                    if (activityScore != null && activityTotal != null) {
+                        tvActivityCount.text = "Pahina • $activityScore/$activityTotal"
+                    }
+                } else {
+                    activityCompletedBadge.visibility = View.GONE
+                    activityCard.alpha = 1f
+                }
+
+                // Quiz: locked once finished
+                val quizFinished = doc.getBoolean("quizFinished") ?: false
+                quizIsFinished = quizFinished
+
+                if (quizFinished) {
+                    quizCompletedBadge.visibility = View.VISIBLE
+                    quizCard.alpha = 0.85f
+                    quizLockOverlay.visibility = View.GONE
+
+                    val quizScore = doc.getLong("quizScore")
+                    val quizTotal = doc.getLong("quizTotal")
+                    if (quizScore != null && quizTotal != null) {
+                        tvQuizCount.text = "Puntos • $quizScore/$quizTotal"
+                    }
+                } else {
+                    quizCompletedBadge.visibility = View.GONE
+                    quizCard.alpha = 1f
+                }
+            } catch (e: Exception) {
+                Log.e("DashboardActivity", "Failed to load completion state", e)
             }
         }
     }
@@ -204,9 +334,18 @@ class DashboardActivity : AppCompatActivity() {
                 val quizQuestions = (quizDoc.get("questions") as? List<*>)?.size ?: 0
 
                 tvLectureCount.text = "$lecturePages pages"
-                tvGameCount.text = "$gameLevels levels"
-                tvActivityCount.text = "$activityPages pages"
-                tvQuizCount.text = "$quizQuestions questions"
+
+                if (!gameIsFinished) {
+                    tvGameCount.text = "$gameLevels levels"
+                }
+
+                if (!activityIsFinished) {
+                    tvActivityCount.text = "$activityPages pages"
+                }
+
+                if (!quizIsFinished) {
+                    tvQuizCount.text = "$quizQuestions questions"
+                }
 
             } catch (e: Exception) {
                 tvLectureCount.text = "0 pages"

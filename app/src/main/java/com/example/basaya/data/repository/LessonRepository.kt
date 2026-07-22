@@ -22,15 +22,13 @@ class LessonRepository(private val context: Context) {
             .get()
             .await()
 
-        if (assignedSnapshot.isEmpty) return
-
         val unlockedMap = assignedSnapshot.documents.associate { doc ->
             doc.id to (doc.getBoolean("unlocked") ?: false)
         }
 
         val lessonIds = unlockedMap.keys.toList()
 
-        //fetch only those lesson documents (chunked, whereIn max 30 at a time)
+        //fetch only those lesson documents
         val lessons = mutableListOf<LessonEntity>()
 
         lessonIds.chunked(30).forEach { chunk ->
@@ -55,6 +53,7 @@ class LessonRepository(private val context: Context) {
             }
         }
 
+        db.lessonDao().deleteLessonsForUser(userId)
         db.lessonDao().insertAll(lessons)
     }
 

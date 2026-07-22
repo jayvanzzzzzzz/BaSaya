@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.basaya.data.dao.CrosswordLevelDao
-import com.example.basaya.data.dao.GameProgressDao
+import com.example.basaya.data.dao.CrosswordProgressDao
 import com.example.basaya.data.dao.LectureDao
 import com.example.basaya.data.dao.LessonDao
 import com.example.basaya.data.entity.CrosswordProgress
@@ -20,11 +20,11 @@ import com.example.basaya.data.entity.CrosswordLevelEntity
         CrosswordLevelEntity::class,
         LectureEntity::class
     ],
-    version = 4
+    version = 5
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun gameProgressDao(): GameProgressDao
+    abstract fun crosswordProgressDao(): CrosswordProgressDao
     abstract fun lessonDao(): LessonDao
     abstract fun crosswordLevelDao(): CrosswordLevelDao
     abstract fun lectureDao(): LectureDao

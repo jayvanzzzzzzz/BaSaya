@@ -14,4 +14,7 @@
     <color name="red">#D32F2F</color>
     <color name="green">#4CAF50</color>
     <color name="light_green">#00FF00</color>
+    <color name="nav_card_bg">#FFFFFF</color>
+    <color name="nav_indicator_bg">#1A5B4FE8</color>
+    <color name="nav_item_color_active">@color/main_blue</color>
 </resources>

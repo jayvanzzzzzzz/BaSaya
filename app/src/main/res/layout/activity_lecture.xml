@@ -5,110 +5,157 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F7F7F8"
     android:orientation="vertical"
     tools:context=".ui.LectureActivity">
 
+    <!-- The activity creates one segment for every page inside this container. -->
     <LinearLayout
         android:id="@+id/llProgressBars"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:paddingTop="8dp" />
+        android:paddingStart="20dp"
+        android:paddingTop="38dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="14dp" />
 
     <LinearLayout
         android:id="@+id/topToolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="10dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
         <ImageButton
             android:id="@+id/ibClose"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_lecture_icon_button"
+            android:contentDescription="Isara ang aralin"
+            android:padding="11dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_close" />
 
-            android:background="@drawable/ic_close"
-            android:layout_gravity="center_vertical"/>
-
-        <Space
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aralin"
+                android:textColor="#1D2939"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Basahin sa sarili mong bilis"
+                android:textColor="#667085"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/ibSpeaker"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-
-            android:scaleType="fitCenter"
-
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_speaker_on"
-            android:layout_gravity="center_vertical"/>
-
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_lecture_icon_button"
+            android:contentDescription="I-on o i-off ang audio"
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_speaker_on" />
     </LinearLayout>
 
-    <ScrollView
-        android:id="@+id/scrollContent"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="14dp"
         android:layout_weight="1"
-        android:clickable="true"
-        android:focusable="true">
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:strokeColor="#EAECF0"
+        app:strokeWidth="1dp">
 
-        <LinearLayout
-            android:id="@+id/allSentenceContainer"
+        <ScrollView
+            android:id="@+id/scrollContent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp" />
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:focusable="true">
 
-    </ScrollView>
+            <LinearLayout
+                android:id="@+id/allSentenceContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="24dp"
+                android:paddingTop="30dp"
+                android:paddingEnd="24dp"
+                android:paddingBottom="30dp"
+                tools:ignore="UselessParent" />
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="8dp"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
+        android:paddingStart="16dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
         android:paddingBottom="16dp">
 
         <TextView
             android:id="@+id/tvContinueHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingVertical="12dp"
+            android:background="@drawable/bg_lecture_continue_hint"
             android:gravity="center"
+            android:paddingTop="11dp"
+            android:paddingBottom="11dp"
             android:text="@string/tap_to_continue"
-            android:textColor="#6B7280"
-            android:textSize="15sp" />
+            android:textColor="#475467"
+            android:textSize="14sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNextPage"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="54dp"
+            android:layout_marginTop="4dp"
             android:visibility="gone"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:text="@string/next"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:letterSpacing="0.01"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
+            app:backgroundTint="#2D63D7"
+            app:cornerRadius="18dp"
+            app:elevation="0dp"
             app:icon="@drawable/ic_right_arrow"
             app:iconGravity="textEnd"
-            app:iconPadding="8dp"
-            app:iconTint="@android:color/white"
+            app:iconPadding="10dp"
             app:iconSize="20dp"
-            app:backgroundTint="@color/main_blue"
-            app:rippleColor="@color/toolbar_bar_color"
-            app:cornerRadius="18dp"
-            app:elevation="2dp"
+            app:iconTint="@android:color/white"
+            app:rippleColor="#D9E4FF"
             app:strokeWidth="0dp" />
-
     </LinearLayout>
 
 </LinearLayout>
