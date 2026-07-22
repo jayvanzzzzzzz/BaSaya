@@ -1,94 +1,73 @@
--- USER LOGIN FLOW (Android App) --
-  User opens Android App
-          ↓
-  Login (email + password)
-          ↓
-  Backend checks database
-          ↓
-  Validate credentials + role = "user"
-          ↓
-  Return success token
-          ↓
-  Redirect → User Dashboard
+System Architecture
 
--- USER APP FLOW (Student / Member) --
-  User Dashboard
-      ↓
-  View lessons / services
-      ↓
-  Select lesson or service
-      ↓
-  View details
-      ↓
-  Submit action (quiz / booking / etc.)
-      ↓
-  Send request to backend
-      ↓
-  Database stores result
-      ↓
-  App updates UI (history/status)
+BaSaya runs on a two-client, single-database architecture: a Kotlin Android app for students, and a web-based admin panel (in development) for teachers/administrators to manage lesson content. Both clients read from and write to a shared Firebase backend — there is no intermediary API server; Firebase Authentication and Cloud Firestore serve that role directly.
 
--- ADMIN LOGIN FLOW (Web System) --
-  Admin opens Web Login Page
-          ↓
-  Enter credentials
-          ↓
-  Backend verifies user
-          ↓
-  Check role = "admin"
-          ↓
-  IF admin → allow access
-  ELSE → deny access / redirect
-          ↓
-  Open Admin Dashboard
+Student Login Flow (Android)
+Open App
+   │
+   ▼
+Enter email + password
+   │
+   ▼
+Firebase Authentication verifies credentials
+   │
+   ▼
+On success → session token issued
+   │
+   ▼
+Redirect to Student Dashboard
+Student App Flow
+Student Dashboard
+   │
+   ▼
+Browse assigned lessons
+   │
+   ▼
+Open a lesson → Lecture / Game / Activity / Quiz
+   │
+   ▼
+Complete content → result written to Firestore
+   │
+   ▼
+Dashboard reflects progress (locked/completed state, scores)
 
--- ADMIN WEB FLOW (Content Management) --
-  Admin Dashboard
-      ↓
-  Manage Lessons / Services
-      ↓
-  Add / Edit / Delete content
-      ↓
-  Save changes to database
-      ↓
-  Database updates in real time
-      ↓
-  Android app reflects updates instantly
+Lecture content can be revisited anytime after completion. Game, Activity, and Quiz content locks once finished, showing the student's final score.
 
---  BACKEND / DATABASE FLOW (Core System) --
-Android App + Web Admin
-            ↓
-     API / Firebase
-            ↓
-     Database (Cloud)
-            ↓
-     Returns Data
+Admin Login Flow (Web)
+Open Admin Web Panel
+   │
+   ▼
+Enter credentials
+   │
+   ▼
+Firebase Authentication verifies credentials
+   │
+   ▼
+Access granted to Admin Dashboard
 
--- ROLE SECURITY FLOW --
-  Login Request
-      ↓
-  Check credentials
-      ↓
-  Check role
-      ├── user → Android App access only
-      └── admin → Web access only
-      ↓
-  Reject unauthorized access
+(Status: in development. Role-based access — restricting admin login to authorized staff accounts only — is planned via Firestore Security Rules, enforced server-side rather than checked client-side.)
 
--- SIMPLE OVERALL SYSTEM VIEW --
-
-             WEB ADMIN
-         (Manage Lessons/Data)
-                    │
-                    ▼
-         DATABASE / BACKEND
-     (Firebase / API Server)
-                    ▲
-                    │
- ANDROID APP (USERS)
- (View Lessons / Submit / Learn)
-
-
--- SUMMARY --
-The system follows a role-based architecture where the Android application is used by end-users to access lessons and features,
-while a web-based admin panel is used to manage and update system content. Both platforms communicate through a centralized cloud database.
+Admin Content Management Flow
+Admin Dashboard
+   │
+   ▼
+Create / Edit / Delete lessons, lectures, games, activities, quizzes
+   │
+   ▼
+Changes saved to Firestore
+   │
+   ▼
+Android app syncs updated content automatically
+Data Flow Overview
+        ANDROID APP                    WEB ADMIN PANEL
+     (student lessons,                (lesson & content
+      quizzes, progress)                management)
+            │                                │
+            └──────────────┬─────────────────┘
+                           ▼
+                 Firebase Authentication
+                    + Cloud Firestore
+                            │
+                            ▼
+              Room (local offline cache,
+               Android app only)
