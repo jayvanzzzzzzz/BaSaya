@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.basaya.R
@@ -29,16 +30,21 @@ class LessonAdapter(
 
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         private val tvDescription: TextView = itemView.findViewById(R.id.tvDescription)
-        private val tvDifficulty: TextView = itemView.findViewById(R.id.tvDifficulty)
+        private val tvProgress: TextView = itemView.findViewById(R.id.tvProgress)
         private val tvDifficultyLabel: TextView = itemView.findViewById(R.id.tvDifficultyLabel)
         private val vDifficultyDot: View = itemView.findViewById(R.id.vDifficultyDot)
         private val ivLessonImage: ImageView = itemView.findViewById(R.id.ivLessonImage)
+        private val progressLesson: ProgressBar = itemView.findViewById(R.id.progressLesson)
+        private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
 
         fun bind(lesson: LessonEntity) {
             tvTitle.text = buildHighlightedTitle(lesson.title, highlightQuery)
             tvDescription.text = lesson.description
-            tvDifficulty.text = lesson.difficulty.uppercase()
             tvDifficultyLabel.text = lesson.difficulty.replaceFirstChar { it.uppercase() }
+
+            bindProgressBadge(tvProgress, lesson)
+            bindProgressBar(progressLesson, tvProgressPercent, lesson)
+
 
             val imageIndex = Math.floorMod(lesson.id.hashCode(), lessonImages.size)
             ivLessonImage.setImageResource(lessonImages[imageIndex])
@@ -55,7 +61,60 @@ class LessonAdapter(
             tvDifficultyLabel.setTextColor(Color.parseColor(labelColor))
 
             itemView.setOnClickListener { onItemClick(lesson) }
+
         }
+    }
+
+    private fun bindProgressBadge(tvProgress: TextView, lesson: LessonEntity) {
+        val context = tvProgress.context
+
+        val lectureFinished = lesson.lectureFinished
+        val gameFinished = lesson.gameFinished
+        val activityFinished = lesson.activityFinished
+        val quizFinished = lesson.quizFinished
+
+        val anyFinished = lectureFinished || gameFinished || activityFinished || quizFinished
+        val allFinished = lectureFinished && gameFinished && activityFinished && quizFinished
+
+        when {
+            allFinished -> {
+                tvProgress.text = "Tapos na"
+                tvProgress.setBackgroundResource(R.drawable.bg_status_completed)
+                tvProgress.setCompoundDrawablesWithIntrinsicBounds(
+                    R.drawable.ic_status_check, 0, 0, 0
+                )
+            }
+            anyFinished -> {
+                tvProgress.text = "Nasa progreso"
+                tvProgress.setBackgroundResource(R.drawable.bg_status_progress)
+                tvProgress.setCompoundDrawablesWithIntrinsicBounds(
+                    R.drawable.ic_status_progress, 0, 0, 0
+                )
+            }
+            else -> {
+                tvProgress.text = "Hindi pa nasisimulan"
+                tvProgress.setBackgroundResource(R.drawable.bg_status_not_started)
+                tvProgress.setCompoundDrawablesWithIntrinsicBounds(
+                    R.drawable.ic_status_locked, 0, 0, 0
+                )
+            }
+        }
+
+        tvProgress.compoundDrawablePadding = (6 * context.resources.displayMetrics.density).toInt()
+    }
+
+    private fun bindProgressBar(progressLesson: ProgressBar, tvProgressPercent: TextView, lesson: LessonEntity) {
+        val completedCount = listOf(
+            lesson.lectureFinished,
+            lesson.gameFinished,
+            lesson.activityFinished,
+            lesson.quizFinished
+        ).count { it }
+
+        val percent = (completedCount * 100) / 4  // 4 total content types per lesson
+
+        progressLesson.progress = percent
+        tvProgressPercent.text = "$percent%"
     }
 
     private fun buildHighlightedTitle(title: String, query: String): CharSequence {

@@ -152,6 +152,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
                             android:text="Hindi pa nasisimulan"
+                            android:padding="0dp"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
                             android:textColor="#667085"
                             android:textSize="13sp"
                             tools:text="4 sa 6 na aralin" />
@@ -233,6 +236,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
                             android:text="Hindi pa nasisimulan"
+                            android:padding="0dp"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
                             android:textColor="#667085"
                             android:textSize="13sp"
                             tools:text="3 sa 8 na aralin" />
@@ -313,6 +319,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
                             android:text="Hindi pa nasisimulan"
+                            android:padding="0dp"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
                             android:textColor="#667085"
                             android:textSize="13sp"
                             tools:text="7 sa 10 na aralin" />

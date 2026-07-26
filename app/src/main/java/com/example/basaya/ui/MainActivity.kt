@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -129,22 +128,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNav() {
-        val navIndicator = findViewById<View>(R.id.navIndicator)
+        val navUnderline = findViewById<View>(R.id.navUnderline)
 
-        val navHome = findViewById<LinearLayout>(R.id.navHome)
+        val navHome = findViewById<View>(R.id.navHome)
         val iconHome = findViewById<ImageView>(R.id.iconHome)
         val labelHome = findViewById<TextView>(R.id.labelHome)
 
-        val navProgress = findViewById<LinearLayout>(R.id.navProgress)
+        val navProgress = findViewById<View>(R.id.navProgress)
         val iconProgress = findViewById<ImageView>(R.id.iconPractice)
         val labelProgress = findViewById<TextView>(R.id.labelPractice)
 
-        val navProfile = findViewById<LinearLayout>(R.id.navProfile)
+        val navProfile = findViewById<View>(R.id.navProfile)
         val iconProfile = findViewById<ImageView>(R.id.iconProfile)
         val labelProfile = findViewById<TextView>(R.id.labelProfile)
 
         BottomNavController(
-            indicator = navIndicator,
+            underline = navUnderline,
             items = listOf(
                 BottomNavController.NavItem(navHome, iconHome, labelHome),
                 BottomNavController.NavItem(navProgress, iconProgress, labelProgress),

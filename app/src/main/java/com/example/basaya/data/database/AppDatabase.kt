@@ -20,7 +20,7 @@ import com.example.basaya.data.entity.CrosswordLevelEntity
         CrosswordLevelEntity::class,
         LectureEntity::class
     ],
-    version = 5
+    version = 6
 )
 abstract class AppDatabase : RoomDatabase() {
 

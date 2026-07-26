@@ -12,5 +12,9 @@ data class LessonEntity(
     val description: String,
     val difficulty: String,
     val order: Int,
-    val unlocked: Boolean   // whether this user can access the lesson yet
+    val unlocked: Boolean,  // whether this user can access the lesson yet
+    val lectureFinished: Boolean = false,
+    val gameFinished: Boolean = false,
+    val activityFinished: Boolean = false,
+    val quizFinished: Boolean = false
 )

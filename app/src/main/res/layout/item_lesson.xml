@@ -38,18 +38,20 @@
                 android:background="@drawable/scrim_lesson_card" />
 
             <TextView
-                android:id="@+id/tvDifficulty"
+                android:id="@+id/tvProgress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|end"
                 android:layout_margin="12dp"
                 android:background="@drawable/bg_lesson_difficulty"
-                android:letterSpacing="0.06"
-                android:paddingStart="11dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="11dp"
-                android:paddingBottom="5dp"
-                android:text="BEGINNER"
+                android:drawablePadding="6dp"
+                android:gravity="center_vertical"
+                android:letterSpacing="0.02"
+                android:paddingStart="10dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="Hindi pa nasisimulan"
                 android:textColor="#FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
@@ -127,6 +129,35 @@
                     android:textColor="#FFFFFF"
                     android:textSize="12sp"
                     android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ProgressBar
+                    android:id="@+id/progressLesson"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="6dp"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/progress_lesson_bar" />
+
+                <TextView
+                    android:id="@+id/tvProgressPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="0%"
+                    android:textColor="#667085"
+                    android:textSize="11sp" />
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -14,7 +14,7 @@ class LessonRepository(private val context: Context) {
 
     suspend fun syncLessons(userId: String) {
 
-        //get this user's assigned lesson IDs
+        //get this user's assigned lesson IDs + progress flags
         val assignedSnapshot = firestore
             .collection("users")
             .document(userId)
@@ -22,11 +22,25 @@ class LessonRepository(private val context: Context) {
             .get()
             .await()
 
-        val unlockedMap = assignedSnapshot.documents.associate { doc ->
-            doc.id to (doc.getBoolean("unlocked") ?: false)
+        data class AssignedInfo(
+            val unlocked: Boolean,
+            val lectureFinished: Boolean,
+            val gameFinished: Boolean,
+            val activityFinished: Boolean,
+            val quizFinished: Boolean
+        )
+
+        val assignedMap = assignedSnapshot.documents.associate { doc ->
+            doc.id to AssignedInfo(
+                unlocked = doc.getBoolean("unlocked") ?: false,
+                lectureFinished = doc.getBoolean("lectureFinished") ?: false,
+                gameFinished = doc.getBoolean("gameFinished") ?: false,
+                activityFinished = doc.getBoolean("activityFinished") ?: false,
+                quizFinished = doc.getBoolean("quizFinished") ?: false
+            )
         }
 
-        val lessonIds = unlockedMap.keys.toList()
+        val lessonIds = assignedMap.keys.toList()
 
         //fetch only those lesson documents
         val lessons = mutableListOf<LessonEntity>()
@@ -39,6 +53,8 @@ class LessonRepository(private val context: Context) {
                 .await()
 
             lessonsSnapshot.documents.forEach { doc ->
+                val info = assignedMap[doc.id]
+
                 lessons.add(
                     LessonEntity(
                         id = doc.id,
@@ -47,7 +63,11 @@ class LessonRepository(private val context: Context) {
                         description = doc.getString("description") ?: "",
                         difficulty = doc.getString("difficulty") ?: "",
                         order = doc.getLong("order")?.toInt() ?: 0,
-                        unlocked = unlockedMap[doc.id] ?: false
+                        unlocked = info?.unlocked ?: false,
+                        lectureFinished = info?.lectureFinished ?: false,
+                        gameFinished = info?.gameFinished ?: false,
+                        activityFinished = info?.activityFinished ?: false,
+                        quizFinished = info?.quizFinished ?: false
                     )
                 )
             }
