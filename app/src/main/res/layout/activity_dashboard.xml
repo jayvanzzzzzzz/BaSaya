@@ -161,7 +161,7 @@
                             android:paddingTop="5dp"
                             android:paddingEnd="10dp"
                             android:paddingBottom="5dp"
-                            android:text="12 topics"
+                            android:text="....."
                             android:textColor="#3C3489"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -285,7 +285,7 @@
                                 android:paddingTop="4dp"
                                 android:paddingEnd="9dp"
                                 android:paddingBottom="4dp"
-                                android:text="8 levels"
+                                android:text="....."
                                 android:textColor="#085041"
                                 android:textSize="10sp"
                                 android:textStyle="bold" />
@@ -394,7 +394,7 @@
                                 android:paddingTop="4dp"
                                 android:paddingEnd="9dp"
                                 android:paddingBottom="4dp"
-                                android:text="5 tasks"
+                                android:text="....."
                                 android:textColor="#712B13"
                                 android:textSize="10sp"
                                 android:textStyle="bold" />
@@ -509,7 +509,7 @@
                                 android:paddingTop="4dp"
                                 android:paddingEnd="9dp"
                                 android:paddingBottom="4dp"
-                                android:text="20 items"
+                                android:text="....."
                                 android:textColor="#27679E"
                                 android:textSize="12sp" />
                         </LinearLayout>

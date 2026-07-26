@@ -22,6 +22,7 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import android.view.animation.LinearInterpolator
 import android.app.ActivityOptions
+import android.widget.Toast
 import androidx.core.animation.doOnEnd
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
@@ -79,14 +80,42 @@ class CrosswordActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val repo = CrosswordRepository(this@CrosswordActivity)
-            repo.syncLevels(lessonId)
+
+            val localLevels = db.crosswordLevelDao().getLevelsForLesson(lessonId)
+
+            if (localLevels.isEmpty()) {
+                repo.syncLevels(lessonId)
+            }
+
+            repo.syncProgress(lessonId)
+
             allGameLevels = repo.getLevels(lessonId)
 
+            if (allGameLevels.isEmpty()) {
+                Log.e("CrosswordActivity", "No game levels found for lessonId=$lessonId — check Firestore 'game' subcollection")
+                Toast.makeText(this@CrosswordActivity, "Walang laro para sa araling ito.", Toast.LENGTH_SHORT).show()
+                finish()
+                return@launch
+            }
+
             val progress = db.crosswordProgressDao().getProgress(lessonId)
-            val currentLevelNumber = progress?.currentLevel ?: 1
+            var currentLevelNumber = progress?.currentLevel ?: 1
+
+            val maxLevel = allGameLevels.maxOf { it.level }
+            if (currentLevelNumber > maxLevel) {
+                Log.w("CrosswordActivity", "currentLevel ($currentLevelNumber) exceeds max level ($maxLevel) — clamping")
+                currentLevelNumber = maxLevel
+            }
 
             currentLevel = allGameLevels.firstOrNull { it.level == currentLevelNumber }
             currentLevelWords = currentLevel?.words
+
+            if (currentLevel == null) {
+                Log.e("CrosswordActivity", "No matching level entity for level=$currentLevelNumber among ${allGameLevels.map { it.level }}")
+                Toast.makeText(this@CrosswordActivity, "May problema sa pag-load ng laro.", Toast.LENGTH_SHORT).show()
+                finish()
+                return@launch
+            }
 
             wordContainer = findViewById(R.id.wordContainer)
 

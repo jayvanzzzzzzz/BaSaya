@@ -104,7 +104,7 @@ class ProgressFragment : Fragment() {
 
         when {
             percent >= 85 -> {
-                statusView.text = "Malakas"
+                statusView.text = "Mahusay"
                 statusView.setBackgroundResource(R.drawable.bg_status_strong)
                 statusView.setTextColor(0xFF2E9E4F.toInt())
             }

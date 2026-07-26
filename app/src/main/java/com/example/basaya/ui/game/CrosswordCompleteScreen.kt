@@ -11,14 +11,19 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
-import com.example.basaya.data.mock.CrosswordMockData
 import com.example.basaya.data.database.AppDatabase
+import kotlinx.coroutines.launch
 
 
 class CrosswordCompleteScreen : AppCompatActivity() {
     private lateinit var btnNext: Button
     private lateinit var lessonId: String
+
+    private val db by lazy {
+        AppDatabase.getDatabase(this)
+    }
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,8 +40,7 @@ class CrosswordCompleteScreen : AppCompatActivity() {
         val progressText = findViewById<TextView>(R.id.tvProgress)
         btnNext = findViewById(R.id.btnNext)
 
-        val allLevels = CrosswordMockData.gameLevels.size
-        val currentLevel = intent.getIntExtra("NEXT_LEVEL", 1)
+        title.text = ""
 
         title.alpha = 0f
         title.translationY = -40f
@@ -45,23 +49,56 @@ class CrosswordCompleteScreen : AppCompatActivity() {
         levelBox.scaleX = 0.85f
         levelBox.scaleY = 0.85f
 
-        progressText.text = "$currentLevel / $allLevels"
-        progressBar.max = allLevels
-        progressBar.progress = currentLevel
+        lifecycleScope.launch {
 
-        if (currentLevel < allLevels) {
-            btnNext.setOnClickListener {
-                val intent =
-                    Intent(this@CrosswordCompleteScreen, CrosswordActivity::class.java).apply {
-                        putExtra("LESSON_ID", lessonId)   // 👈 add this
-                    }
-                val options =
-                    ActivityOptions.makeCustomAnimation(this@CrosswordCompleteScreen, 0, 0)
-                startActivity(intent, options.toBundle())
-                finish()
+            val levels = db.crosswordLevelDao().getLevelsForLesson(lessonId)
+            val progress = db.crosswordProgressDao().getProgress(lessonId)
+
+            val allLevels = levels.size
+
+            // NEXT_LEVEL is actually the level the player just finished
+            val currentLevel = intent.getIntExtra("NEXT_LEVEL", 1)
+
+            progressText.text = "$currentLevel / $allLevels"
+
+            progressBar.max = allLevels
+            progressBar.progress = currentLevel
+
+            if (currentLevel < allLevels) {
+
+                btnNext.text = "NEXT"
+
+                btnNext.setOnClickListener {
+
+                    startActivity(
+                        Intent(
+                            this@CrosswordCompleteScreen,
+                            CrosswordActivity::class.java
+                        ).apply {
+                            putExtra("LESSON_ID", lessonId)
+                        },
+                        ActivityOptions.makeCustomAnimation(
+                            this@CrosswordCompleteScreen,
+                            0,
+                            0
+                        ).toBundle()
+                    )
+
+                    finish()
+                }
+
+            } else {
+
+                progressBar.progress = allLevels
+                progressText.text = "$allLevels / $allLevels"
+
+                btnNext.text = "COMPLETE"
+
+                btnNext.setOnClickListener {
+                    finish()
+                }
             }
-        } else {
-            btnNext.text = "COMPLETE"
+
         }
 
 

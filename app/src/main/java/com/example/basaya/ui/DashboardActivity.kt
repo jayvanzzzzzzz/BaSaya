@@ -17,6 +17,7 @@ import android.widget.TextView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.basaya.R
+import com.example.basaya.data.cache.CompletionStateCache
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.ui.activity.PracticeActivity
 import com.example.basaya.ui.game.CrosswordActivity
@@ -24,6 +25,7 @@ import com.example.basaya.ui.quiz.QuizActivity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.example.basaya.data.cache.ContentCountsCache
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -37,6 +39,10 @@ class DashboardActivity : AppCompatActivity() {
     private var activityIsFinished = false
     private var quizIsFinished = false
     private var lectureFinished = false
+
+    private var hasGameScore = false
+    private var hasActivityScore = false
+    private var hasQuizScore = false
 
     private lateinit var lectureRepository: LectureRepository
     private lateinit var lessonId: String
@@ -53,6 +59,9 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var gameCompletedBadge: LinearLayout
     private lateinit var activityCompletedBadge: LinearLayout
     private lateinit var quizCompletedBadge: LinearLayout
+
+    private lateinit var countsCache: ContentCountsCache
+    private lateinit var completionCache: CompletionStateCache
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
 
@@ -90,9 +99,13 @@ class DashboardActivity : AppCompatActivity() {
         tvActivityCount = findViewById(R.id.tvActivityCount)
         tvQuizCount = findViewById(R.id.tvQuizCount)
 
-        loadContentCounts()
 
         lectureRepository = LectureRepository(this)
+
+        countsCache = ContentCountsCache(this)
+        completionCache = CompletionStateCache(this)
+
+        loadContentCounts()
 
         tvLessonTitle = findViewById(R.id.tvLessonTitle)
         tvLessonDescription = findViewById(R.id.tvLessonDesc)
@@ -212,6 +225,37 @@ class DashboardActivity : AppCompatActivity() {
         if (lessonId.isBlank()) return
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
+        completionCache.get(lessonId)?.let { cached ->
+            lectureFinished = cached.lectureFinished
+            lectureCompletedBadge.visibility =
+                if (cached.lectureFinished) View.VISIBLE else View.GONE
+
+            gameIsFinished = cached.gameFinished
+            if (cached.gameTotal > 0) {
+                tvGameCount.text = "${cached.gameScore}/${cached.gameTotal} levels"
+                hasGameScore = true
+            }
+            gameCompletedBadge.visibility = if (cached.gameFinished) View.VISIBLE else View.GONE
+            gameCard.alpha = if (cached.gameFinished) 0.85f else 1f
+
+            activityIsFinished = cached.activityFinished
+            if (cached.activityScore != null && cached.activityTotal != null) {
+                tvActivityCount.text = "Pahina • ${cached.activityScore}/${cached.activityTotal}"
+                hasActivityScore = true
+            }
+            activityCompletedBadge.visibility = if (cached.activityFinished) View.VISIBLE else View.GONE
+            activityCard.alpha = if (cached.activityFinished) 0.85f else 1f
+
+            quizIsFinished = cached.quizFinished
+            if (cached.quizScore != null && cached.quizTotal != null) {
+                tvQuizCount.text = "Puntos • ${cached.quizScore}/${cached.quizTotal}"
+                hasQuizScore = true
+            }
+            quizCompletedBadge.visibility = if (cached.quizFinished) View.VISIBLE else View.GONE
+            quizCard.alpha = if (cached.quizFinished) 0.85f else 1f
+            if (cached.quizFinished) quizLockOverlay.visibility = View.GONE
+        }
+
         lifecycleScope.launch {
             try {
                 val doc = firestore
@@ -230,56 +274,79 @@ class DashboardActivity : AppCompatActivity() {
                 val gameFinished = doc.getBoolean("gameFinished") ?: false
                 gameIsFinished = gameFinished
 
+                val gameScore = doc.getLong("gameScore") ?: 0
+                val gameTotal = doc.getLong("gameTotal") ?: 0
+
+                if (gameTotal > 0) {
+                    tvGameCount.text = "$gameScore/$gameTotal levels"
+                    hasGameScore = true
+                }
+
                 if (gameFinished) {
                     gameCompletedBadge.visibility = View.VISIBLE
                     gameCard.alpha = 0.85f
-
-                    val gameScore = doc.getLong("gameScore")
-                    val gameTotal = doc.getLong("gameTotal")
-                    if (gameScore != null && gameTotal != null) {
-                        tvGameCount.text = "Antas • $gameScore/$gameTotal"
-                    }
                 } else {
                     gameCompletedBadge.visibility = View.GONE
                     gameCard.alpha = 1f
                 }
 
-                // Activity: locked once finished
+                // Activity: score shows as soon as it exists; lock only depends on finished
                 val activityFinished = doc.getBoolean("activityFinished") ?: false
                 activityIsFinished = activityFinished
+
+                val activityScore = doc.getLong("activityScore")
+                val activityTotal = doc.getLong("activityTotal")
+
+                if (activityScore != null && activityTotal != null) {
+                    tvActivityCount.text = "Pahina • $activityScore/$activityTotal"
+                    hasActivityScore = true
+                }
 
                 if (activityFinished) {
                     activityCompletedBadge.visibility = View.VISIBLE
                     activityCard.alpha = 0.85f
-
-                    val activityScore = doc.getLong("activityScore")
-                    val activityTotal = doc.getLong("activityTotal")
-                    if (activityScore != null && activityTotal != null) {
-                        tvActivityCount.text = "Pahina • $activityScore/$activityTotal"
-                    }
                 } else {
                     activityCompletedBadge.visibility = View.GONE
                     activityCard.alpha = 1f
                 }
 
-                // Quiz: locked once finished
+                // Quiz: score shows as soon as it exists; lock only depends on finished
                 val quizFinished = doc.getBoolean("quizFinished") ?: false
                 quizIsFinished = quizFinished
+
+                val quizScore = doc.getLong("quizScore")
+                val quizTotal = doc.getLong("quizTotal")
+
+                if (quizScore != null && quizTotal != null) {
+                    tvQuizCount.text = "Puntos • $quizScore/$quizTotal"
+                    hasQuizScore = true
+                }
 
                 if (quizFinished) {
                     quizCompletedBadge.visibility = View.VISIBLE
                     quizCard.alpha = 0.85f
                     quizLockOverlay.visibility = View.GONE
-
-                    val quizScore = doc.getLong("quizScore")
-                    val quizTotal = doc.getLong("quizTotal")
-                    if (quizScore != null && quizTotal != null) {
-                        tvQuizCount.text = "Puntos • $quizScore/$quizTotal"
-                    }
                 } else {
                     quizCompletedBadge.visibility = View.GONE
                     quizCard.alpha = 1f
                 }
+
+                completionCache.save(
+                    lessonId,
+                    CompletionStateCache.State(
+                        lectureFinished = lectureFinished,
+                        gameFinished = gameIsFinished,
+                        gameScore = gameScore,
+                        gameTotal = gameTotal,
+                        activityFinished = activityIsFinished,
+                        activityScore = activityScore,
+                        activityTotal = activityTotal,
+                        quizFinished = quizIsFinished,
+                        quizScore = quizScore,
+                        quizTotal = quizTotal
+                    )
+                )
+
             } catch (e: Exception) {
                 Log.e("DashboardActivity", "Failed to load completion state", e)
             }
@@ -288,6 +355,13 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun loadContentCounts() {
         if (lessonId.isBlank()) return
+
+        countsCache.get(lessonId)?.let { cached ->
+            tvLectureCount.text = "${cached.lecturePages} pages"
+            if (!hasGameScore) tvGameCount.text = "0/${cached.gameLevels} levels"
+            if (!hasActivityScore) tvActivityCount.text = "0/${cached.activityPages} pages"
+            if (!hasQuizScore) tvQuizCount.text = "0/${cached.quizQuestions} questions"
+        }
 
         lifecycleScope.launch {
             try {
@@ -335,23 +409,34 @@ class DashboardActivity : AppCompatActivity() {
 
                 tvLectureCount.text = "$lecturePages pages"
 
-                if (!gameIsFinished) {
-                    tvGameCount.text = "$gameLevels levels"
+                if (!hasGameScore) {
+                    tvGameCount.text = "0/$gameLevels levels"
+                }
+                if (!hasActivityScore) {
+                    tvActivityCount.text = "0/$activityPages pages"
+                }
+                if (!hasQuizScore) {
+                    tvQuizCount.text = "0/$quizQuestions questions"
                 }
 
-                if (!activityIsFinished) {
-                    tvActivityCount.text = "$activityPages pages"
-                }
-
-                if (!quizIsFinished) {
-                    tvQuizCount.text = "$quizQuestions questions"
-                }
+                // Successful fetch — refresh the cache for next time we're offline
+                countsCache.save(
+                    lessonId,
+                    ContentCountsCache.Counts(
+                        lecturePages = lecturePages,
+                        gameLevels = gameLevels,
+                        activityPages = activityPages,
+                        quizQuestions = quizQuestions
+                    )
+                )
 
             } catch (e: Exception) {
-                tvLectureCount.text = "0 pages"
-                tvGameCount.text = "0 levels"
-                tvActivityCount.text = "0 pages"
-                tvQuizCount.text = "0 questions"
+                if (countsCache.get(lessonId) == null) {
+                    tvLectureCount.text = "0 pages"
+                    if (!hasGameScore) tvGameCount.text = "0/0 levels"
+                    if (!hasActivityScore) tvActivityCount.text = "0/0 pages"
+                    if (!hasQuizScore) tvQuizCount.text = "0/0 questions"
+                }
             }
         }
     }
