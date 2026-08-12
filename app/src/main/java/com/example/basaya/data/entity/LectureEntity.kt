@@ -7,5 +7,5 @@ import androidx.room.PrimaryKey
 data class LectureEntity(
     @PrimaryKey val lessonId: String,
     val title: String,
-    val pagesJson: String // serialized List<LecturePage>
+    val pagesJson: String
 )

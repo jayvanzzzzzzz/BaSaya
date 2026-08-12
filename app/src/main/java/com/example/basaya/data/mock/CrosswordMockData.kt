@@ -1,6 +1,6 @@
 package com.example.basaya.data.mock
 
-import com.example.basaya.model.CrosswordGameLevel
+import com.example.basaya.data.model.CrosswordGameLevel
 
 object CrosswordMockData {
     val gameLevels = listOf(

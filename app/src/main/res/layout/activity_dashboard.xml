@@ -4,57 +4,97 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F7F8"
+    android:background="@color/paper_bg"
     android:orientation="vertical">
 
+    <!-- Status bar spacer -->
     <View
         android:id="@+id/statusBarBg"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="#FFFFFF" />
+        android:background="@color/card_paper" />
 
+    <!-- ─── HEADER ─── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@color/card_paper"
         android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="22dp">
+        android:paddingStart="24dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="26dp">
 
-        <TextView
+        <!-- "ARALIN" + decorative dot -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:letterSpacing="0.08"
-            android:text="ARALIN"
-            android:textColor="#667085"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tvLessonTitle"
-            android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/quicksand_medium"
+                android:letterSpacing="0.1"
+                android:text="ARALIN"
+                android:textColor="@color/ink_muted_text"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_dot_accent" />
+        </LinearLayout>
+
+        <!-- Title + decorative accent line beneath -->
+        <FrameLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:fontFamily="@font/lexend"
-            android:text="Lesson Title"
-            android:textColor="#182230"
-            android:textSize="25sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="8dp">
 
+            <TextView
+                android:id="@+id/tvLessonTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:text="Lesson Title"
+                android:textColor="#24211A"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="3dp"
+                android:layout_gravity="bottom|start"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_header_accent_line" />
+        </FrameLayout>
+
+        <!-- Description -->
         <TextView
             android:id="@+id/tvLessonDesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:fontFamily="@font/lexend"
-            android:lineSpacingExtra="2dp"
+            android:layout_marginTop="14dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:lineSpacingExtra="3dp"
             android:text="Lesson Description"
-            android:textColor="#667085"
-            android:textSize="14sp" />
+            android:textColor="@color/ink_muted_text"
+            android:textSize="14sp"
+            android:alpha="0.85" />
+
     </LinearLayout>
 
+    <!-- Header divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0D8C2" />
+
+    <!-- ─── SCROLLABLE CONTENT ─── -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -66,36 +106,53 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingTop="24dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="32dp">
+            android:paddingStart="20dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="40dp">
 
-            <TextView
+            <!-- Section heading -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Magsimula rito"
-                android:textColor="#344054"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- LECTURE — wrapped in FrameLayout for the checkmark badge -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/quicksand_medium"
+                    android:letterSpacing="0.03"
+                    android:text="Magsimula rito"
+                    android:textColor="@color/ink_muted_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="1.5dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_section_line" />
+            </LinearLayout>
+
+            <!-- ════════════ LECTURE ════════════ -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="16dp">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/lectureCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
                     android:clickable="true"
                     android:focusable="true"
-                    app:cardBackgroundColor="#E9EEFF"
-                    app:cardCornerRadius="22dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#D8E2FF"
-                    app:strokeWidth="1dp">
+                    app:cardBackgroundColor="@color/card_paper"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="@color/ink_indigo"
+                    app:strokeWidth="1.2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -104,113 +161,103 @@
                         android:orientation="horizontal"
                         android:padding="18dp">
 
-                        <LinearLayout
-                            android:layout_width="52dp"
-                            android:layout_height="52dp"
-                            android:background="@drawable/bg_icon_purple"
-                            android:gravity="center">
+                        <!-- Accent bar -->
+                        <View
+                            android:layout_width="5dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_accent_indigo" />
 
-                            <ImageView
-                                android:layout_width="25dp"
-                                android:layout_height="25dp"
-                                android:contentDescription="Aralin"
-                                android:src="@drawable/ic_book"
-                                app:tint="#3C3489" />
-                        </LinearLayout>
+                        <!-- Icon -->
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_marginStart="16dp"
+                            android:contentDescription="Aralin"
+                            android:src="@drawable/ic_book"
+                            app:tint="@color/ink_indigo" />
 
+                        <!-- Text group -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="15dp"
+                            android:layout_marginStart="14dp"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="BASAHIN"
-                                android:textColor="#5C61B8"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
+                                android:fontFamily="@font/lexend"
                                 android:text="Lecture"
-                                android:textColor="#24285D"
-                                android:textSize="18sp"
+                                android:textColor="#24211A"
+                                android:textSize="17sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
+                                android:fontFamily="@font/quicksand_medium"
                                 android:text="Unawain muna ang mga aralin"
-                                android:textColor="#565D94"
+                                android:textColor="@color/ink_muted_text"
                                 android:textSize="12sp" />
                         </LinearLayout>
 
+                        <!-- Count badge -->
                         <TextView
                             android:id="@+id/tvLectureCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:background="@drawable/bg_pill_purple"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip"
+                            android:fontFamily="@font/quicksand_medium"
                             android:paddingStart="10dp"
                             android:paddingTop="5dp"
                             android:paddingEnd="10dp"
                             android:paddingBottom="5dp"
                             android:text="....."
-                            android:textColor="#3C3489"
+                            android:textColor="@color/ink_indigo"
                             android:textSize="11sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Completed stamp badge -->
                 <LinearLayout
                     android:id="@+id/lectureCompletedBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="top|end"
-                    android:layout_margin="10dp"
-                    android:background="@drawable/bg_completed_badge"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="6dp"
-                    android:paddingTop="4dp"
-                    android:paddingEnd="9dp"
-                    android:paddingBottom="4dp"
-                    android:visibility="gone">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:background="@drawable/bg_check_badge"
-                        android:contentDescription="Nakumpleto"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_check" />
+                    android:layout_margin="8dp"
+                    android:background="@drawable/bg_stamp_badge"
+                    android:gravity="center"
+                    android:elevation="8dp"
+                    android:rotation="-12"
+                    android:visibility="visible">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:text="Tapos na"
-                        android:textColor="#085041"
-                        android:textSize="11sp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:gravity="center"
+                        android:lineSpacingExtra="-1dp"
+                        android:text="TAPOS"
+                        android:textColor="@color/stamp_green"
+                        android:textSize="8sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-
             </FrameLayout>
 
+            <!-- ════════════ GAME & ACTIVITY (side by side) ════════════ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="30dp"
+                android:layout_marginBottom="16dp"
+                android:fontFamily="@font/quicksand_medium"
                 android:text="Subukan ang natutunan mo"
-                android:textColor="#344054"
-                android:textSize="14sp"
+                android:textColor="@color/ink_muted_text"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -218,7 +265,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <!-- GAME — wrapped in FrameLayout for the checkmark badge -->
+                <!-- GAME -->
                 <FrameLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -231,104 +278,91 @@
                         android:layout_height="wrap_content"
                         android:clickable="true"
                         android:focusable="true"
-                        app:cardBackgroundColor="#E5F5EF"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="#D0EBE0"
-                        app:strokeWidth="1dp">
+                        app:cardBackgroundColor="@color/card_paper"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="3dp"
+                        app:strokeColor="@color/ink_forest"
+                        app:strokeWidth="1.2dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="15dp">
+                            android:padding="16dp">
 
-                            <LinearLayout
-                                android:layout_width="42dp"
-                                android:layout_height="42dp"
-                                android:background="@drawable/bg_icon_teal"
-                                android:gravity="center">
+                            <!-- Top accent bar -->
+                            <View
+                                android:layout_width="32dp"
+                                android:layout_height="4dp"
+                                android:background="@drawable/bg_accent_bar_forest" />
 
-                                <ImageView
-                                    android:layout_width="21dp"
-                                    android:layout_height="21dp"
-                                    android:contentDescription="Laro"
-                                    android:src="@drawable/ic_puzzle"
-                                    app:tint="#085041" />
-
-                            </LinearLayout>
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_marginTop="12dp"
+                                android:contentDescription="Laro"
+                                android:src="@drawable/ic_puzzle"
+                                app:tint="@color/ink_forest" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="13dp"
+                                android:layout_marginTop="10dp"
+                                android:fontFamily="@font/lexend"
                                 android:text="Laro"
-                                android:textColor="#063B30"
-                                android:textSize="16sp"
+                                android:textColor="#24211A"
+                                android:textSize="15sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
+                                android:fontFamily="@font/quicksand_medium"
                                 android:text="Matuto sa masayang paraan"
-                                android:textColor="#565D94"
-                                android:textSize="12sp" />
+                                android:textColor="@color/ink_muted_text"
+                                android:textSize="11sp" />
 
                             <TextView
                                 android:id="@+id/tvGameCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:background="@drawable/bg_pill_teal"
+                                android:layout_marginTop="10dp"
+                                android:background="@drawable/bg_chip"
+                                android:fontFamily="@font/quicksand_medium"
                                 android:paddingStart="9dp"
                                 android:paddingTop="4dp"
                                 android:paddingEnd="9dp"
                                 android:paddingBottom="4dp"
                                 android:text="....."
-                                android:textColor="#085041"
+                                android:textColor="@color/ink_forest"
                                 android:textSize="10sp"
                                 android:textStyle="bold" />
-
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
                     <LinearLayout
                         android:id="@+id/gameCompletedBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:layout_gravity="top|end"
-                        android:layout_margin="10dp"
-                        android:background="@drawable/bg_completed_badge"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingStart="6dp"
-                        android:paddingTop="4dp"
-                        android:paddingEnd="9dp"
-                        android:paddingBottom="4dp"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/bg_stamp_badge_1"
+                        android:gravity="center"
+                        android:rotation="-12"
                         android:visibility="gone">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:background="@drawable/bg_check_badge"
-                            android:contentDescription="Nakumpleto"
-                            android:padding="4dp"
-                            android:src="@drawable/ic_check" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:text="Tapos na"
-                            android:textColor="#085041"
-                            android:textSize="11sp"
+                            android:fontFamily="@font/quicksand_medium"
+                            android:text="TAPOS"
+                            android:textColor="@color/stamp_green"
+                            android:textSize="7sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
                 </FrameLayout>
 
-                <!-- ACTIVITY — wrapped in FrameLayout for the checkmark badge -->
+                <!-- ACTIVITY -->
                 <FrameLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -341,61 +375,63 @@
                         android:layout_height="wrap_content"
                         android:clickable="true"
                         android:focusable="true"
-                        app:cardBackgroundColor="#FCEDE7"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="#F5DCD2"
-                        app:strokeWidth="1dp">
+                        app:cardBackgroundColor="@color/card_paper"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="3dp"
+                        app:strokeColor="@color/ink_rust"
+                        app:strokeWidth="1.2dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="15dp">
+                            android:padding="16dp">
 
-                            <LinearLayout
-                                android:layout_width="42dp"
-                                android:layout_height="42dp"
-                                android:background="@drawable/bg_icon_coral"
-                                android:gravity="center">
+                            <View
+                                android:layout_width="32dp"
+                                android:layout_height="4dp"
+                                android:background="@drawable/bg_accent_bar_rust" />
 
-                                <ImageView
-                                    android:layout_width="21dp"
-                                    android:layout_height="21dp"
-                                    android:contentDescription="Gawain"
-                                    android:src="@drawable/ic_pencil"
-                                    app:tint="#712B13" />
-                            </LinearLayout>
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_marginTop="12dp"
+                                android:contentDescription="Gawain"
+                                android:src="@drawable/ic_pencil"
+                                app:tint="@color/ink_rust" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="13dp"
+                                android:layout_marginTop="10dp"
+                                android:fontFamily="@font/lexend"
                                 android:text="Gawain"
-                                android:textColor="#54200E"
-                                android:textSize="16sp"
+                                android:textColor="#24211A"
+                                android:textSize="15sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
-                                android:text="Sanayin ang iyong mga natutuhan"
-                                android:textColor="#565D94"
-                                android:textSize="12sp" />
+                                android:fontFamily="@font/quicksand_medium"
+                                android:text="Sanayin ang iyong natutuhan"
+                                android:textColor="@color/ink_muted_text"
+                                android:textSize="11sp" />
 
                             <TextView
                                 android:id="@+id/tvActivityCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:background="@drawable/bg_pill_coral"
+                                android:layout_marginTop="10dp"
+                                android:background="@drawable/bg_chip"
+                                android:fontFamily="@font/quicksand_medium"
                                 android:paddingStart="9dp"
                                 android:paddingTop="4dp"
                                 android:paddingEnd="9dp"
                                 android:paddingBottom="4dp"
                                 android:text="....."
-                                android:textColor="#712B13"
+                                android:textColor="@color/ink_rust"
                                 android:textSize="10sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -403,78 +439,63 @@
 
                     <LinearLayout
                         android:id="@+id/activityCompletedBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:layout_gravity="top|end"
-                        android:layout_margin="10dp"
-                        android:background="@drawable/bg_completed_badge"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingStart="6dp"
-                        android:paddingTop="4dp"
-                        android:paddingEnd="9dp"
-                        android:paddingBottom="4dp"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/bg_stamp_badge_1"
+                        android:gravity="center"
+                        android:rotation="-12"
                         android:visibility="gone">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:background="@drawable/bg_check_badge"
-                            android:contentDescription="Nakumpleto"
-                            android:padding="4dp"
-                            android:src="@drawable/ic_check" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:text="Tapos na"
-                            android:textColor="#085041"
-                            android:textSize="11sp"
+                            android:fontFamily="@font/quicksand_medium"
+                            android:text="TAPOS"
+                            android:textColor="@color/stamp_green"
+                            android:textSize="7sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- QUIZ — already wrapped in FrameLayout; just added the checkmark -->
+            <!-- ════════════ PRONUNCIATION ════════════ -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp">
+                android:layout_marginTop="16dp">
 
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/quizCard"
+                    android:id="@+id/pronunciationCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:focusable="true"
-                    app:cardBackgroundColor="#E8F2FC"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#D8E7F7"
-                    app:strokeWidth="1dp">
+                    app:cardBackgroundColor="@color/card_paper"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="@color/ink_maroon"
+                    app:strokeWidth="1.2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp">
+                        android:padding="18dp">
 
-                        <LinearLayout
-                            android:layout_width="46dp"
-                            android:layout_height="46dp"
-                            android:background="@drawable/bg_icon_blue"
-                            android:gravity="center">
+                        <View
+                            android:layout_width="5dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_accent_maroon" />
 
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:contentDescription="Pagsusulit"
-                                android:src="@drawable/ic_clipboard_check"
-                                app:tint="#0C447C" />
-                        </LinearLayout>
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_marginStart="16dp"
+                            android:contentDescription="Bigkas"
+                            android:src="@drawable/ic_mic"
+                            app:tint="@color/ink_maroon" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -486,8 +507,9 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Pagsusulit"
-                                android:textColor="#09375F"
+                                android:fontFamily="@font/lexend"
+                                android:text="Bigkas"
+                                android:textColor="#24211A"
                                 android:textSize="17sp"
                                 android:textStyle="bold" />
 
@@ -495,33 +517,140 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
-                                android:text="Sukatin ang iyong kaalaman"
-                                android:textColor="#565D94"
-                                android:textSize="12sp" />
-
-                            <TextView
-                                android:id="@+id/tvQuizCount"
-                                android:background="@drawable/bg_icon_blue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:paddingStart="9dp"
-                                android:paddingTop="4dp"
-                                android:paddingEnd="9dp"
-                                android:paddingBottom="4dp"
-                                android:text="....."
-                                android:textColor="#27679E"
+                                android:fontFamily="@font/quicksand_medium"
+                                android:text="Sanayin ang wastong bigkas"
+                                android:textColor="@color/ink_muted_text"
                                 android:textSize="12sp" />
                         </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvPronunciationCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip"
+                            android:fontFamily="@font/quicksand_medium"
+                            android:paddingStart="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="5dp"
+                            android:text="....."
+                            android:textColor="@color/ink_maroon"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Your existing code can set this to GONE after the lecture is complete. -->
+                <LinearLayout
+                    android:id="@+id/pronunciationCompletedBadge"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="8dp"
+                    android:background="@drawable/bg_stamp_badge"
+                    android:gravity="center"
+                    android:rotation="-12"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="TAPOS"
+                        android:textColor="@color/stamp_green"
+                        android:textSize="8sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- ════════════ QUIZ ════════════ -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/quizCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="@color/card_paper"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="@color/ink_denim"
+                    app:strokeWidth="1.2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="18dp">
+
+                        <View
+                            android:layout_width="5dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_accent_denim" />
+
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_marginStart="16dp"
+                            android:contentDescription="Pagsusulit"
+                            android:src="@drawable/ic_clipboard_check"
+                            app:tint="@color/ink_denim" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/lexend"
+                                android:text="Pagsusulit"
+                                android:textColor="#24211A"
+                                android:textSize="17sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:fontFamily="@font/quicksand_medium"
+                                android:text="Sukatin ang iyong kaalaman"
+                                android:textColor="@color/ink_muted_text"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvQuizCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip"
+                            android:fontFamily="@font/quicksand_medium"
+                            android:paddingStart="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="5dp"
+                            android:text="....."
+                            android:textColor="@color/ink_denim"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Lock overlay -->
                 <LinearLayout
                     android:id="@+id/quizLockOverlay"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_quiz_locked_overlay"
+                    android:elevation="6dp"
+                    android:background="@drawable/bg_lock_pattern"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="18dp"
@@ -529,58 +658,45 @@
                     android:visibility="visible">
 
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:background="@drawable/bg_quiz_lock_badge"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="Naka-lock"
                         android:src="@drawable/ic_lock_small"
-                        android:padding="7dp"
-                        android:contentDescription="Naka-lock" />
+                        app:tint="#8A7B54" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
+                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:fontFamily="@font/lexend"
+                        android:fontFamily="@font/quicksand_medium"
                         android:text="Tapusin muna ang lecture para magbukas"
-                        android:textColor="#475467"
+                        android:textColor="#5B5748"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/quizCompletedBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="top|end"
-                    android:layout_margin="10dp"
-                    android:background="@drawable/bg_completed_badge"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="6dp"
-                    android:paddingTop="4dp"
-                    android:paddingEnd="9dp"
-                    android:paddingBottom="4dp"
+                    android:layout_margin="8dp"
+                    android:background="@drawable/bg_stamp_badge_1"
+                    android:gravity="center"
+                    android:rotation="-12"
                     android:visibility="gone">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:background="@drawable/bg_check_badge"
-                        android:contentDescription="Nakumpleto"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_check" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:text="Tapos na"
-                        android:textColor="#085041"
-                        android:textSize="11sp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="TAPOS"
+                        android:textColor="@color/stamp_green"
+                        android:textSize="8sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

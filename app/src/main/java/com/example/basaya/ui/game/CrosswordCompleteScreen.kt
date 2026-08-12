@@ -15,15 +15,21 @@ import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.database.AppDatabase
 import kotlinx.coroutines.launch
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 
 class CrosswordCompleteScreen : AppCompatActivity() {
     private lateinit var btnNext: Button
     private lateinit var lessonId: String
+    private lateinit var tvLessonTitle: TextView
+    private lateinit var tvLevel: TextView
 
     private val db by lazy {
         AppDatabase.getDatabase(this)
     }
+
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +57,14 @@ class CrosswordCompleteScreen : AppCompatActivity() {
 
         lifecycleScope.launch {
 
+            val lessonDocument = firestore
+                .collection("lessons")
+                .document(lessonId)
+                .get()
+                .await()
+
+            title.text = lessonDocument.getString("title") ?: "BaSaya"
+
             val levels = db.crosswordLevelDao().getLevelsForLesson(lessonId)
             val progress = db.crosswordProgressDao().getProgress(lessonId)
 
@@ -61,8 +75,12 @@ class CrosswordCompleteScreen : AppCompatActivity() {
 
             progressText.text = "$currentLevel / $allLevels"
 
+            tvLevel.text = currentLevel.toString()
+
             progressBar.max = allLevels
             progressBar.progress = currentLevel
+
+
 
             if (currentLevel < allLevels) {
 

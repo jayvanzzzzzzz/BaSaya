@@ -17,7 +17,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.repository.ActivityRepository
-import com.example.basaya.model.PracticeActivityData
+import com.example.basaya.data.model.PracticeActivityData
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
@@ -82,8 +82,15 @@ class PracticeActivity : AppCompatActivity() {
 
         activityRepository = ActivityRepository(this)
 
+        activityRepository = ActivityRepository(this)
+
         lifecycleScope.launch {
+            val t0 = System.currentTimeMillis()
+            Log.d("PerfCheck", "Starting getActivity()")
+
             val fetched = activityRepository.getActivity(lessonId)
+
+            Log.d("PerfCheck", "getActivity() returned after ${System.currentTimeMillis() - t0}ms")
 
             if (fetched == null || fetched.pages.isEmpty()) {
                 Toast.makeText(this@PracticeActivity, "Activity not found.", Toast.LENGTH_SHORT).show()
@@ -97,6 +104,7 @@ class PracticeActivity : AppCompatActivity() {
 
             setupProgressTrack()
             showPage(currentPageIndex)
+            Log.d("PerfCheck", "UI fully rendered at ${System.currentTimeMillis() - t0}ms")
 
             btnAction.setOnClickListener {
                 if (!hasChecked) {
@@ -267,4 +275,5 @@ class PracticeActivity : AppCompatActivity() {
             finish()
         }
     }
+
 }

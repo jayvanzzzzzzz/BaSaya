@@ -24,7 +24,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.repository.LectureRepository
-import com.example.basaya.model.Lecture
+import com.example.basaya.data.model.Lecture
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback

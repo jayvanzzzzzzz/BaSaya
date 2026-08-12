@@ -1,4 +1,4 @@
-package com.example.basaya.model
+package com.example.basaya.data.model
 
 import com.google.firebase.Timestamp
 

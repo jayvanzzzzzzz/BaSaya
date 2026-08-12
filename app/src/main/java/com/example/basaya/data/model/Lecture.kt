@@ -1,6 +1,4 @@
-package com.example.basaya.model
-
-import com.example.basaya.model.LecturePage
+package com.example.basaya.data.model
 
 data class Lecture (
     val id: String,

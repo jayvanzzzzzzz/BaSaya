@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -26,6 +27,15 @@ import com.example.basaya.data.repository.LessonRepository
 import com.example.basaya.ui.DashboardActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import com.google.android.material.button.MaterialButton
+
 
 class HomeFragment : Fragment() {
 
@@ -68,15 +78,39 @@ class HomeFragment : Fragment() {
                 }
         }
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerLessons)
-        var adapter = LessonAdapter(emptyList()) { lesson ->
-            if (isAdded && !requireActivity().isFinishing) {
-                val intent = Intent(requireContext(), DashboardActivity::class.java).apply {
-                    putExtra("LESSON_ID", lesson.id)
+        // Launches the actual download work; shared by both adapter instances below
+        // so the pre-fetch adapter (empty list) and the post-fetch adapter stay in sync.
+        val handleDownloadClick: (LessonEntity, (Boolean) -> Unit) -> Unit = { lesson, onResult ->
+            lifecycleScope.launch {
+                val repo = LessonRepository(requireContext())
+                val success = repo.downloadLesson(lesson.id)
+
+                if (isAdded && !success) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Hindi na-download. Siguraduhing may internet at subukan muli.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }else{
+                    Toast.makeText(
+                        requireContext(),
+                        "Matagumpay na na-download ang aralin.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-                startActivity(intent)
+
+                onResult(success)
             }
         }
+
+        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerLessons)
+        var adapter = LessonAdapter(
+            emptyList(),
+            onItemClick = { lesson ->
+                openLessonIfAvailable(lesson)
+            },
+            onDownloadClick = handleDownloadClick
+        )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -120,14 +154,13 @@ class HomeFragment : Fragment() {
                     recyclerView.visibility = View.VISIBLE
                     tvEmptyLessons.visibility = View.GONE
 
-                    adapter = LessonAdapter(lessons) { lesson ->
-                        if (isAdded && !requireActivity().isFinishing) {
-                            val intent = Intent(requireContext(), DashboardActivity::class.java).apply {
-                                putExtra("LESSON_ID", lesson.id)
-                            }
-                            startActivity(intent)
-                        }
-                    }
+                    adapter = LessonAdapter(
+                        lessons,
+                        onItemClick = { lesson ->
+                            openLessonIfAvailable(lesson)
+                        },
+                        onDownloadClick = handleDownloadClick
+                    )
                     recyclerView.adapter = adapter
                 }
 
@@ -239,6 +272,60 @@ class HomeFragment : Fragment() {
             }
         }
         btnRefresh.isEnabled = true
+    }
+
+    private fun hasInternetConnection(): Boolean {
+        val connectivityManager =
+            requireContext().getSystemService(Context.CONNECTIVITY_SERVICE)
+                    as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    private fun openLessonIfAvailable(lesson: LessonEntity) {
+        if (!isAdded || requireActivity().isFinishing) return
+
+        if (lesson.isDownloaded || hasInternetConnection()) {
+            startActivity(
+                Intent(requireContext(), DashboardActivity::class.java).apply {
+                    putExtra("LESSON_ID", lesson.id)
+                }
+            )
+        } else {
+            showOfflineLessonDialog(lesson)
+        }
+    }
+
+    private fun showOfflineLessonDialog(lesson: LessonEntity) {
+        val dialog = Dialog(requireContext())
+        val dialogView = layoutInflater.inflate(R.layout.dialog_offline_lesson, null)
+
+        dialog.setContentView(dialogView)
+
+        dialogView.findViewById<TextView>(R.id.tvOfflineMessage).text =
+            "Hindi pa na-download ang “${lesson.title}”. Kumonekta sa internet at pindutin ang Download."
+
+        dialogView.findViewById<MaterialButton>(R.id.btnOfflineOkay)
+            .setOnClickListener { dialog.dismiss() }
+
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout(
+                (resources.displayMetrics.widthPixels * 0.88).toInt(),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        dialog.show()
+
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     override fun onDestroyView() {

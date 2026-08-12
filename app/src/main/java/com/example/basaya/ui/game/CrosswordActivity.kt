@@ -29,7 +29,7 @@ import com.example.basaya.R
 import com.example.basaya.data.entity.CrosswordProgress
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.repository.CrosswordRepository
-import com.example.basaya.model.CrosswordGameLevel
+import com.example.basaya.data.model.CrosswordGameLevel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -81,15 +81,19 @@ class CrosswordActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val repo = CrosswordRepository(this@CrosswordActivity)
 
-            val localLevels = db.crosswordLevelDao().getLevelsForLesson(lessonId)
+            // Room-only read first — this lesson may already be downloaded.
+            allGameLevels = repo.getLevels(lessonId)
 
-            if (localLevels.isEmpty()) {
-                repo.syncLevels(lessonId)
+            if (allGameLevels.isEmpty()) {
+                // Not downloaded yet — fetch directly from Firestore for THIS
+                // session only. Does not write to Room; only the Download
+                // button (LessonRepository.downloadLesson -> syncLevels) does.
+                allGameLevels = repo.fetchLevelsRemote(lessonId)
             }
 
+            // Student's own progress state (not lesson content) — still fine
+            // to persist locally regardless of download status.
             repo.syncProgress(lessonId)
-
-            allGameLevels = repo.getLevels(lessonId)
 
             if (allGameLevels.isEmpty()) {
                 Log.e("CrosswordActivity", "No game levels found for lessonId=$lessonId — check Firestore 'game' subcollection")
@@ -248,6 +252,8 @@ class CrosswordActivity : AppCompatActivity() {
         //touch controls
         container.setOnTouchListener { _, event ->
 
+            if (!::lineView.isInitialized) return@setOnTouchListener false
+
             val touchX = event.x
             val touchY = event.y
 
@@ -268,6 +274,8 @@ class CrosswordActivity : AppCompatActivity() {
                         val centerY = touchLetter.y + touchLetter.height / 2f
 
                         lineView.selectedPoints.add(centerX to centerY)
+                        lineView.fingerX = touchX
+                        lineView.fingerY = touchY
                         lineView.invalidate()
 
                         touchLetter.isSelected = true

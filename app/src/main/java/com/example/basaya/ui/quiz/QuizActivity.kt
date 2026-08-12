@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.repository.QuizRepository
-import com.example.basaya.model.Quiz
+import com.example.basaya.data.model.Quiz
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch

@@ -6,15 +6,16 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "lessons")
 data class LessonEntity(
     @PrimaryKey
-    val id: String,         // Firestore document ID
-    val userId: String,     // which user this cached lesson belongs to
+    val id: String,
+    val userId: String,
     val title: String,
     val description: String,
     val difficulty: String,
     val order: Int,
-    val unlocked: Boolean,  // whether this user can access the lesson yet
+    val unlocked: Boolean,
     val lectureFinished: Boolean = false,
     val gameFinished: Boolean = false,
     val activityFinished: Boolean = false,
-    val quizFinished: Boolean = false
+    val quizFinished: Boolean = false,
+    val isDownloaded: Boolean
 )

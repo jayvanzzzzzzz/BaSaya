@@ -4,7 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -20,12 +22,15 @@ import com.example.basaya.R
 import com.example.basaya.data.cache.CompletionStateCache
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.ui.activity.PracticeActivity
+import com.example.basaya.ui.pronunciation.PronunciationActivity
 import com.example.basaya.ui.game.CrosswordActivity
 import com.example.basaya.ui.quiz.QuizActivity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.basaya.data.cache.ContentCountsCache
+import com.example.basaya.data.database.AppDatabase
+import android.app.Activity
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -33,16 +38,19 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var lectureCard: CardView
     private lateinit var quizCard: CardView
     private lateinit var activityCard: CardView
+    private lateinit var pronunciationCard: CardView
     private lateinit var quizLockOverlay: LinearLayout
 
     private var gameIsFinished = false
     private var activityIsFinished = false
     private var quizIsFinished = false
     private var lectureFinished = false
+    private var pronunciationIsFinished = false
 
     private var hasGameScore = false
     private var hasActivityScore = false
     private var hasQuizScore = false
+    private var hasPronunciationScore = false
 
     private lateinit var lectureRepository: LectureRepository
     private lateinit var lessonId: String
@@ -51,6 +59,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var tvGameCount: TextView
     private lateinit var tvActivityCount: TextView
     private lateinit var tvQuizCount: TextView
+    private lateinit var tvPronunciationCount: TextView
 
     private lateinit var tvLessonTitle: TextView
     private lateinit var tvLessonDescription: TextView
@@ -59,11 +68,14 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var gameCompletedBadge: LinearLayout
     private lateinit var activityCompletedBadge: LinearLayout
     private lateinit var quizCompletedBadge: LinearLayout
+    private lateinit var pronunciationCompletedBadge: LinearLayout
 
     private lateinit var countsCache: ContentCountsCache
     private lateinit var completionCache: CompletionStateCache
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
+
+    private val db by lazy { AppDatabase.getDatabase(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,18 +99,20 @@ class DashboardActivity : AppCompatActivity() {
         lectureCard = findViewById(R.id.lectureCard)
         quizCard = findViewById(R.id.quizCard)
         activityCard = findViewById(R.id.activityCard)
+        pronunciationCard = findViewById(R.id.pronunciationCard)
         quizLockOverlay = findViewById(R.id.quizLockOverlay)
 
         lectureCompletedBadge = findViewById(R.id.lectureCompletedBadge)
         gameCompletedBadge = findViewById(R.id.gameCompletedBadge)
         activityCompletedBadge = findViewById(R.id.activityCompletedBadge)
         quizCompletedBadge = findViewById(R.id.quizCompletedBadge)
+        pronunciationCompletedBadge = findViewById(R.id.pronunciationCompletedBadge)
 
         tvLectureCount = findViewById(R.id.tvLectureCount)
         tvGameCount = findViewById(R.id.tvGameCount)
         tvActivityCount = findViewById(R.id.tvActivityCount)
         tvQuizCount = findViewById(R.id.tvQuizCount)
-
+        tvPronunciationCount = findViewById(R.id.tvPronunciationCount)
 
         lectureRepository = LectureRepository(this)
 
@@ -135,10 +149,7 @@ class DashboardActivity : AppCompatActivity() {
                     .setPositiveButton("OK", null)
                     .show()
             } else {
-                val intent = Intent(this@DashboardActivity, CrosswordActivity::class.java).apply {
-                    putExtra("LESSON_ID", lessonId)
-                }
-                startActivity(intent)
+                openContentIfAvailable(CrosswordActivity::class.java)
             }
         }
 
@@ -148,35 +159,12 @@ class DashboardActivity : AppCompatActivity() {
                     .setTitle("Aralin na Nakumpleto")
                     .setMessage("Nakumpleto mo na ang araling ito. Maaari mo pa rin itong basahin muli anumang oras.")
                     .setPositiveButton("Basahin Muli") { _, _ ->
-                        val intent = Intent(this, LectureActivity::class.java).apply {
-                            putExtra("LESSON_ID", lessonId)
-                        }
-                        startActivity(intent)
+                        openContentIfAvailable(LectureActivity::class.java)
                     }
                     .setNegativeButton("Isara", null)
                     .show()
             } else {
-                val intent = Intent(this, LectureActivity::class.java).apply {
-                    putExtra("LESSON_ID", lessonId)
-                }
-                startActivity(intent)
-            }
-        }
-
-        // quiz starts locked
-        quizCard.isClickable = false
-        quizCard.setOnClickListener {
-            if (quizIsFinished) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Pagsusulit na Nakumpleto")
-                    .setMessage("Natapos mo na ang pagsusulit. Hindi na ito maaaring ulitin.")
-                    .setPositiveButton("OK", null)
-                    .show()
-            } else {
-                val intent = Intent(this@DashboardActivity, QuizActivity::class.java).apply {
-                    putExtra("LESSON_ID", lessonId)
-                }
-                startActivity(intent)
+                openContentIfAvailable(LectureActivity::class.java)
             }
         }
 
@@ -188,10 +176,31 @@ class DashboardActivity : AppCompatActivity() {
                     .setPositiveButton("OK", null)
                     .show()
             } else {
-                val intent = Intent(this@DashboardActivity, PracticeActivity::class.java).apply {
-                    putExtra("LESSON_ID", lessonId)
-                }
-                startActivity(intent)
+                openContentIfAvailable(PracticeActivity::class.java)
+            }
+        }
+
+        quizCard.setOnClickListener {
+            if (quizIsFinished) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Pagsusulit na Nakumpleto")
+                    .setMessage("Natapos mo na ang pagsusulit. Hindi na ito maaaring ulitin.")
+                    .setPositiveButton("OK", null)
+                    .show()
+            } else {
+                openContentIfAvailable(QuizActivity::class.java)
+            }
+        }
+
+        pronunciationCard.setOnClickListener {
+            if (pronunciationIsFinished) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Bigkas na Nakumpleto")
+                    .setMessage("Nakumpleto mo na ang bigkas na ito. Hindi na ito maaaring ulitin.")
+                    .setPositiveButton("OK", null)
+                    .show()
+            } else {
+                openContentIfAvailable(PronunciationActivity::class.java)
             }
         }
     }
@@ -254,6 +263,14 @@ class DashboardActivity : AppCompatActivity() {
             quizCompletedBadge.visibility = if (cached.quizFinished) View.VISIBLE else View.GONE
             quizCard.alpha = if (cached.quizFinished) 0.85f else 1f
             if (cached.quizFinished) quizLockOverlay.visibility = View.GONE
+
+            pronunciationIsFinished = cached.pronunciationFinished
+            if (cached.pronunciationScore != null && cached.pronunciationTotal != null) {
+                tvPronunciationCount.text = "Salita • ${cached.pronunciationScore}/${cached.pronunciationTotal}"
+                hasPronunciationScore = true
+            }
+            pronunciationCompletedBadge.visibility = if (cached.pronunciationFinished) View.VISIBLE else View.GONE
+            pronunciationCard.alpha = if (cached.pronunciationFinished) 0.85f else 1f
         }
 
         lifecycleScope.launch {
@@ -290,7 +307,7 @@ class DashboardActivity : AppCompatActivity() {
                     gameCard.alpha = 1f
                 }
 
-                // Activity: score shows as soon as it exists; lock only depends on finished
+                // Activity score shows as soon as it exists; lock only depends on finished
                 val activityFinished = doc.getBoolean("activityFinished") ?: false
                 activityIsFinished = activityFinished
 
@@ -310,7 +327,7 @@ class DashboardActivity : AppCompatActivity() {
                     activityCard.alpha = 1f
                 }
 
-                // Quiz: score shows as soon as it exists; lock only depends on finished
+                // Quiz score shows as soon as it exists; lock only depends on finished
                 val quizFinished = doc.getBoolean("quizFinished") ?: false
                 quizIsFinished = quizFinished
 
@@ -331,6 +348,26 @@ class DashboardActivity : AppCompatActivity() {
                     quizCard.alpha = 1f
                 }
 
+                // score shows as soon as it exists; lock only depends on finished
+                val pronunciationFinished = doc.getBoolean("pronunciationFinished") ?: false
+                pronunciationIsFinished = pronunciationFinished
+
+                val pronunciationScore = doc.getLong("pronunciationScore")
+                val pronunciationTotal = doc.getLong("pronunciationTotal")
+
+                if (pronunciationScore != null && pronunciationTotal != null) {
+                    tvPronunciationCount.text = "Salita • $pronunciationScore/$pronunciationTotal"
+                    hasPronunciationScore = true
+                }
+
+                if (pronunciationFinished) {
+                    pronunciationCompletedBadge.visibility = View.VISIBLE
+                    pronunciationCard.alpha = 0.85f
+                } else {
+                    pronunciationCompletedBadge.visibility = View.GONE
+                    pronunciationCard.alpha = 1f
+                }
+
                 completionCache.save(
                     lessonId,
                     CompletionStateCache.State(
@@ -343,7 +380,10 @@ class DashboardActivity : AppCompatActivity() {
                         activityTotal = activityTotal,
                         quizFinished = quizIsFinished,
                         quizScore = quizScore,
-                        quizTotal = quizTotal
+                        quizTotal = quizTotal,
+                        pronunciationFinished = pronunciationIsFinished,
+                        pronunciationScore = pronunciationScore,
+                        pronunciationTotal = pronunciationTotal
                     )
                 )
 
@@ -361,6 +401,7 @@ class DashboardActivity : AppCompatActivity() {
             if (!hasGameScore) tvGameCount.text = "0/${cached.gameLevels} levels"
             if (!hasActivityScore) tvActivityCount.text = "0/${cached.activityPages} pages"
             if (!hasQuizScore) tvQuizCount.text = "0/${cached.quizQuestions} questions"
+            if (!hasPronunciationScore) tvPronunciationCount.text = "0/${cached.pronunciationWordCount} salita"
         }
 
         lifecycleScope.launch {
@@ -402,10 +443,21 @@ class DashboardActivity : AppCompatActivity() {
 
                 val quizDoc = quizSnapshot.documents.first()
 
+                val pronunciationSnapshot = firestore
+                    .collection("lessons")
+                    .document(lessonId)
+                    .collection("pronunciation")
+                    .limit(1)
+                    .get()
+                    .await()
+
+                val pronunciationDoc = pronunciationSnapshot.documents.first()
+
                 val lecturePages = (lectureDoc.get("pages") as? List<*>)?.size ?: 0
                 val gameLevels = gameSnapshot.documents.size
                 val activityPages = (activityDoc.get("pages") as? List<*>)?.size ?: 0
                 val quizQuestions = (quizDoc.get("questions") as? List<*>)?.size ?: 0
+                val pronunciationWordCount = (pronunciationDoc.get("words") as? List<*>)?.size ?: 0
 
                 tvLectureCount.text = "$lecturePages pages"
 
@@ -418,6 +470,9 @@ class DashboardActivity : AppCompatActivity() {
                 if (!hasQuizScore) {
                     tvQuizCount.text = "0/$quizQuestions questions"
                 }
+                if (!hasPronunciationScore) {
+                    tvPronunciationCount.text = "0/$pronunciationWordCount salita"
+                }
 
                 // Successful fetch — refresh the cache for next time we're offline
                 countsCache.save(
@@ -426,7 +481,8 @@ class DashboardActivity : AppCompatActivity() {
                         lecturePages = lecturePages,
                         gameLevels = gameLevels,
                         activityPages = activityPages,
-                        quizQuestions = quizQuestions
+                        quizQuestions = quizQuestions,
+                        pronunciationWordCount = pronunciationWordCount
                     )
                 )
 
@@ -436,7 +492,40 @@ class DashboardActivity : AppCompatActivity() {
                     if (!hasGameScore) tvGameCount.text = "0/0 levels"
                     if (!hasActivityScore) tvActivityCount.text = "0/0 pages"
                     if (!hasQuizScore) tvQuizCount.text = "0/0 questions"
+                    if (!hasPronunciationScore) tvPronunciationCount.text = "0/0 salita"
                 }
+            }
+        }
+    }
+
+    private fun hasInternetConnection(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun openContentIfAvailable(destination: Class<out Activity>) {
+        lifecycleScope.launch {
+            val isDownloaded = db.lessonDao()
+                .isLessonDownloaded(lessonId) ?: false
+
+            if (isDownloaded || hasInternetConnection()) {
+                startActivity(
+                    Intent(this@DashboardActivity, destination).apply {
+                        putExtra("LESSON_ID", lessonId)
+                    }
+                )
+            } else {
+                MaterialAlertDialogBuilder(this@DashboardActivity)
+                    .setTitle("Walang Internet Connection")
+                    .setMessage("Walang internet at hindi pa na-download ang aralin na ito.")
+                    .setPositiveButton("OK", null)
+                    .show()
             }
         }
     }

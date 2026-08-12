@@ -1,4 +1,4 @@
-package com.example.basaya.model
+package com.example.basaya.data.model
 
 data class Activity(
     val type: String,

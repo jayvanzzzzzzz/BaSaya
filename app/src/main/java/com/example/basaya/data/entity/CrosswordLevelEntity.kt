@@ -6,9 +6,9 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "crossword_levels")
 data class CrosswordLevelEntity(
     @PrimaryKey
-    val id: String,         // Firestore document ID
-    val lessonId: String,   // foreign key to lessons
+    val id: String,
+    val lessonId: String,
     val level: Int,
-    val words: String,      // comma-separated e.g. "LAMESA,SALA,LASA"
+    val words: String,
     val order: Int
 )

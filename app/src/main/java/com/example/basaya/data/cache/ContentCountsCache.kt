@@ -10,7 +10,8 @@ class ContentCountsCache(context: Context) {
         val lecturePages: Int,
         val gameLevels: Int,
         val activityPages: Int,
-        val quizQuestions: Int
+        val quizQuestions: Int,
+        val pronunciationWordCount: Int
     )
 
     fun save(lessonId: String, counts: Counts) {
@@ -19,6 +20,7 @@ class ContentCountsCache(context: Context) {
             .putInt("${lessonId}_gameLevels", counts.gameLevels)
             .putInt("${lessonId}_activityPages", counts.activityPages)
             .putInt("${lessonId}_quizQuestions", counts.quizQuestions)
+            .putInt("${lessonId}_pronunciationWordCount", counts.pronunciationWordCount)
             .apply()
     }
 
@@ -29,7 +31,8 @@ class ContentCountsCache(context: Context) {
             lecturePages = prefs.getInt("${lessonId}_lecturePages", 0),
             gameLevels = prefs.getInt("${lessonId}_gameLevels", 0),
             activityPages = prefs.getInt("${lessonId}_activityPages", 0),
-            quizQuestions = prefs.getInt("${lessonId}_quizQuestions", 0)
+            quizQuestions = prefs.getInt("${lessonId}_quizQuestions", 0),
+            pronunciationWordCount = prefs.getInt("${lessonId}_pronunciationWordCount", 0)
         )
     }
 }

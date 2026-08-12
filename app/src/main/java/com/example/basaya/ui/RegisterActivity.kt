@@ -24,7 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.repository.UserRepository
-import com.example.basaya.model.User
+import com.example.basaya.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.util.Calendar

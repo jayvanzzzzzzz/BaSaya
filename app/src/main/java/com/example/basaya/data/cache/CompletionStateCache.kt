@@ -16,7 +16,10 @@ class CompletionStateCache(context: Context) {
         val activityTotal: Long?,
         val quizFinished: Boolean,
         val quizScore: Long?,
-        val quizTotal: Long?
+        val quizTotal: Long?,
+        val pronunciationFinished: Boolean,
+        val pronunciationScore: Long?,
+        val pronunciationTotal: Long?
     )
 
     fun save(lessonId: String, state: State) {
@@ -31,6 +34,9 @@ class CompletionStateCache(context: Context) {
             .putBoolean("${lessonId}_quizFinished", state.quizFinished)
             .putLong("${lessonId}_quizScore", state.quizScore ?: -1)
             .putLong("${lessonId}_quizTotal", state.quizTotal ?: -1)
+            .putBoolean("${lessonId}_pronunciationFinished", state.pronunciationFinished)
+            .putLong("${lessonId}_pronunciationScore", state.pronunciationScore ?: -1)
+            .putLong("${lessonId}_pronunciationTotal", state.pronunciationTotal ?: -1)
             .apply()
     }
 
@@ -41,6 +47,8 @@ class CompletionStateCache(context: Context) {
         val activityTotal = prefs.getLong("${lessonId}_activityTotal", -1).takeIf { it >= 0 }
         val quizScore = prefs.getLong("${lessonId}_quizScore", -1).takeIf { it >= 0 }
         val quizTotal = prefs.getLong("${lessonId}_quizTotal", -1).takeIf { it >= 0 }
+        val pronunciationScore = prefs.getLong("${lessonId}_pronunciationScore", -1).takeIf { it >= 0 }
+        val pronunciationTotal = prefs.getLong("${lessonId}_pronunciationTotal", -1).takeIf { it >= 0 }
 
         return State(
             lectureFinished = prefs.getBoolean("${lessonId}_lectureFinished", false),
@@ -52,7 +60,10 @@ class CompletionStateCache(context: Context) {
             activityTotal = activityTotal,
             quizFinished = prefs.getBoolean("${lessonId}_quizFinished", false),
             quizScore = quizScore,
-            quizTotal = quizTotal
+            quizTotal = quizTotal,
+            pronunciationFinished = prefs.getBoolean("${lessonId}_pronunciationFinished", false),
+            pronunciationScore = pronunciationScore,
+            pronunciationTotal = pronunciationTotal
         )
     }
 }

@@ -17,4 +17,24 @@
     <color name="nav_card_bg">#FFFFFF</color>
     <color name="nav_indicator_bg">#1A5B4FE8</color>
     <color name="nav_item_color_active">@color/main_blue</color>
+    <color name="heart_red">#E63950</color>
+    <color name="desk_background">#F4EFE6</color>
+    <color name="card_paper_white">#FFFDF8</color>
+    <color name="text_on_tape">#3A3A3A</color>
+    <color name="text_on_sticky">#2F2F2F</color>
+    <color name="primary_purple">#5B4CF4</color>
+    <color name="paper_bg">#F7F5EE</color>
+    <color name="card_paper">#FFFFFF</color>
+    <color name="ink_indigo">#5C6BC0</color>
+    <color name="ink_forest">#4A8C6F</color>
+    <color name="ink_rust">#C97B5A</color>
+    <color name="ink_maroon">#A8576E</color>
+    <color name="ink_denim">#5B7BA0</color>
+    <color name="ink_muted_text">#7D7568</color>
+    <color name="stamp_green">#4CAF50</color>
+
+    <color name="dialog_paper">#FFFDF7</color>
+    <color name="dialog_ink">#25231D</color>
+    <color name="dialog_muted">#6B675C</color>
+    <color name="dialog_action">#315EAE</color>
 </resources>

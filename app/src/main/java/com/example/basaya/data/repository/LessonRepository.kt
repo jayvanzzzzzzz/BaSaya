@@ -45,6 +45,13 @@ class LessonRepository(private val context: Context) {
         //fetch only those lesson documents
         val lessons = mutableListOf<LessonEntity>()
 
+        // preserve isDownloaded flags already stored locally, since a fresh
+        // Firestore sync would otherwise wipe out download state every refresh
+        val existingDownloadedIds = db.lessonDao().getLessonsForUser(userId)
+            .filter { it.isDownloaded }
+            .map { it.id }
+            .toSet()
+
         lessonIds.chunked(30).forEach { chunk ->
             val lessonsSnapshot = firestore
                 .collection("lessons")
@@ -67,7 +74,8 @@ class LessonRepository(private val context: Context) {
                         lectureFinished = info?.lectureFinished ?: false,
                         gameFinished = info?.gameFinished ?: false,
                         activityFinished = info?.activityFinished ?: false,
-                        quizFinished = info?.quizFinished ?: false
+                        quizFinished = info?.quizFinished ?: false,
+                        isDownloaded = existingDownloadedIds.contains(doc.id)
                     )
                 )
             }
@@ -77,9 +85,35 @@ class LessonRepository(private val context: Context) {
         db.lessonDao().insertAll(lessons)
     }
 
-
-
     suspend fun getLessons(userId: String): List<LessonEntity> {
         return db.lessonDao().getLessonsForUser(userId)
+    }
+
+    /**
+     * Pre-warms Room's cache for all four content types of a lesson
+     * (Lecture, Game/Crossword, Activity, Quiz) so they load instantly
+     * offline afterward. This is now the ONLY path that writes lesson
+     * content to Room — opening Lecture/Crossword/Activity/Quiz directly
+     * no longer caches as a side effect.
+     * Returns true only if every content type synced successfully.
+     */
+    suspend fun downloadLesson(lessonId: String): Boolean {
+        return try {
+            val lectureRepo = LectureRepository(context)
+            val crosswordRepo = CrosswordRepository(context)
+            val activityRepo = ActivityRepository(context)
+            val quizRepo = QuizRepository(context)
+
+            lectureRepo.downloadLecture(lessonId)
+            crosswordRepo.syncLevels(lessonId)
+            crosswordRepo.syncProgress(lessonId)
+            activityRepo.downloadActivity(lessonId)
+            quizRepo.downloadQuiz(lessonId)
+
+            db.lessonDao().updateDownloaded(lessonId, true)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 }

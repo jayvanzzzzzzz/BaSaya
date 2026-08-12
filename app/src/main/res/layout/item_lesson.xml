@@ -159,6 +159,45 @@
                     android:textSize="11sp" />
 
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Text reflects current download state: "I-download" / "Dina-download..." / "Na-download na" -->
+                <TextView
+                    android:id="@+id/tvCheckDownload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="I-download"
+                    android:textColor="#667085"
+                    android:fontFamily="@font/public_sans"
+                    android:gravity="center_vertical" />
+
+                <!-- Shown when not downloading: ic_download (not downloaded) or ic_check_download (downloaded) -->
+                <ImageButton
+                    android:id="@+id/ibDownload"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="2dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="btn"
+                    android:src="@drawable/ic_download" />
+
+                <!-- Shown only while a download is in progress -->
+                <ProgressBar
+                    android:id="@+id/pbDownload"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="4dp"
+                    android:indeterminateTint="#4A90E2"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

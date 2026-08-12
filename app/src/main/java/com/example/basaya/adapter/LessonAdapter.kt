@@ -6,6 +6,7 @@ import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -15,7 +16,8 @@ import com.example.basaya.data.entity.LessonEntity
 
 class LessonAdapter(
     private var lessonList: List<LessonEntity>,
-    private val onItemClick: (LessonEntity) -> Unit
+    private val onItemClick: (LessonEntity) -> Unit,
+    private val onDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit
 ) : RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
 
     private val lessonImages = intArrayOf(
@@ -25,6 +27,10 @@ class LessonAdapter(
     )
 
     private var highlightQuery: String = ""
+
+    // Tracks which lessonIds currently have a download in flight, so the
+    // spinner survives view recycling and re-binds correctly.
+    private val downloadingIds = mutableSetOf<String>()
 
     inner class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -36,6 +42,9 @@ class LessonAdapter(
         private val ivLessonImage: ImageView = itemView.findViewById(R.id.ivLessonImage)
         private val progressLesson: ProgressBar = itemView.findViewById(R.id.progressLesson)
         private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
+        private val tvCheckDownload: TextView = itemView.findViewById(R.id.tvCheckDownload)
+        private val ibDownload: ImageButton = itemView.findViewById(R.id.ibDownload)
+        private val pbDownload: ProgressBar = itemView.findViewById(R.id.pbDownload)
 
         fun bind(lesson: LessonEntity) {
             tvTitle.text = buildHighlightedTitle(lesson.title, highlightQuery)
@@ -44,7 +53,7 @@ class LessonAdapter(
 
             bindProgressBadge(tvProgress, lesson)
             bindProgressBar(progressLesson, tvProgressPercent, lesson)
-
+            bindDownloadState(lesson)
 
             val imageIndex = Math.floorMod(lesson.id.hashCode(), lessonImages.size)
             ivLessonImage.setImageResource(lessonImages[imageIndex])
@@ -62,6 +71,47 @@ class LessonAdapter(
 
             itemView.setOnClickListener { onItemClick(lesson) }
 
+            ibDownload.setOnClickListener {
+                if (lesson.isDownloaded || downloadingIds.contains(lesson.id)) return@setOnClickListener
+
+                downloadingIds.add(lesson.id)
+                bindDownloadState(lesson)
+
+                onDownloadClick(lesson) { success ->
+                    downloadingIds.remove(lesson.id)
+
+                    if (success) {
+                        markDownloaded(lesson.id)
+                    } else {
+                        // revert to the not-downloaded state so the user can retry
+                        bindDownloadState(lesson)
+                    }
+                }
+            }
+        }
+
+        private fun bindDownloadState(lesson: LessonEntity) {
+            val isDownloading = downloadingIds.contains(lesson.id)
+
+            when {
+                isDownloading -> {
+                    ibDownload.visibility = View.GONE
+                    pbDownload.visibility = View.VISIBLE
+                    tvCheckDownload.text = "Dina-download..."
+                }
+                lesson.isDownloaded -> {
+                    ibDownload.visibility = View.VISIBLE
+                    pbDownload.visibility = View.GONE
+                    ibDownload.setImageResource(R.drawable.ic_check_download)
+                    tvCheckDownload.text = "Na-download na"
+                }
+                else -> {
+                    ibDownload.visibility = View.VISIBLE
+                    pbDownload.visibility = View.GONE
+                    ibDownload.setImageResource(R.drawable.ic_download)
+                    tvCheckDownload.text = "I-download"
+                }
+            }
         }
     }
 
@@ -151,5 +201,16 @@ class LessonAdapter(
         lessonList = newList
         highlightQuery = query
         notifyDataSetChanged()
+    }
+
+    /** Flips a single lesson's isDownloaded flag to true and refreshes just that row. */
+    private fun markDownloaded(lessonId: String) {
+        val index = lessonList.indexOfFirst { it.id == lessonId }
+        if (index == -1) return
+
+        lessonList = lessonList.toMutableList().apply {
+            this[index] = this[index].copy(isDownloaded = true)
+        }
+        notifyItemChanged(index)
     }
 }
