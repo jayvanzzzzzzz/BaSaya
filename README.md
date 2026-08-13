@@ -1,73 +1,180 @@
-System Architecture
+BaSaya is a Filipino learning application designed to help students learn through interactive lessons and activities.
 
-BaSaya runs on a two-client, single-database architecture: a Kotlin Android app for students, and a web-based admin panel (in development) for teachers/administrators to manage lesson content. Both clients read from and write to a shared Firebase backend — there is no intermediary API server; Firebase Authentication and Cloud Firestore serve that role directly.
+The system has two main parts:
 
-Student Login Flow (Android)
-Open App
-   │
-   ▼
+Student Android App — where students access their assigned lessons, lectures, games, activities, and quizzes.
+Admin Web Panel — where teachers and administrators can manage lesson content. (Currently in development.)
+
+Both clients use the same Firebase backend, allowing lesson content and student progress to stay synchronized.
+
+ System Architecture
+
+BaSaya uses a two-client, single-database architecture.
+
+The Android app and web admin panel communicate directly with Firebase. There is currently no separate backend/API server between the clients and Firebase.
+
+             ┌─────────────────────┐
+             │   Student Android   │
+             │        App          │
+             └──────────┬──────────┘
+                        │
+                        │
+                        ▼
+              ┌───────────────────┐
+              │      Firebase     │
+              │                   │
+              │ Authentication    │
+              │ Cloud Firestore   │
+              └─────────┬─────────┘
+                        │
+                        │
+                        ▼
+             ┌─────────────────────┐
+             │    Admin Web Panel  │
+             │   (In Development) │
+             └─────────────────────┘
+
+The Android app also uses Room as a local cache so downloaded lesson content can be accessed offline.
+
+ Student Login
+
+Students sign in using their email and password.
+
+Open BaSaya
+     │
+     ▼
 Enter email + password
-   │
-   ▼
-Firebase Authentication verifies credentials
-   │
-   ▼
-On success → session token issued
-   │
-   ▼
-Redirect to Student Dashboard
-Student App Flow
+     │
+     ▼
+Firebase Authentication
+     │
+     ▼
+Credentials verified
+     │
+     ▼
 Student Dashboard
-   │
-   ▼
-Browse assigned lessons
-   │
-   ▼
-Open a lesson → Lecture / Game / Activity / Quiz
-   │
-   ▼
-Complete content → result written to Firestore
-   │
-   ▼
-Dashboard reflects progress (locked/completed state, scores)
 
-Lecture content can be revisited anytime after completion. Game, Activity, and Quiz content locks once finished, showing the student's final score.
+Firebase Authentication handles the login and maintains the student's authenticated session.
 
-Admin Login Flow (Web)
-Open Admin Web Panel
-   │
-   ▼
-Enter credentials
-   │
-   ▼
-Firebase Authentication verifies credentials
-   │
-   ▼
-Access granted to Admin Dashboard
+Student Learning Flow
 
-(Status: in development. Role-based access — restricting admin login to authorized staff accounts only — is planned via Firestore Security Rules, enforced server-side rather than checked client-side.)
+After logging in, students can see the lessons assigned to them.
 
-Admin Content Management Flow
+Student Dashboard
+       │
+       ▼
+Browse Assigned Lessons
+       │
+       ▼
+Open a Lesson
+       │
+       ├── Lecture
+       ├── Game
+       ├── Activity
+       └── Quiz
+              │
+              ▼
+        Complete Content
+              │
+              ▼
+      Save Result / Progress
+              │
+              ▼
+      Dashboard Updates
+
+Student progress is saved to Firestore, allowing the dashboard to reflect the student's current progress, completed content, scores, and locked/unlocked states.
+
+Content Rules
+Lecture can be revisited even after completion.
+Game, Activity, and Quiz become locked after completion.
+Completed Game, Activity, and Quiz content displays the student's final score.
+Offline Learning
+
+BaSaya supports downloading lessons for offline use.
+
+When a student downloads a lesson, the app preloads its content into the Android app's local Room database.
+
+Download Lesson
+      │
+      ▼
+┌─────────────────────┐
+│ Lecture             │
+│ Game / Crossword    │
+│ Activity            │
+│ Quiz                │
+└──────────┬──────────┘
+           │
+           ▼
+     Room Database
+           │
+           ▼
+    Available Offline
+
+This allows students to access downloaded lesson content even when they don't have an internet connection.
+
+Admin Web Panel
+
+The admin panel is currently in development.
+
+The planned workflow is:
+
+Admin Login
+     │
+     ▼
 Admin Dashboard
-   │
-   ▼
-Create / Edit / Delete lessons, lectures, games, activities, quizzes
-   │
-   ▼
-Changes saved to Firestore
-   │
-   ▼
-Android app syncs updated content automatically
-Data Flow Overview
-        ANDROID APP                    WEB ADMIN PANEL
-     (student lessons,                (lesson & content
-      quizzes, progress)                management)
-            │                                │
-            └──────────────┬─────────────────┘
+     │
+     ├── Create Lessons
+     ├── Edit Lessons
+     ├── Delete Lessons
+     ├── Manage Lectures
+     ├── Manage Games
+     ├── Manage Activities
+     └── Manage Quizzes
+
+Changes made through the admin panel are saved to Firestore, allowing the Android application to synchronize updated lesson content.
+
+Admin access is intended to be restricted to authorized staff through Firestore Security Rules rather than relying only on client-side checks.
+
+ Overall Data Flow
+
+At a high level, the system works like this:
+
+       STUDENT APP                    ADMIN PANEL
+            │                             │
+            │                             │
+            └──────────────┬──────────────┘
+                           │
                            ▼
-                 Firebase Authentication
-                    + Cloud Firestore
-                            │
-                            ▼
-              Room (local offline cache,
-               Android app only)
+                 Firebase Backend
+                 ┌─────────────────┐
+                 │ Authentication  │
+                 │ Cloud Firestore │
+                 └────────┬────────┘
+                          │
+                          ▼
+                    Student Data
+                    & Lesson Data
+                          │
+                          ▼
+                    Room Database
+                  (Android Offline
+                       Cache)
+
+In simple terms: Firebase acts as the shared backend for BaSaya, while Room provides local storage for downloaded content on the Android app.
+
+ Main Technologies
+Student Android App
+Kotlin
+Android
+Firebase Authentication
+Cloud Firestore
+Room Database
+Coroutines
+Admin Web Panel
+Web-based
+Firebase Authentication
+Cloud Firestore
+Currently in development
+ Project Goal
+
+BaSaya aims to provide students with an accessible and interactive way to learn Filipino through a combination of lectures, games, activities, and quizzes, while also giving teachers and administrators a way to manage educational content.
