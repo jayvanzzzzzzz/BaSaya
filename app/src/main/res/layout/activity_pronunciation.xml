@@ -49,7 +49,7 @@
             android:layout_height="14dp"
             android:progressDrawable="@drawable/progress_highlighter_green"
             android:max="100"
-            android:progress="20"
+            android:progress="0"
             app:layout_constraintStart_toEndOf="@id/btnClose"
             app:layout_constraintEnd_toStartOf="@id/livesIndicator"
             app:layout_constraintTop_toTopOf="parent"
@@ -81,7 +81,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:text="5"
+                android:text="..."
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/quicksand_medium"
@@ -150,7 +150,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Kumusta"
+                android:text="..."
                 android:fontFamily="@font/lexend"
                 android:textStyle="bold"
                 android:textSize="28sp"
@@ -173,7 +173,7 @@
                 android:layout_marginTop="12dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvTargetWord"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -258,7 +258,8 @@
             android:background="@drawable/bg_ink_stamp_mic"
             android:src="@drawable/ic_mic"
             android:contentDescription="Record pronunciation"
-            android:padding="20dp" />
+            android:padding="20dp"
+            android:clickable="false"/>
 
         <ProgressBar
             android:id="@+id/micProcessingSpinner"

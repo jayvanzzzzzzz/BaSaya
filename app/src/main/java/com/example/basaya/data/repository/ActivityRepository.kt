@@ -7,36 +7,33 @@ import com.example.basaya.data.model.ActivityPage
 import com.example.basaya.data.model.PracticeActivityData
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.tasks.await
 
 class ActivityRepository(private val context: Context) {
 
+    private val db by lazy { AppDatabase.getDatabase(context) }
     private val firestore = FirebaseFirestore.getInstance()
     private val gson = Gson()
 
-    private val db by lazy { AppDatabase.getDatabase(context) }
-
     /**
-     * Room-first read. If nothing is cached yet, fetches from Firestore
-     * for DISPLAY ONLY — does not write to Room. Caching only happens
-     * via downloadActivity(), called from the Download button flow.
+     * Room-first, Firestore-fallback for DISPLAY purposes only.
+     * The fallback does NOT write to Room — only downloadActivity()
+     * (called from the Download button flow) is allowed to persist locally.
      */
     suspend fun getActivity(lessonId: String): PracticeActivityData? {
-        val cached = db.activityDao().getActivity(lessonId)
+        val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
-        if (cached != null) {
-            return cached.toPracticeActivityData()
+        if (isDownloaded) {
+            return db.activityDao().getActivity(lessonId)?.toPracticeActivityData()
         }
 
         return fetchFromFirestore(lessonId)
     }
 
-    /**
-     * Explicit download: fetches from Firestore and persists to Room.
-     * Only called from the lesson Download button (LessonRepository.downloadLesson).
-     */
+    /** Fetches + caches to Room. Called from the Download button flow. */
     suspend fun downloadActivity(lessonId: String): Boolean {
         val fetched = fetchFromFirestore(lessonId) ?: return false
         db.activityDao().insert(fetched.toEntity(lessonId))
@@ -44,43 +41,47 @@ class ActivityRepository(private val context: Context) {
     }
 
     private suspend fun fetchFromFirestore(lessonId: String): PracticeActivityData? {
-        val snapshot = firestore
-            .collection("lessons")
-            .document(lessonId)
-            .collection("activity")
-            .get()
-            .await()
+        return try {
+            val snapshot = firestore
+                .collection("lessons")
+                .document(lessonId)
+                .collection("activity")
+                .get(Source.SERVER)
+                .await()
 
-        if (snapshot.isEmpty) return null
+            if (snapshot.isEmpty) return null
 
-        val doc = snapshot.documents.first()
-        val title = doc.getString("title") ?: ""
-        val instruction = doc.getString("instruction") ?: ""
-        val explanation = doc.getString("explanation") ?: ""
-
-        @Suppress("UNCHECKED_CAST")
-        val pagesRaw = doc.get("pages") as? List<Map<String, Any>> ?: emptyList()
-
-        val pages = pagesRaw.map { p ->
-            @Suppress("UNCHECKED_CAST")
-            val words = p["words"] as? List<String> ?: emptyList()
+            val doc = snapshot.documents.first()
+            val title = doc.getString("title") ?: ""
+            val instruction = doc.getString("instruction") ?: ""
+            val explanation = doc.getString("explanation") ?: ""
 
             @Suppress("UNCHECKED_CAST")
-            val correctIndices = (p["correctIndices"] as? List<Long>)?.map { it.toInt() } ?: emptyList()
+            val pagesRaw = doc.get("pages") as? List<Map<String, Any>> ?: emptyList()
 
-            ActivityPage(
-                words = words,
-                correctIndices = correctIndices
+            val pages = pagesRaw.map { p ->
+                @Suppress("UNCHECKED_CAST")
+                val words = p["words"] as? List<String> ?: emptyList()
+
+                @Suppress("UNCHECKED_CAST")
+                val correctIndices = (p["correctIndices"] as? List<Long>)?.map { it.toInt() } ?: emptyList()
+
+                ActivityPage(
+                    words = words,
+                    correctIndices = correctIndices
+                )
+            }
+
+            PracticeActivityData(
+                id = doc.id,
+                title = title,
+                instruction = instruction,
+                explanation = explanation,
+                pages = pages
             )
+        } catch (e: Exception) {
+            null // Offline and not downloaded
         }
-
-        return PracticeActivityData(
-            id = doc.id,
-            title = title,
-            instruction = instruction,
-            explanation = explanation,
-            pages = pages
-        )
     }
 
     suspend fun markActivityFinished(userId: String, lessonId: String, score: Int, total: Int) {

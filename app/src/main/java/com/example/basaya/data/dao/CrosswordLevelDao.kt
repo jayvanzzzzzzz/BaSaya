@@ -13,4 +13,7 @@ interface CrosswordLevelDao {
 
     @Query("SELECT * FROM crossword_levels WHERE lessonId = :lessonId ORDER BY `order` ASC")
     suspend fun getLevelsForLesson(lessonId: String): List<CrosswordLevelEntity>
+
+    @Query("DELETE FROM crossword_levels WHERE lessonId = :lessonId")
+    suspend fun deleteByLessonId(lessonId: String)
 }

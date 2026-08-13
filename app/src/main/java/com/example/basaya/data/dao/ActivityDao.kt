@@ -13,4 +13,7 @@ interface ActivityDao {
 
     @Query("SELECT * FROM activities WHERE lessonId = :lessonId")
     suspend fun getActivity(lessonId: String): ActivityEntity?
+
+    @Query("DELETE FROM activities WHERE lessonId = :lessonId")
+    suspend fun deleteByLessonId(lessonId: String)
 }

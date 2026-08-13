@@ -13,4 +13,7 @@ interface LectureDao {
 
     @Query("SELECT * FROM lectures WHERE lessonId = :lessonId")
     suspend fun getLecture(lessonId: String): LectureEntity?
+
+    @Query("DELETE FROM lectures WHERE lessonId = :lessonId")
+    suspend fun deleteByLessonId(lessonId: String)
 }

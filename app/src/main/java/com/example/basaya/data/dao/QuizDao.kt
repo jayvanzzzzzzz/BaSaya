@@ -13,4 +13,7 @@ interface QuizDao {
 
     @Query("SELECT * FROM quizzes WHERE lessonId = :lessonId")
     suspend fun getQuiz(lessonId: String): QuizEntity?
+
+    @Query("DELETE FROM quizzes WHERE lessonId = :lessonId")
+    suspend fun deleteByLessonId(lessonId: String)
 }

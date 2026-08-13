@@ -9,12 +9,14 @@ import com.example.basaya.data.dao.CrosswordLevelDao
 import com.example.basaya.data.dao.CrosswordProgressDao
 import com.example.basaya.data.dao.LectureDao
 import com.example.basaya.data.dao.LessonDao
+import com.example.basaya.data.dao.PronunciationDao
 import com.example.basaya.data.dao.QuizDao
 import com.example.basaya.data.entity.ActivityEntity
 import com.example.basaya.data.entity.CrosswordProgress
 import com.example.basaya.data.entity.LectureEntity
 import com.example.basaya.data.entity.LessonEntity
 import com.example.basaya.data.entity.CrosswordLevelEntity
+import com.example.basaya.data.entity.PronunciationEntity
 import com.example.basaya.data.entity.QuizEntity
 
 @Database(
@@ -24,9 +26,10 @@ import com.example.basaya.data.entity.QuizEntity
         CrosswordLevelEntity::class,
         LectureEntity::class,
         ActivityEntity::class,
-        QuizEntity::class
+        QuizEntity::class,
+        PronunciationEntity::class
     ],
-    version = 8
+    version = 9
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -36,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun lectureDao(): LectureDao
     abstract fun activityDao(): ActivityDao
     abstract fun quizDao(): QuizDao
+    abstract fun pronunciationDao(): PronunciationDao
 
     companion object {
         @Volatile

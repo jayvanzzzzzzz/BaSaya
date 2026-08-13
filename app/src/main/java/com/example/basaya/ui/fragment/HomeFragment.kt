@@ -78,6 +78,23 @@ class HomeFragment : Fragment() {
                 }
         }
 
+        val handleRemoveDownloadClick: (LessonEntity, (Boolean) -> Unit) -> Unit = { lesson, onResult ->
+            lifecycleScope.launch {
+                val repo = LessonRepository(requireContext())
+                val success = repo.removeDownload(lesson.id)
+
+                if (isAdded) {
+                    Toast.makeText(
+                        requireContext(),
+                        if (success) "Naalis ang download." else "Hindi na-alis ang download. Subukan muli.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                onResult(success)
+            }
+        }
+
         // Launches the actual download work; shared by both adapter instances below
         // so the pre-fetch adapter (empty list) and the post-fetch adapter stay in sync.
         val handleDownloadClick: (LessonEntity, (Boolean) -> Unit) -> Unit = { lesson, onResult ->
@@ -109,7 +126,8 @@ class HomeFragment : Fragment() {
             onItemClick = { lesson ->
                 openLessonIfAvailable(lesson)
             },
-            onDownloadClick = handleDownloadClick
+            onDownloadClick = handleDownloadClick,
+            onRemoveDownloadClick = handleRemoveDownloadClick
         )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -159,7 +177,8 @@ class HomeFragment : Fragment() {
                         onItemClick = { lesson ->
                             openLessonIfAvailable(lesson)
                         },
-                        onDownloadClick = handleDownloadClick
+                        onDownloadClick = handleDownloadClick,
+                        onRemoveDownloadClick = handleRemoveDownloadClick
                     )
                     recyclerView.adapter = adapter
                 }

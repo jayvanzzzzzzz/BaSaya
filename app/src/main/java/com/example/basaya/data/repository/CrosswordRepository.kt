@@ -5,28 +5,54 @@ import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.CrosswordLevelEntity
 import com.example.basaya.data.model.CrosswordGameLevel
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import com.example.basaya.data.entity.CrosswordProgress
 import com.google.firebase.auth.FirebaseAuth
 
 class CrosswordRepository(private val context: Context) {
 
-    private val db = AppDatabase.getDatabase(context)
+    private val db by lazy { AppDatabase.getDatabase(context) }
     private val firestore = FirebaseFirestore.getInstance()
+
+    /**
+     * Room-first, Firestore-fallback for DISPLAY purposes only.
+     * The fallback does NOT write to Room — only syncLevels()
+     * (called from the Download button flow) is allowed to persist locally.
+     */
+    suspend fun getLevels(lessonId: String): List<CrosswordGameLevel> {
+        val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
+
+        if (isDownloaded) {
+            return db.crosswordLevelDao().getLevelsForLesson(lessonId)
+                .map { entity ->
+                    CrosswordGameLevel(
+                        id = entity.level,
+                        level = entity.level,
+                        words = entity.words.split(",")
+                    )
+                }
+        }
+
+        return fetchLevelsRemote(lessonId)
+    }
 
     /**
      * Explicit download: fetches from Firestore and persists to Room.
      * Only called from the lesson Download button (LessonRepository.downloadLesson).
      */
     suspend fun syncLevels(lessonId: String) {
-
-        val snapshot = firestore
-            .collection("lessons")
-            .document(lessonId)
-            .collection("game")
-            .orderBy("level")
-            .get()
-            .await()
+        val snapshot = try {
+            firestore
+                .collection("lessons")
+                .document(lessonId)
+                .collection("game")
+                .orderBy("level")
+                .get(Source.SERVER)
+                .await()
+        } catch (e: Exception) {
+            return // Offline — leave whatever's already cached alone
+        }
 
         val levels = snapshot.documents.map { doc ->
             CrosswordLevelEntity(
@@ -41,38 +67,30 @@ class CrosswordRepository(private val context: Context) {
         db.crosswordLevelDao().insertAll(levels)
     }
 
-    /** Room-only read. Returns an empty list if this lesson hasn't been downloaded yet. */
-    suspend fun getLevels(lessonId: String): List<CrosswordGameLevel> {
-        return db.crosswordLevelDao().getLevelsForLesson(lessonId)
-            .map { entity ->
-                CrosswordGameLevel(
-                    id = entity.level,
-                    level = entity.level,
-                    words = entity.words.split(",")
-                )
-            }
-    }
-
     /**
      * Fetches levels directly from Firestore for DISPLAY ONLY — does not
-     * write to Room. Used as a fallback when opening the game online
-     * before it's been downloaded.
+     * write to Room. Used as the fallback inside getLevels() when this
+     * lesson hasn't been downloaded yet.
      */
     suspend fun fetchLevelsRemote(lessonId: String): List<CrosswordGameLevel> {
-        val snapshot = firestore
-            .collection("lessons")
-            .document(lessonId)
-            .collection("game")
-            .orderBy("level")
-            .get()
-            .await()
+        return try {
+            val snapshot = firestore
+                .collection("lessons")
+                .document(lessonId)
+                .collection("game")
+                .orderBy("level")
+                .get(Source.SERVER)
+                .await()
 
-        return snapshot.documents.map { doc ->
-            CrosswordGameLevel(
-                id = doc.getLong("level")?.toInt() ?: 0,
-                level = doc.getLong("level")?.toInt() ?: 0,
-                words = (doc.get("words") as? List<*>)?.map { it.toString() } ?: emptyList()
-            )
+            snapshot.documents.map { doc ->
+                CrosswordGameLevel(
+                    id = doc.getLong("level")?.toInt() ?: 0,
+                    level = doc.getLong("level")?.toInt() ?: 0,
+                    words = (doc.get("words") as? List<*>)?.map { it.toString() } ?: emptyList()
+                )
+            }
+        } catch (e: Exception) {
+            emptyList() // Offline and not downloaded
         }
     }
 
@@ -125,8 +143,7 @@ class CrosswordRepository(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
-            // network failure here is fine — local progress will just stay absent
-            // and get retried next time syncProgress is called with no local row yet
+
         }
     }
 }

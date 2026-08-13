@@ -134,6 +134,9 @@ class PronunciationActivity : AppCompatActivity() {
         pulseRing1 = findViewById(R.id.pulseRing1)
         pulseRing2 = findViewById(R.id.pulseRing2)
         micProcessingSpinner = findViewById(R.id.micProcessingSpinner)
+
+        btnMic.isClickable = false
+        btnSpeaker.isClickable = false
     }
 
     private fun setupClickListeners() {
@@ -186,6 +189,9 @@ class PronunciationActivity : AppCompatActivity() {
         updateLivesDisplay()
         updateProgressBar()
         resultStickyNote.visibility = View.GONE
+
+        btnMic.isClickable = true
+        btnSpeaker.isClickable = true
     }
 
     private fun updateProgressBar() {

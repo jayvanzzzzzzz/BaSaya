@@ -116,4 +116,18 @@ class LessonRepository(private val context: Context) {
             false
         }
     }
+
+    suspend fun removeDownload(lessonId: String): Boolean {
+        return try {
+            db.lectureDao().deleteByLessonId(lessonId)
+            db.activityDao().deleteByLessonId(lessonId)
+            db.quizDao().deleteByLessonId(lessonId)
+            db.crosswordLevelDao().deleteByLessonId(lessonId)
+
+            db.lessonDao().markLessonRemoved(lessonId)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

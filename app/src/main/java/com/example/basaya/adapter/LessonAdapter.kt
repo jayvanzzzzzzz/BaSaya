@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -17,7 +19,8 @@ import com.example.basaya.data.entity.LessonEntity
 class LessonAdapter(
     private var lessonList: List<LessonEntity>,
     private val onItemClick: (LessonEntity) -> Unit,
-    private val onDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit
+    private val onDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit,
+    private val onRemoveDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit
 ) : RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
 
     private val lessonImages = intArrayOf(
@@ -32,6 +35,10 @@ class LessonAdapter(
     // spinner survives view recycling and re-binds correctly.
     private val downloadingIds = mutableSetOf<String>()
 
+    // Tracks which lessonIds are currently being removed, so the 3-dot
+    // menu can't be double-tapped mid-delete.
+    private val removingIds = mutableSetOf<String>()
+
     inner class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
@@ -43,8 +50,10 @@ class LessonAdapter(
         private val progressLesson: ProgressBar = itemView.findViewById(R.id.progressLesson)
         private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
         private val tvCheckDownload: TextView = itemView.findViewById(R.id.tvCheckDownload)
-        private val ibDownload: ImageButton = itemView.findViewById(R.id.ibDownload)
+        private val ibDownload: ImageView = itemView.findViewById(R.id.ibDownload)
         private val pbDownload: ProgressBar = itemView.findViewById(R.id.pbDownload)
+        private val ibMoreOptions: ImageButton = itemView.findViewById(R.id.ibMoreOptions)
+        private val downloadButton: LinearLayout = itemView.findViewById(R.id.downloadButton)
 
         fun bind(lesson: LessonEntity) {
             tvTitle.text = buildHighlightedTitle(lesson.title, highlightQuery)
@@ -71,7 +80,7 @@ class LessonAdapter(
 
             itemView.setOnClickListener { onItemClick(lesson) }
 
-            ibDownload.setOnClickListener {
+            downloadButton.setOnClickListener {
                 if (lesson.isDownloaded || downloadingIds.contains(lesson.id)) return@setOnClickListener
 
                 downloadingIds.add(lesson.id)
@@ -83,11 +92,37 @@ class LessonAdapter(
                     if (success) {
                         markDownloaded(lesson.id)
                     } else {
-                        // revert to the not-downloaded state so the user can retry
                         bindDownloadState(lesson)
                     }
                 }
             }
+
+            ibMoreOptions.setOnClickListener {
+                if (removingIds.contains(lesson.id)) return@setOnClickListener
+                showRemoveDownloadMenu(lesson)
+            }
+        }
+
+        private fun showRemoveDownloadMenu(lesson: LessonEntity) {
+            val popup = PopupMenu(itemView.context, ibMoreOptions)
+            popup.menu.add("Alisin ang Download")
+
+            popup.setOnMenuItemClickListener {
+                removingIds.add(lesson.id)
+
+                onRemoveDownloadClick(lesson) { success ->
+                    removingIds.remove(lesson.id)
+
+                    if (success) {
+                        markRemoved(lesson.id)
+                    } else {
+                        bindDownloadState(lesson)
+                    }
+                }
+                true
+            }
+
+            popup.show()
         }
 
         private fun bindDownloadState(lesson: LessonEntity) {
@@ -97,18 +132,21 @@ class LessonAdapter(
                 isDownloading -> {
                     ibDownload.visibility = View.GONE
                     pbDownload.visibility = View.VISIBLE
+                    ibMoreOptions.visibility = View.GONE
                     tvCheckDownload.text = "Dina-download..."
                 }
                 lesson.isDownloaded -> {
                     ibDownload.visibility = View.VISIBLE
                     pbDownload.visibility = View.GONE
                     ibDownload.setImageResource(R.drawable.ic_check_download)
+                    ibMoreOptions.visibility = View.VISIBLE
                     tvCheckDownload.text = "Na-download na"
                 }
                 else -> {
                     ibDownload.visibility = View.VISIBLE
                     pbDownload.visibility = View.GONE
                     ibDownload.setImageResource(R.drawable.ic_download)
+                    ibMoreOptions.visibility = View.GONE
                     tvCheckDownload.text = "I-download"
                 }
             }
@@ -210,6 +248,17 @@ class LessonAdapter(
 
         lessonList = lessonList.toMutableList().apply {
             this[index] = this[index].copy(isDownloaded = true)
+        }
+        notifyItemChanged(index)
+    }
+
+    /** Flips a single lesson's isDownloaded flag back to false and refreshes just that row. */
+    private fun markRemoved(lessonId: String) {
+        val index = lessonList.indexOfFirst { it.id == lessonId }
+        if (index == -1) return
+
+        lessonList = lessonList.toMutableList().apply {
+            this[index] = this[index].copy(isDownloaded = false)
         }
         notifyItemChanged(index)
     }
