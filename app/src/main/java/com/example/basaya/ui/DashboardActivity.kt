@@ -31,6 +31,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.basaya.data.cache.ContentCountsCache
 import com.example.basaya.data.database.AppDatabase
 import android.app.Activity
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.ViewGroup
+import android.widget.ImageView
+import com.google.android.material.button.MaterialButton
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -143,11 +149,11 @@ class DashboardActivity : AppCompatActivity() {
 
         gameCard.setOnClickListener {
             if (gameIsFinished) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Larong Nakumpleto")
-                    .setMessage("Nakumpleto mo na ang larong ito. Hindi na ito maaaring ulitin.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Nakumpleto mo na ang larong ito. Hindi na ito maaaring ulitin."
+                )
             } else {
                 openContentIfAvailable(CrosswordActivity::class.java)
             }
@@ -155,14 +161,16 @@ class DashboardActivity : AppCompatActivity() {
 
         lectureCard.setOnClickListener {
             if (lectureFinished) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Aralin na Nakumpleto")
-                    .setMessage("Nakumpleto mo na ang araling ito. Maaari mo pa rin itong basahin muli anumang oras.")
-                    .setPositiveButton("Basahin Muli") { _, _ ->
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Natapos mo na ang leksyon na ito. Maaari mo pa rin itong basahin muli anumang oras.",
+                    primaryText = "Basahin muli",
+                    onPrimary = {
                         openContentIfAvailable(LectureActivity::class.java)
-                    }
-                    .setNegativeButton("Isara", null)
-                    .show()
+                    },
+                    secondaryText = "Isara"
+                )
             } else {
                 openContentIfAvailable(LectureActivity::class.java)
             }
@@ -170,11 +178,11 @@ class DashboardActivity : AppCompatActivity() {
 
         activityCard.setOnClickListener {
             if (activityIsFinished) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Gawaing Nakumpleto")
-                    .setMessage("Nakumpleto mo na ang gawaing ito. Hindi na ito maaaring ulitin.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Nakumpleto mo na ang gawaing ito. Hindi na ito maaaring ulitin."
+                )
             } else {
                 openContentIfAvailable(PracticeActivity::class.java)
             }
@@ -182,11 +190,11 @@ class DashboardActivity : AppCompatActivity() {
 
         quizCard.setOnClickListener {
             if (quizIsFinished) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Pagsusulit na Nakumpleto")
-                    .setMessage("Natapos mo na ang pagsusulit. Hindi na ito maaaring ulitin.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Natapos mo na ang pagsusulit. Hindi na ito maaaring ulitin."
+                )
             } else {
                 openContentIfAvailable(QuizActivity::class.java)
             }
@@ -194,11 +202,11 @@ class DashboardActivity : AppCompatActivity() {
 
         pronunciationCard.setOnClickListener {
             if (pronunciationIsFinished) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Bigkas na Nakumpleto")
-                    .setMessage("Nakumpleto mo na ang bigkas na ito. Hindi na ito maaaring ulitin.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Nakumpleto mo na ang bigkas na ito. Hindi na ito maaaring ulitin."
+                )
             } else {
                 openContentIfAvailable(PronunciationActivity::class.java)
             }
@@ -207,7 +215,7 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // re-check every time this screen open
+
         checkQuizUnlockState()
         loadCompletionState()
     }
@@ -521,12 +529,61 @@ class DashboardActivity : AppCompatActivity() {
                     }
                 )
             } else {
-                MaterialAlertDialogBuilder(this@DashboardActivity)
-                    .setTitle("Walang Internet Connection")
-                    .setMessage("Walang internet at hindi pa na-download ang aralin na ito.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                showLessonDialog(
+                    iconRes = R.drawable.ic_download_modern,
+                    title = "Hindi available offline",
+                    message = "Walang internet at hindi pa na-download ang aralin na ito.",
+                    primaryText = "OK"
+                )
             }
         }
     }
+
+    private fun showLessonDialog(
+        iconRes: Int,
+        title: String,
+        message: String,
+        primaryText: String = "OK",
+        onPrimary: (() -> Unit)? = null,
+        secondaryText: String? = null,
+        onSecondary: (() -> Unit)? = null
+    ) {
+        val dialog = Dialog(this)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_lesson_status, null)
+
+        dialogView.findViewById<ImageView>(R.id.ivDialogIcon)
+            .setImageResource(iconRes)
+
+        dialogView.findViewById<TextView>(R.id.tvDialogTitle).text = title
+        dialogView.findViewById<TextView>(R.id.tvDialogMessage).text = message
+
+        dialogView.findViewById<MaterialButton>(R.id.btnDialogPrimary).apply {
+            text = primaryText
+            setOnClickListener {
+                dialog.dismiss()
+                onPrimary?.invoke()
+            }
+        }
+
+        dialogView.findViewById<TextView>(R.id.btnDialogSecondary).apply {
+            if (secondaryText != null) {
+                visibility = View.VISIBLE
+                text = secondaryText
+                setOnClickListener {
+                    dialog.dismiss()
+                    onSecondary?.invoke()
+                }
+            }
+        }
+
+        dialog.setContentView(dialogView)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
 }

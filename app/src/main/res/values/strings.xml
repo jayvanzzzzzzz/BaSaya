@@ -44,4 +44,28 @@
     <string name="tap_to_continue">Pumindot upang magpatuloy.</string>
     <string name="next_page">Next Page</string>
     <string name="next">SUSUNOD</string>
+
+    <string name="cta_add_class">Pumasok sa Klase</string>
+    <string name="cta_add_class_description">Magdagdag ng bagong klase</string>
+    <string name="join_class_sheet_title">Sumali sa klase</string>
+    <string name="join_class_sheet_message">Ilagay ang code ng klase para makita ang iyong mga aralin.</string>
+    <string name="enter_class">Pumasok sa klase</string>
+
+    <string name="close">Isara</string>
+    <string name="join">Sumali</string>
+    <string name="signed_in_as">Kasalukuyan kang naka-sign in bilang</string>
+    <string name="profile_photo">Larawan sa profile</string>
+    <string name="join_class_instruction">Hingin sa iyong guro ang class code at ilagay ito rito.</string>
+    <string name="class_code">Class code</string>
+    <string name="internet_connection_required">Kailangan ng internet connection</string>
+    <string name="toast_join_class_first">Sumali muna sa isang klase.</string>
+    <string name="toast_download_success">Matagumpay na na-download ang aralin.</string>
+    <string name="toast_download_failed">Hindi na-download. Siguraduhing may internet at subukan muli.</string>
+    <string name="toast_remove_download_success">Naalis ang download.</string>
+    <string name="toast_remove_download_failed">Hindi na-alis ang download. Subukan muli.</string>
+    <string name="offline_lesson_message">Hindi pa na-download ang “%1$s”. Kumonekta sa internet at pindutin ang Download.</string>
+    <string name="empty_not_in_class">Wala ka pang nasalihang klase.\nPindutin ang button sa ibaba para sumali gamit ang class code.</string>
+    <string name="empty_no_lessons">Wala pang nakatalagang aralin.\nBumalik muli para tingnan ang mga bagong gawain.</string>
+    <string name="empty_no_search_results">Walang resulta para sa \u201c%1$s\u201d.</string>
+    <string name="error_checking_class_membership">May problema sa koneksyon. Subukan muli.</string>
 </resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Soft cream outer halo -->
+    <path
+        android:fillColor="#F2F6FF"
+        android:pathData="M24,2A22,22 0,1 0,24,46A22,22 0,1 0,24,2" />
+
+    <!-- Navy-blue completion coin -->
+    <path
+        android:fillColor="#315EAE"
+        android:pathData="M24,7A17,17 0,1 0,24,41A17,17 0,1 0,24,7" />
+
+    <!-- Subtle inner highlight -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M24,9.25A14.75,14.75 0,1 0,24,38.75A14.75,14.75 0,1 0,24,9.25"
+        android:strokeColor="#6F96DE"
+        android:strokeWidth="1.2" />
+
+    <!-- Crisp centered check -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M15.7,24.1 L21.1,29.45 L32.55,18"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

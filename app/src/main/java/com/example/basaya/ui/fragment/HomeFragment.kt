@@ -6,6 +6,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -30,10 +34,11 @@ import kotlinx.coroutines.launch
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import com.example.basaya.ui.JoinClassActivity
 import com.google.android.material.button.MaterialButton
 
 
@@ -45,6 +50,32 @@ class HomeFragment : Fragment() {
 
     private var allLessons: List<LessonEntity> = emptyList()
 
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var tvEmptyLessons: TextView
+    private lateinit var loadingContainer: LinearLayout
+    private lateinit var etSearch: EditText
+    private lateinit var btnRefresh: ImageButton
+    private lateinit var tvClassName: TextView
+
+    private val authHelper = AuthHelper()
+    private var currentClassId: String? = null
+
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
+
+    // The three distinct reasons the lesson list can be empty — each maps
+    // to its own icon, tint color, and message via showEmptyState() below.
+    private enum class EmptyLessonsState {
+        NOT_IN_CLASS,
+        NO_LESSONS_IN_CLASS
+    }
+
+    private val joinClassLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                checkClassMembershipAndLoad()
+            }
+        }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,146 +83,43 @@ class HomeFragment : Fragment() {
 
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        // pulse animation for loading lessons
         val dot1 = view.findViewById<View>(R.id.dot1)
         val dot2 = view.findViewById<View>(R.id.dot2)
         val dot3 = view.findViewById<View>(R.id.dot3)
 
         startDotsAnimation(dot1, dot2, dot3)
 
-        val authHelper = AuthHelper()
-
-        val uid = authHelper.getCurrentUser()?.uid
-
-        if (uid != null) {
-            FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(uid)
-                .get()
-                .addOnSuccessListener { doc ->
-                    val firstName = doc.getString("firstName") ?: ""
-                    val lastName = doc.getString("lastName") ?: ""
-
-                }
-                .addOnFailureListener { e ->
-                    Log.e("HomeFragment", "Failed to fetch user", e)
-                }
+        val btnJoinClass = view.findViewById<ImageButton>(R.id.btnJoinClass)
+        btnJoinClass.setOnClickListener {
+            if(hasInternetConnection())showJoinClassSheet()
+            else Toast.makeText(requireContext(),
+                getString(R.string.internet_connection_required),
+                Toast.LENGTH_SHORT).show()
         }
 
-        val handleRemoveDownloadClick: (LessonEntity, (Boolean) -> Unit) -> Unit = { lesson, onResult ->
-            lifecycleScope.launch {
-                val repo = LessonRepository(requireContext())
-                val success = repo.removeDownload(lesson.id)
+        recyclerView = view.findViewById(R.id.recyclerLessons)
+        tvEmptyLessons = view.findViewById(R.id.tvEmptyLessons)
+        loadingContainer = view.findViewById(R.id.loadingContainer)
+        etSearch = view.findViewById(R.id.etSearch)
+        btnRefresh = view.findViewById(R.id.btnRefresh)
+        tvClassName = view.findViewById(R.id.tvClassName)
 
-                if (isAdded) {
-                    Toast.makeText(
-                        requireContext(),
-                        if (success) "Naalis ang download." else "Hindi na-alis ang download. Subukan muli.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                onResult(success)
-            }
-        }
-
-        // Launches the actual download work; shared by both adapter instances below
-        // so the pre-fetch adapter (empty list) and the post-fetch adapter stay in sync.
-        val handleDownloadClick: (LessonEntity, (Boolean) -> Unit) -> Unit = { lesson, onResult ->
-            lifecycleScope.launch {
-                val repo = LessonRepository(requireContext())
-                val success = repo.downloadLesson(lesson.id)
-
-                if (isAdded && !success) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Hindi na-download. Siguraduhing may internet at subukan muli.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }else{
-                    Toast.makeText(
-                        requireContext(),
-                        "Matagumpay na na-download ang aralin.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                onResult(success)
-            }
-        }
-
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerLessons)
         var adapter = LessonAdapter(
             emptyList(),
-            onItemClick = { lesson ->
-                openLessonIfAvailable(lesson)
-            },
-            onDownloadClick = handleDownloadClick,
-            onRemoveDownloadClick = handleRemoveDownloadClick
+            onItemClick = { lesson -> openLessonIfAvailable(lesson) },
+            onDownloadClick = { lesson, onResult -> handleDownload(lesson, onResult) },
+            onRemoveDownloadClick = { lesson, onResult -> handleRemoveDownload(lesson, onResult) }
         )
-
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
-
-        val tvEmptyLessons = view.findViewById<TextView>(R.id.tvEmptyLessons)
-        val loadingContainer = view.findViewById<LinearLayout>(R.id.loadingContainer)
-        val tvLoadingText = view.findViewById<TextView>(R.id.tvLoadingText)
-        val btnRefresh = view.findViewById<ImageButton>(R.id.btnRefresh)
-        val etSearch = view.findViewById<EditText>(R.id.etSearch)
-
-        // pulled the fetch logic into a local function so both initial load
-        // and the refresh button can call the same code
-        fun fetchLessons(isManualRefresh: Boolean) {
-            if (uid == null) {
-                Log.e("HomeFragment", "No logged-in user — cannot load lessons")
-                return
-            }
-            if (isRefreshing) return
-            isRefreshing = true
-
-            if (isManualRefresh) {
-                startRefreshSpin(btnRefresh)
-            }
-
-            lifecycleScope.launch {
-                val repo = LessonRepository(requireContext())
-                repo.syncLessons(uid)
-                val lessons = repo.getLessons(uid)
-
-                allLessons = lessons
-
-                if (!isAdded) return@launch
-
-                loadingContainer.visibility = View.GONE
-                dotsAnimatorSet?.cancel()
-
-                if (lessons.isEmpty()) {
-                    recyclerView.visibility = View.GONE
-                    tvEmptyLessons.visibility = View.VISIBLE
-                } else {
-                    recyclerView.visibility = View.VISIBLE
-                    tvEmptyLessons.visibility = View.GONE
-
-                    adapter = LessonAdapter(
-                        lessons,
-                        onItemClick = { lesson ->
-                            openLessonIfAvailable(lesson)
-                        },
-                        onDownloadClick = handleDownloadClick,
-                        onRemoveDownloadClick = handleRemoveDownloadClick
-                    )
-                    recyclerView.adapter = adapter
-                }
-
-                if (isManualRefresh) {
-                    stopRefreshSpin(btnRefresh)
-                }
-                isRefreshing = false
-            }
-        }
+        this.adapter = adapter
 
         btnRefresh.setOnClickListener {
-            fetchLessons(isManualRefresh = true)
+            if (currentClassId == null) {
+                Toast.makeText(requireContext(), getString(R.string.toast_join_class_first), Toast.LENGTH_SHORT).show()
+            } else {
+                fetchLessons(isManualRefresh = true)
+            }
         }
 
         etSearch.addTextChangedListener(object : android.text.TextWatcher {
@@ -209,30 +137,177 @@ class HomeFragment : Fragment() {
 
                 if (filtered.isEmpty()) {
                     recyclerView.visibility = View.GONE
-                    tvEmptyLessons.visibility = View.VISIBLE
+
+                    // Only shows "no results" if there WERE lessons to search through —
+                    // otherwise the class-empty state from fetchLessons() already
+                    // covers it and shouldn't be overwritten.
+                    if (allLessons.isNotEmpty()) {
+                        tvEmptyLessons.text = getString(R.string.empty_no_search_results, query)
+
+                        val icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_empty_search)
+                        icon?.setBounds(0, 0, icon.intrinsicWidth, icon.intrinsicHeight)
+                        tvEmptyLessons.setCompoundDrawables(null, icon, null, null)
+
+                        tvEmptyLessons.visibility = View.VISIBLE
+                    }
                 } else {
                     recyclerView.visibility = View.VISIBLE
                     tvEmptyLessons.visibility = View.GONE
                 }
 
-                adapter.updateList(filtered, query)
+                this@HomeFragment.adapter.updateList(filtered, query)
             }
         })
 
-        //  guard added — uid must be non-null to call syncLessons/getLessons
-        if (uid != null) {
-            fetchLessons(isManualRefresh = false)
-        } else {
-            Log.e("HomeFragment", "No logged-in user — cannot load lessons")
-        }
+        checkClassMembershipAndLoad()
 
         return view
     }
 
+    private lateinit var adapter: LessonAdapter
+
+    private fun showEmptyState(state: EmptyLessonsState) {
+        recyclerView.visibility = View.GONE
+        tvEmptyLessons.visibility = View.VISIBLE
+
+        val (iconRes, message) = when (state) {
+            EmptyLessonsState.NOT_IN_CLASS -> Pair(
+                R.drawable.ic_empty_join_class,
+                getString(R.string.empty_not_in_class)
+            )
+            EmptyLessonsState.NO_LESSONS_IN_CLASS -> Pair(
+                R.drawable.ic_empty_lessons,
+                getString(R.string.empty_no_lessons)
+            )
+        }
+
+        tvEmptyLessons.text = message
+
+        val icon = ContextCompat.getDrawable(requireContext(), iconRes)
+        icon?.setBounds(0, 0, icon.intrinsicWidth, icon.intrinsicHeight)
+        tvEmptyLessons.setCompoundDrawables(null, icon, null, null)
+    }
+
+    private fun checkClassMembershipAndLoad() {
+        val uid = authHelper.getCurrentUser()?.uid
+        if (uid == null) {
+            Log.e("HomeFragment", "No logged-in user — cannot check class membership")
+            return
+        }
+
+        loadingContainer.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+        tvEmptyLessons.visibility = View.GONE
+
+        firestore
+            .collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (!isAdded) return@addOnSuccessListener
+
+                val classId = doc.getString("classId")
+                val className = doc.getString("className")
+                currentClassId = classId
+
+                if (classId.isNullOrBlank()) {
+                    tvClassName.text = ""
+                    loadingContainer.visibility = View.GONE
+                    dotsAnimatorSet?.cancel()
+                    showEmptyState(EmptyLessonsState.NOT_IN_CLASS)
+                } else {
+                    tvClassName.text = className ?: ""
+                    fetchLessons(isManualRefresh = false)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("HomeFragment", "Failed to check class membership", e)
+                if (!isAdded) return@addOnFailureListener
+                loadingContainer.visibility = View.GONE
+                dotsAnimatorSet?.cancel()
+                tvEmptyLessons.text = getString(R.string.error_checking_class_membership)
+                tvEmptyLessons.visibility = View.VISIBLE
+                recyclerView.visibility = View.GONE
+            }
+    }
+
+    private fun handleDownload(lesson: LessonEntity, onResult: (Boolean) -> Unit) {
+        lifecycleScope.launch {
+            val repo = LessonRepository(requireContext())
+            val success = repo.downloadLesson(lesson.id)
+
+            if (isAdded) {
+                Toast.makeText(
+                    requireContext(),
+                    if (success) getString(R.string.toast_download_success)
+                    else getString(R.string.toast_download_failed),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            onResult(success)
+        }
+    }
+
+    private fun handleRemoveDownload(lesson: LessonEntity, onResult: (Boolean) -> Unit) {
+        lifecycleScope.launch {
+            val repo = LessonRepository(requireContext())
+            val success = repo.removeDownload(lesson.id)
+
+            if (isAdded) {
+                Toast.makeText(
+                    requireContext(),
+                    if (success) getString(R.string.toast_remove_download_success)
+                    else getString(R.string.toast_remove_download_failed),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            onResult(success)
+        }
+    }
+
+    private fun fetchLessons(isManualRefresh: Boolean) {
+        val uid = authHelper.getCurrentUser()?.uid
+        if (uid == null) {
+            Log.e("HomeFragment", "No logged-in user — cannot load lessons")
+            return
+        }
+        if (isRefreshing) return
+        isRefreshing = true
+
+        if (isManualRefresh) {
+            startRefreshSpin(btnRefresh)
+        }
+
+        lifecycleScope.launch {
+            val repo = LessonRepository(requireContext())
+            repo.syncLessons(uid)
+            val lessons = repo.getLessons(uid)
+
+            allLessons = lessons
+
+            if (!isAdded) return@launch
+
+            loadingContainer.visibility = View.GONE
+            dotsAnimatorSet?.cancel()
+
+            if (lessons.isEmpty()) {
+                showEmptyState(EmptyLessonsState.NO_LESSONS_IN_CLASS)
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                tvEmptyLessons.visibility = View.GONE
+                adapter.updateList(lessons, "")
+            }
+
+            if (isManualRefresh) {
+                stopRefreshSpin(btnRefresh)
+            }
+            isRefreshing = false
+        }
+    }
 
     private fun startDotsAnimation(dot1: View, dot2: View, dot3: View) {
         val dots = listOf(dot1, dot2, dot3)
-        val staggerDelay = 150L // ms between each dot starting
+        val staggerDelay = 150L
 
         val animators = dots.mapIndexed { index, dot ->
             createDotPulse(dot).apply {
@@ -255,7 +330,6 @@ class HomeFragment : Fragment() {
             playTogether(scaleUpX, scaleUpY, alpha)
             duration = 900
             interpolator = AccelerateDecelerateInterpolator()
-            // loop this specific dot's pulse forever
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
                     if (dot.isAttachedToWindow) {
@@ -326,7 +400,7 @@ class HomeFragment : Fragment() {
         dialog.setContentView(dialogView)
 
         dialogView.findViewById<TextView>(R.id.tvOfflineMessage).text =
-            "Hindi pa na-download ang “${lesson.title}”. Kumonekta sa internet at pindutin ang Download."
+            getString(R.string.offline_lesson_message, lesson.title)
 
         dialogView.findViewById<MaterialButton>(R.id.btnOfflineOkay)
             .setOnClickListener { dialog.dismiss() }
@@ -340,11 +414,21 @@ class HomeFragment : Fragment() {
         }
 
         dialog.show()
+    }
 
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.88).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+    private fun showJoinClassSheet() {
+        if (!isAdded) return
+
+        val sheet = BottomSheetDialog(requireContext())
+        val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_join_class, null)
+        sheet.setContentView(sheetView)
+
+        sheetView.findViewById<View>(R.id.btnEnterClass).setOnClickListener {
+            sheet.dismiss()
+            joinClassLauncher.launch(Intent(requireContext(), JoinClassActivity::class.java))
+        }
+
+        sheet.show()
     }
 
     override fun onDestroyView() {

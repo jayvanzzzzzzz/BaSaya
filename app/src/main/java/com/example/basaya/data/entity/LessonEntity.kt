@@ -8,6 +8,7 @@ data class LessonEntity(
     @PrimaryKey
     val id: String,
     val userId: String,
+    val classId: String,
     val title: String,
     val description: String,
     val difficulty: String,

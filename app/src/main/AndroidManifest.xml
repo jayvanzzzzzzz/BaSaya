@@ -20,6 +20,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BaSaya">
         <activity
+            android:name=".ui.JoinClassActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.pronunciation.PronunciationActivity"
             android:exported="false" />
         <activity
