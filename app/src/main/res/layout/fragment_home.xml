@@ -5,29 +5,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F7F8"
+    android:background="@color/dirty_white"
     tools:context=".ui.fragment.HomeFragment">
 
-    <!-- Kept for existing edge-to-edge/status-bar inset handling. -->
-    <View
-        android:id="@+id/statusBarBg"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/topSection"
+        android:id="@+id/topSectionWrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="#F7F7F8"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:background="@color/toolbar_bar_color"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusBarBg">
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/topSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_fragment_top_rounded"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
         <!--
         <TextView
@@ -63,8 +62,8 @@
         <EditText
             android:id="@+id/etSearch"
             android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="22dp"
             android:autofillHints="name"
             android:background="@drawable/bg_home_search"
             android:drawableStart="@drawable/ic_search"
@@ -80,6 +79,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
@@ -93,7 +94,7 @@
         android:layout_marginEnd="10dp"
         android:textSize="18sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/topSection"
+        app:layout_constraintTop_toBottomOf="@+id/topSectionWrapper"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toTopOf="@id/tvSectionLabel"/>
     

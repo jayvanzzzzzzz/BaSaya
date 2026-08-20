@@ -37,4 +37,7 @@
     <color name="dialog_ink">#25231D</color>
     <color name="dialog_muted">#6B675C</color>
     <color name="dialog_action">#315EAE</color>
+
+    <color name="dirty_white">#F7F7F8</color>
+    <color name="orange">#FF9800</color>
 </resources>

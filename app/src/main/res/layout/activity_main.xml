@@ -24,8 +24,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         app:elevation="12dp"
-
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/statusBarBg">
@@ -38,6 +39,8 @@
             android:elevation="12dp"
             android:paddingStart="20dp"
             android:paddingEnd="8dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             app:contentInsetStart="0dp"
             app:layout_scrollFlags="scroll|enterAlways|snap">
 
@@ -45,51 +48,98 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
+                <!-- Avatar + chevron badge -->
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="42dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <TextView
+                        android:id="@+id/tvAvatarInitial"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:background="@drawable/bg_avatar_placeholder"
+                        android:contentDescription="@string/profile_picture"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:gravity="center"
+                        android:text="B"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/ivProfileChevron"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_marginEnd="-8dp"
+                        android:layout_marginBottom="3dp"
+                        android:background="@drawable/bg_chevron_badge"
+                        android:padding="2dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/main_blue" />
+
+                </FrameLayout>
+
+                <!-- First name, beside avatar -->
                 <TextView
-                    android:id="@+id/tvAppTitle"
+                    android:id="@+id/tvFirstName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:letterSpacing="0.01"
-                    android:text="@string/app_title"
-                    android:textColor="@color/main_blue"
-                    android:textSize="26sp"
+                    android:layout_marginStart="20dp"
                     android:layout_weight="1"
-                    android:textStyle="bold"/>
+                    android:fontFamily="@font/public_sans"
+                    android:text="@string/name"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
                 <!-- Right Actions -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
                     <!-- Notification Button with Badge -->
                     <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="2dp">
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_marginEnd="20dp"
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
+
+                        <!-- Soft circular backdrop — larger than the icon for a visible glow -->
+                        <View
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:layout_gravity="center"
+                            android:alpha="0.3"
+                            android:background="@drawable/notif_circle_placeholder" />
 
                         <ImageButton
                             android:id="@+id/btnNotification"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:background="@drawable/bg_toolbar_icon_btn"
+                            android:layout_width="23dp"
+                            android:layout_height="23dp"
+                            android:layout_gravity="center"
+                            android:background="@android:color/transparent"
                             android:contentDescription="@string/notifications"
                             android:padding="11dp"
                             android:src="@drawable/ic_notifications"
                             app:tint="@color/muted" />
 
-                        <!-- Notification Badge -->
                         <TextView
                             android:id="@+id/tvNotifBadge"
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_gravity="top|end"
-                            android:layout_marginTop="5dp"
-                            android:layout_marginEnd="5dp"
+                            android:layout_marginTop="2dp"
+                            android:layout_marginEnd="2dp"
                             android:background="@drawable/bg_badge"
                             android:gravity="center"
                             android:text="3"
@@ -99,28 +149,19 @@
                             android:visibility="visible" />
 
                     </FrameLayout>
-            </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-
-                    android:text="@string/name"
-                    android:gravity="center"
-                    android:textStyle="bold"
-                    android:textColor="@color/muted"/>
-
-                <!-- 3-Dot More Options -->
-                <ImageButton
-                    android:id="@+id/btnMoreOptions"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_toolbar_icon_btn"
-                    android:contentDescription="@string/more_options"
-                    android:padding="11dp"
-                    android:src="@drawable/ic_more_vert"
-                    app:tint="@color/muted" />
+                    <!-- 3-Dot More Options
+                    <ImageButton
+                        android:id="@+id/btnMoreOptions"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_toolbar_icon_btn"
+                        android:contentDescription="@string/more_options"
+                        android:padding="11dp"
+                        android:src="@drawable/ic_more_vert"
+                        app:tint="@color/muted" />
+                -->
+                </LinearLayout>
 
             </LinearLayout>
 

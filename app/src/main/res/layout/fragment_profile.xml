@@ -65,7 +65,6 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/lexend"
                             android:text="J"
-                            android:textColor="#FFFFFF"
                             android:textSize="22sp"
                             android:textStyle="bold" />
                     </LinearLayout>

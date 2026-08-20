@@ -30,6 +30,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvName: TextView
     private var isUserReady = false
 
+    private var isProfileMenuActive = false
+
+    // Class-level now — needed by animateChevron(), and by the avatar click listener below.
+    private lateinit var ivProfileChevron: ImageView
+    private lateinit var tvAvatarInitial: TextView
+
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
     private val homeFragment by lazy { HomeFragment() }
@@ -60,6 +66,14 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        ivProfileChevron = findViewById(R.id.ivProfileChevron)
+
+        findViewById<View>(R.id.tvAvatarInitial).setOnClickListener { view ->
+            isProfileMenuActive = !isProfileMenuActive
+            animateChevron(isProfileMenuActive)
+            showToolbarMenu(view)
+        }
+
         window.statusBarColor = ContextCompat.getColor(this, R.color.toolbar_bar_color)
 
         WindowInsetsControllerCompat(window, window.decorView)
@@ -81,7 +95,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val btnNotif = findViewById<ImageButton>(R.id.btnNotification).setOnClickListener {
+        findViewById<ImageButton>(R.id.btnNotification).setOnClickListener {
             showConfirmDialog()
         }
 
@@ -96,8 +110,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        tvName = findViewById(R.id.tvName)
+        tvName = findViewById(R.id.tvFirstName)
         tvName.text = "..."
+        tvAvatarInitial = findViewById(R.id.tvAvatarInitial)
+
+        tvAvatarInitial.text = "0"
 
         val authHelper = AuthHelper()
         val uid = authHelper.getCurrentUser()?.uid
@@ -108,7 +125,10 @@ class MainActivity : AppCompatActivity() {
                 .document(uid)
                 .get()
                 .addOnSuccessListener { doc ->
+                    val firstName = doc.getString("firstName") ?: ""
+
                     tvName.text = doc.getString("firstName") ?: ""
+                    tvAvatarInitial.text = firstName.firstOrNull()?.uppercase() ?: "B"
                 }
                 .addOnFailureListener { e ->
                     Log.e("MainActivity", "Failed to fetch user", e)
@@ -124,7 +144,6 @@ class MainActivity : AppCompatActivity() {
         activeFragment = homeFragment
 
         setupBottomNav()
-        setupToolbarMenu()
     }
 
     private fun setupBottomNav() {
@@ -160,24 +179,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupToolbarMenu() {
+    // btnMoreOptions now delegates to the same shared menu as the avatar tap.
+   /* private fun setupToolbarMenu() {
         val btnMoreOptions = findViewById<ImageButton>(R.id.btnMoreOptions)
-
         btnMoreOptions.setOnClickListener { view ->
-            val popup = PopupMenu(this, view)
-            popup.menuInflater.inflate(R.menu.toolbar_menu, popup.menu)
-
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.menu_logout -> {
-                        auth.signOut()
-                        true
-                    }
-                    else -> false
-                }
-            }
-            popup.show()
+            showToolbarMenu(view)
         }
+    }*/
+
+    // Shared popup logic — called from both the avatar and the 3-dot button.
+    private fun showToolbarMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menuInflater.inflate(R.menu.toolbar_menu, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.menu_logout -> {
+                    auth.signOut()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // Reset the chevron if this menu was opened via the avatar and the
+        // user dismisses it without picking anything.
+        popup.setOnDismissListener {
+            if (isProfileMenuActive) {
+                isProfileMenuActive = false
+                animateChevron(false)
+            }
+        }
+
+        popup.show()
     }
 
     private fun switchTo(fragment: Fragment) {
@@ -200,9 +234,17 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Wala papo")
             .setMessage("Mga 1 week pa.")
-            .setPositiveButton("Oki") { _, _ ->
-            }
+            .setPositiveButton("Oki") { _, _ -> }
             .setCancelable(false)
             .show()
+    }
+
+    private fun animateChevron(active: Boolean) {
+        val targetRotation = if (active) 90f else 0f
+        ivProfileChevron.animate()
+            .rotation(targetRotation)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+            .start()
     }
 }

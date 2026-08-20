@@ -9,6 +9,7 @@ import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import com.example.basaya.data.entity.CrosswordProgress
 import com.google.firebase.auth.FirebaseAuth
+import kotlin.Float
 
 class CrosswordRepository(private val context: Context) {
 

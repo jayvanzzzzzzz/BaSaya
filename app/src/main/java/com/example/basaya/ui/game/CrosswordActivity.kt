@@ -459,13 +459,14 @@ class CrosswordActivity : AppCompatActivity() {
                                             .document(uid)
                                             .collection("assignedLessons")
                                             .document(lessonId)
-                                            .update(
+                                            .set(
                                                 mapOf(
                                                     "gameScore" to currentLevelNumber,
                                                     "gameTotal" to totalLevels,
                                                     "gameFinished" to (currentLevelNumber >= totalLevels),
                                                     "gameCompletedAt" to FieldValue.serverTimestamp()
-                                                )
+                                                ),
+                                                com.google.firebase.firestore.SetOptions.merge()
                                             )
                                             .await()
                                     } catch (e: Exception) {

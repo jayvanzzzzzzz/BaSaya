@@ -68,4 +68,6 @@
     <string name="empty_no_lessons">Wala pang nakatalagang aralin.\nBumalik muli para tingnan ang mga bagong gawain.</string>
     <string name="empty_no_search_results">Walang resulta para sa \u201c%1$s\u201d.</string>
     <string name="error_checking_class_membership">May problema sa koneksyon. Subukan muli.</string>
+
+    <string name="profile_picture">Profile picture</string>
 </resources>

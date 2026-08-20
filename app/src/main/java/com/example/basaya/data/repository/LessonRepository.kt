@@ -22,8 +22,7 @@ class LessonRepository(private val context: Context) {
             return
         }
 
-        // 2. Progress flags per lesson (optional docs — missing = not started yet,
-        // NOT "not assigned". Access is now class-based, not per-lesson-assignment).
+        // 2. Progress flags per lesson (unchanged — still per-user)
         data class ProgressInfo(
             val lectureFinished: Boolean,
             val gameFinished: Boolean,
@@ -47,10 +46,27 @@ class LessonRepository(private val context: Context) {
             )
         }
 
-        // 3. All lessons belonging to this class (teacher sets classId manually for now)
+        // 3a. Get the pointer list — which lessonIds belong to this class
+        val classLessonsSnapshot = firestore
+            .collection("classes")
+            .document(classId)
+            .collection("classLessons")
+            .get()
+            .await()
+
+        val lessonIds = classLessonsSnapshot.documents.map { it.id }
+
+        if (lessonIds.isEmpty()) {
+            db.lessonDao().deleteLessonsForUser(userId)
+            return
+        }
+
+        // 3b. Fetch the actual lesson content docs by those IDs.
+        // whereIn supports up to 30 values per query — fine for a class-sized lesson list.
+        // If a class ever exceeds 30 lessons, this needs to be chunked into multiple queries.
         val lessonsSnapshot = firestore
             .collection("lessons")
-            .whereEqualTo("classId", classId)
+            .whereIn(com.google.firebase.firestore.FieldPath.documentId(), lessonIds)
             .get()
             .await()
 
@@ -71,7 +87,7 @@ class LessonRepository(private val context: Context) {
                 description = doc.getString("description") ?: "",
                 difficulty = doc.getString("difficulty") ?: "",
                 order = doc.getLong("order")?.toInt() ?: 0,
-                unlocked = true, // see note below — every class lesson is now visible
+                unlocked = true,
                 lectureFinished = progress?.lectureFinished ?: false,
                 gameFinished = progress?.gameFinished ?: false,
                 activityFinished = progress?.activityFinished ?: false,

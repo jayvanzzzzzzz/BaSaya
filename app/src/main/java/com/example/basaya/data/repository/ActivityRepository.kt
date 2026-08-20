@@ -90,13 +90,14 @@ class ActivityRepository(private val context: Context) {
             .document(userId)
             .collection("assignedLessons")
             .document(lessonId)
-            .update(
+            .set(
                 mapOf(
                     "activityFinished" to true,
                     "activityScore" to score,
                     "activityTotal" to total,
                     "activityCompletedAt" to FieldValue.serverTimestamp()
-                )
+                ),
+                com.google.firebase.firestore.SetOptions.merge()
             )
             .await()
     }
