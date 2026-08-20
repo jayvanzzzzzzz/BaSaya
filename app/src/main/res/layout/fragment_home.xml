@@ -88,15 +88,27 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Class: "
-
-        android:layout_marginTop="10dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@+id/topSectionWrapper"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/tvSectionLabel"/>
+        app:layout_constraintBottom_toTopOf="@id/divider"/>
+
+   <View
+       android:id="@+id/divider"
+       android:layout_width="match_parent"
+       android:layout_height="1dp"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/tvClassName"
+       android:background="@color/muted"
+       android:alpha=".3"
+       android:layout_marginStart="20dp"
+       android:layout_marginEnd="20dp"
+       android:layout_marginTop="10dp"
+       android:layout_marginBottom="10dp"/>
     
     <TextView
         android:id="@+id/tvSectionLabel"
@@ -104,6 +116,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="15dp"
         android:letterSpacing="0.08"
         android:text="MGA NAKATALAGANG ARALIN"
         android:textColor="#667085"
@@ -111,8 +125,8 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/btnRefresh"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvClassName"
-        app:layout_constraintBottom_toBottomOf="@id/btnRefresh" />
+        app:layout_constraintTop_toBottomOf="@id/divider"
+        app:layout_constraintBottom_toTopOf="@id/recyclerLessons" />
 
     <ImageButton
         android:id="@+id/btnRefresh"
@@ -121,11 +135,12 @@
         android:layout_marginEnd="20dp"
         android:background="@drawable/bg_refresh_btn"
         android:contentDescription="Refresh lessons"
+        android:layout_marginTop="5dp"
         android:padding="8dp"
         android:src="@drawable/ic_refresh"
         app:tint="#5B4FE8"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvClassName"/>
+        app:layout_constraintTop_toBottomOf="@id/divider"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerLessons"
