@@ -1,6 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import com.example.basaya.data.audio.PronunciationAudioStore
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.PronunciationEntity
 import com.example.basaya.data.model.PronunciationActivityData
@@ -36,6 +37,7 @@ class PronunciationRepository(private val context: Context) {
     suspend fun downloadPronunciation(lessonId: String): Boolean {
         val fetched = fetchFromFirestore(lessonId) ?: return false
         db.pronunciationDao().insert(fetched.toEntity(lessonId))
+        PronunciationAudioStore.download(context, lessonId, fetched.audioRefs)
         return true
     }
 
@@ -58,7 +60,13 @@ class PronunciationRepository(private val context: Context) {
             val words = doc.get("words") as? List<String> ?: emptyList()
 
             @Suppress("UNCHECKED_CAST")
-            val audioRefs = doc.get("audioRefs") as? List<String> ?: emptyList()
+            val legacyRefs = doc.get("audioRefs") as? List<String> ?: emptyList()
+            val cloudAudio = cloudAudioEntries(doc.get("cloudAudio"), doc.get("pages"))
+
+            // Prefer the Cloudflare R2 URL for each word; keep the old ref (raw name/URL) otherwise.
+            val audioRefs = words.mapIndexed { index, word ->
+                cloudUrlFor(word, index, cloudAudio) ?: legacyRefs.getOrNull(index).orEmpty()
+            }
 
             PronunciationActivityData(
                 id = lessonId,
@@ -87,6 +95,29 @@ class PronunciationRepository(private val context: Context) {
                 )
             )
             .await()
+    }
+
+    // --- Cloudflare audio ---
+
+    /**
+     * basaya-web writes `cloudAudio: [{ audioUrl, storageKey, text } | null]`, either on the
+     * document itself or per page (`pages[].cloudAudio`, like lectures). Null entries are
+     * kept so list positions still line up with the words.
+     */
+    private fun cloudAudioEntries(docCloudAudio: Any?, pages: Any?): List<Map<*, *>?> {
+        (docCloudAudio as? List<*>)?.let { list -> return list.map { it as? Map<*, *> } }
+        return (pages as? List<*>).orEmpty().flatMap { page ->
+            ((page as? Map<*, *>)?.get("cloudAudio") as? List<*>).orEmpty().map { it as? Map<*, *> }
+        }
+    }
+
+    /** Match by the entry's text first (robust to reordering), then by position. */
+    private fun cloudUrlFor(word: String, index: Int, entries: List<Map<*, *>?>): String? {
+        val byText = entries.firstOrNull { entry ->
+            (entry?.get("text") as? String)?.trim()?.equals(word.trim(), ignoreCase = true) == true
+        }
+        val entry = byText ?: entries.getOrNull(index)
+        return (entry?.get("audioUrl") as? String)?.takeIf { it.startsWith("https://") }
     }
 
     // --- Mapping helpers ---

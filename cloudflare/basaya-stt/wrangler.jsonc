@@ -1,0 +1,7 @@
+{
+  // Speech-to-text for the BaSaya pronunciation activity (Workers AI Whisper).
+  "name": "basaya-stt",
+  "main": "src/index.js",
+  "compatibility_date": "2025-01-01",
+  "ai": { "binding": "AI" }
+}

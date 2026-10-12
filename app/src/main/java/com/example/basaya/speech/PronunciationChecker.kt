@@ -43,6 +43,9 @@ class PronunciationChecker(private val context: Context) {
          * The system download prompt has already been triggered — tell the user to wait/retry.
          */
         fun onLanguageDownloadTriggered()
+
+        /** Live loudness of the child's voice, 0..1, for listening animations. */
+        fun onVoiceLevel(level: Float) {}
     }
 
     fun startListening(targetWord: String, listener: PronunciationResultListener) {
@@ -192,7 +195,10 @@ class PronunciationChecker(private val context: Context) {
 
             override fun onReadyForSpeech(params: Bundle?) {}
             override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onRmsChanged(rmsdB: Float) {
+                // rmsdB is roughly -2 (silence) to 10 (loud speech)
+                listener?.onVoiceLevel(((rmsdB + 2f) / 12f).coerceIn(0f, 1f))
+            }
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {}
             override fun onPartialResults(partialResults: Bundle?) {}

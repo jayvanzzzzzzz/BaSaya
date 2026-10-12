@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pronunciation screen: warm peach stage, coral buddy, teal microphone. -->
+<resources>
+    <color name="pr_bg_top">#FFD3C0</color>
+    <color name="pr_bg_mid">#FFE6D8</color>
+    <color name="pr_bg_bottom">#FFF6EC</color>
+
+    <color name="pr_ink">#3B2440</color>
+    <color name="pr_ink_soft">#6E5772</color>
+
+    <color name="pr_coral">#F0604E</color>
+    <color name="pr_coral_lip">#C9473B</color>
+    <color name="pr_teal">#1FA89B</color>
+    <color name="pr_teal_lip">#14786F</color>
+    <color name="pr_teal_ring">#8022B3A6</color>
+    <color name="pr_white_lip">#F0C9B8</color>
+    <color name="pr_track">#FFFFFF</color>
+    <color name="pr_heart">#E8475B</color>
+
+    <color name="pr_success">#1E8A44</color>
+    <color name="pr_success_bg">#E3F7E8</color>
+    <color name="pr_okay">#9A6200</color>
+    <color name="pr_okay_bg">#FFF2D2</color>
+    <color name="pr_cheer">#B83A2C</color>
+    <color name="pr_cheer_bg">#FFE6E0</color>
+    <color name="pr_info">#3B3561</color>
+    <color name="pr_info_bg">#ECEAFB</color>
+</resources>

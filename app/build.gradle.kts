@@ -1,7 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
     alias(libs.plugins.kotlin.ksp)
+}
+
+// Pronunciation speech-to-text Worker (see cloudflare/basaya-stt/README.md). Kept out of git.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
 }
 
 android {
@@ -16,6 +24,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "STT_WORKER_URL", "\"${localProperties.getProperty("stt.workerUrl", "")}\"")
+        buildConfigField("String", "STT_APP_KEY", "\"${localProperties.getProperty("stt.appKey", "")}\"")
     }
 
     buildTypes {
@@ -26,6 +37,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

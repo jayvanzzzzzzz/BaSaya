@@ -45,7 +45,7 @@ object LectureAudioStore {
     private fun lessonDir(context: Context, lessonId: String) =
         File(File(context.filesDir, ROOT_DIR), lessonId)
 
-    private fun downloadFile(url: String, target: File) {
+    internal fun downloadFile(url: String, target: File) {
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = TIMEOUT_MS

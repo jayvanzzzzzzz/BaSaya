@@ -1,5 +1,6 @@
 package com.example.basaya.speech
 
+import java.text.Normalizer
 import kotlin.math.max
 import kotlin.math.min
 
@@ -27,8 +28,11 @@ object PronunciationScorer {
         var bestIndex = -1
 
         candidates.forEachIndexed { index, candidate ->
-            val normalizedCandidate = normalize(candidate)
-            val distance = levenshteinDistance(normalizedTarget, normalizedCandidate)
+            // The recognizer may hear extra words ("ang bahay") or split one ("ba hay"),
+            // so compare the target against each word, neighbouring pairs, and the whole phrase.
+            val distance = candidateVariants(candidate).minOfOrNull { variant ->
+                levenshteinDistance(loose(normalizedTarget), loose(variant))
+            } ?: Int.MAX_VALUE
             if (distance < bestDistance) {
                 bestDistance = distance
                 bestCandidate = candidate
@@ -68,10 +72,11 @@ object PronunciationScorer {
      * represents a proportionally bigger error.
      */
     private fun toleranceForLength(length: Int): Tolerance {
+        // One wrong letter usually makes a different (or non-)word, e.g. "mataba" vs "matabak",
+        // so short words must match exactly. Only long words allow a single slip, as OKAY.
         return when {
-            length <= 4 -> Tolerance(great = 0, okay = 1)
-            length <= 7 -> Tolerance(great = 1, okay = 2)
-            else -> Tolerance(great = 1, okay = 2)
+            length <= 7 -> Tolerance(great = 0, okay = 0)
+            else -> Tolerance(great = 0, okay = 1)
         }
     }
 
@@ -81,9 +86,25 @@ object PronunciationScorer {
         return (similarity * 100f).coerceIn(0f, 100f)
     }
 
+    /** Lowercase, accents removed (á → a, ñ → n), letters only, spaces and hyphens dropped. */
     private fun normalize(text: String): String {
-        return text.trim().lowercase().replace(Regex("[^a-zñ ]"), "")
+        val decomposed = Normalizer.normalize(text.trim().lowercase(), Normalizer.Form.NFD)
+        return decomposed.replace(Regex("\\p{Mn}+"), "").replace(Regex("[^a-z]"), "")
     }
+
+    private fun candidateVariants(candidate: String): List<String> {
+        val words = candidate.trim().lowercase().split(Regex("[\\s\\-]+")).map(::normalize).filter { it.isNotEmpty() }
+        if (words.isEmpty()) return emptyList()
+        val pairs = words.zipWithNext { a, b -> a + b }
+        return (words + pairs + words.joinToString("")).distinct()
+    }
+
+    /**
+     * Tagalog speakers (and recognizers) freely swap o/u and e/i ("puno"/"punu",
+     * "babae"/"babai"), so treat those vowels as the same sound when comparing.
+     */
+    private fun loose(text: String): String =
+        text.replace('o', 'u').replace('e', 'i')
 
     private fun levenshteinDistance(a: String, b: String): Int {
         val dp = Array(a.length + 1) { IntArray(b.length + 1) }
