@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Candy disc: darker lip underneath, bright face on top. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="4dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/cw_select_lip" />
+        </shape>
+    </item>
+    <item android:bottom="4dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/cw_select" />
+        </shape>
+    </item>
+</layer-list>

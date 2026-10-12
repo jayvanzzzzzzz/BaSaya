@@ -104,6 +104,15 @@
     <string name="lesson_dash_locked_cd">Naka-lock. Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
     <string name="lesson_dash_count_placeholder">…</string>
 
+    <!-- Lecture screen -->
+    <string name="lecture_default_title">Aralin</string>
+    <string name="lecture_page_label">PAHINA %1$d NG %2$d</string>
+    <string name="lecture_tap_hint">Pindutin ang pahina para sa susunod!</string>
+    <string name="lecture_book_cd">Ang nagsasalitang aklat. Pindutin para ulitin ang pangungusap.</string>
+    <string name="lecture_close_cd">Isara ang aralin</string>
+    <string name="lecture_speaker_cd">I-on o i-off ang tunog</string>
+    <string name="lecture_finish">TAPUSIN</string>
+
     <!-- Register screen -->
     <string name="register_heading">Sumali sa BaSaya!</string>
     <string name="register_subtitle">Ilang hakbang na lang, magsisimula na ang iyong pagbabasa.</string>
@@ -133,4 +142,78 @@
     <string name="lesson_card_download_cd">I-download ang aralin</string>
     <string name="lesson_card_downloading_cd">Dina-download ang aralin</string>
     <string name="lesson_card_more_cd">Iba pang opsyon</string>
+    <string name="cw_back">Bumalik</string>
+    <string name="cw_shuffle">Haluin ang mga titik</string>
+    <string name="cw_level">Antas %1$d</string>
+    <string name="cw_progress">%1$d/%2$d</string>
+    <string name="cw_progress_cd">%1$d sa %2$d na salita ang nahanap</string>
+    <!-- Pronunciation -->
+    <string name="pr_instruction_default">Bigkasin ang salitang ito.</string>
+    <string name="pr_close">Isara</string>
+    <string name="pr_play_word">Pakinggan ang salita</string>
+    <string name="pr_record">Bigkasin ang salita</string>
+    <string name="pr_lives_cd">%1$d buhay</string>
+    <string name="pr_mic_hint_idle">Pindutin ang mic at sabihin ang salita</string>
+    <string name="pr_mic_hint_listening">Nakikinig ako… sabihin mo na!</string>
+    <string name="pr_mic_hint_thinking">Sandali lang…</string>
+    <string name="pr_great">Ang galing mo!</string>
+    <string name="pr_okay">Malapit na, tama!</string>
+    <string name="pr_try_again">Kaya mo \'yan! Subukan ulit.</string>
+    <string name="pr_out_of_lives">Ayos lang! Lilipat tayo sa susunod na salita.</string>
+    <string name="pr_heard">Narinig ko: %1$s</string>
+    <string name="pr_no_speech">Wala akong narinig. Subukan ulit nang mas malakas.</string>
+    <string name="pr_need_internet">Kailangan ng internet para magpatuloy.</string>
+    <string name="pr_need_internet_detail">Kumonekta sa internet para masuri ang iyong pagbigkas.</string>
+    <string name="pr_mic_permission">Kailangan ng microphone permission para magamit ito.</string>
+    <string name="pr_mic_unavailable">Hindi magamit ang mikropono ngayon.</string>
+    <string name="pr_say_again">Sabihin mo ulit ang salita.</string>
+    <string name="pr_no_lesson">Walang lesson na natagpuan.</string>
+    <string name="pr_no_activity">Walang pronunciation activity para sa lesson na ito.</string>
+    <string name="pr_stt_unavailable">Hindi available ang speech recognition sa device na ito.</string>
+    <string name="pr_language_download">Nagda-download ng wikang Filipino para sa speech recognition. Subukan ulit pagkatapos.</string>
+    <!-- Practice (Gawain) -->
+    <string name="ac_close">Isara</string>
+    <string name="ac_page">Pahina %1$d / %2$d</string>
+    <string name="ac_check">Suriin ang Sagot</string>
+    <string name="ac_next">Susunod</string>
+    <string name="ac_finish">Tapusin</string>
+    <string name="ac_retry">Subukan Muli</string>
+    <string name="ac_good">Mahusay!</string>
+    <string name="ac_try_again">Subukan muli.</string>
+    <string name="ac_missing_lesson">Walang lesson na natagpuan.</string>
+    <string name="ac_not_found">Walang gawain para sa araling ito.</string>
+    <string name="ac_word_selected">%1$s, napili</string>
+    <string name="ac_word_correct">%1$s, tama</string>
+    <string name="ac_word_wrong">%1$s, mali</string>
+    <!-- Practice complete -->
+    <string name="ac_done_title">Natapos mo ang Gawain!</string>
+    <string name="ac_score_label">Iyong puntos</string>
+    <string name="ac_score">%1$d / %2$d</string>
+    <string name="ac_stars_cd">%1$d sa 3 bituin</string>
+    <string name="ac_remark_great">Mahusay! Handa ka na sa susunod na hakbang.</string>
+    <string name="ac_remark_good">Magaling! Konting ulit pa lang.</string>
+    <string name="ac_remark_keep_going">Magpatuloy! Balikan ang aralin at subukan muli.</string>
+    <string name="ac_remark_sub">Ipagpatuloy ang pagsasanay upang mas tumibay ang iyong kaalaman.</string>
+    <string name="ac_back_to_lesson">Bumalik sa aralin</string>
+    <!-- Quiz (Pagsusulit) -->
+    <string name="qz_close">Isara</string>
+    <string name="qz_label">Pagsusulit</string>
+    <string name="qz_question_progress">Tanong %1$d ng %2$d</string>
+    <string name="qz_pick">Piliin ang tamang sagot</string>
+    <string name="qz_next">Susunod</string>
+    <string name="qz_finish">Tapusin</string>
+    <string name="qz_missing_lesson">Walang lesson na natagpuan.</string>
+    <string name="qz_not_found">Walang pagsusulit para sa araling ito.</string>
+    <string name="qz_choice_cd">%1$s: %2$s</string>
+    <string name="qz_choice_selected_cd">%1$s: %2$s, napili</string>
+    <string name="qz_done_title">Natapos mo ang Pagsusulit!</string>
+    <string name="qz_score">%1$d / %2$d</string>
+    <string name="qz_percent">%1$d%%</string>
+    <string name="qz_score_label">tamang sagot</string>
+    <string name="qz_remark_perfect">Napakahusay! Perpekto ang iyong iskor!</string>
+    <string name="qz_remark_excellent">Napakahusay! Ipagpatuloy mo!</string>
+    <string name="qz_remark_great">Mahusay! Magpatuloy sa pag-aaral.</string>
+    <string name="qz_remark_good">Maganda ang iyong pagsisikap. Subukan muli upang mas mapabuti.</string>
+    <string name="qz_remark_keep_going">Huwag panghinaan ng loob. Mag-aral pa at subukan muli.</string>
+    <string name="qz_done">Tapos na</string>
 </resources>

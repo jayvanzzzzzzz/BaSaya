@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crossword game palette: sunny sky, candy tiles, deep indigo ink. -->
+<resources>
+    <color name="cw_sky_top">#5EC2FF</color>
+    <color name="cw_sky_mid">#A6E1FF</color>
+    <color name="cw_sky_bottom">#EAF9FF</color>
+
+    <color name="cw_ink">#2D2A6E</color>
+
+    <color name="cw_panel">#E6FFFFFF</color>
+    <color name="cw_panel_stroke">#FFFFFF</color>
+
+
+    <color name="cw_select">#FF8A3D</color>
+    <color name="cw_select_lip">#DD6A1F</color>
+    <color name="cw_wheel_ring">#FFCF4A</color>
+
+    <color name="cw_success">#2FB457</color>
+    <color name="cw_error">#F2545B</color>
+
+    <color name="cw_btn_lip">#C9DCF0</color>
+    <color name="cw_shuffle_fill">#E3F1FF</color>
+    <color name="cw_shuffle_lip">#B5D3F3</color>
+    <color name="cw_shuffle_icon">#3F6FD1</color>
+    <color name="cw_star">#FFB800</color>
+</resources>

@@ -13,10 +13,12 @@ class LineView(context: Context) : View(context) {
     var fingerX = 0f
     var fingerY = 0f
 
-    private val paint = Paint().apply {
-        strokeWidth = 12f
-        isAntiAlias = true
-        color = context.getColor(R.color.main_blue)
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        strokeWidth = 12f * resources.displayMetrics.density
+        strokeCap = Paint.Cap.ROUND
+        style = Paint.Style.STROKE
+        color = context.getColor(R.color.cw_select)
+        alpha = 210
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -24,31 +26,15 @@ class LineView(context: Context) : View(context) {
 
         // Draw lines between selected letters
         for (i in 0 until selectedPoints.size - 1) {
-
             val start = selectedPoints[i]
             val end = selectedPoints[i + 1]
-
-            canvas.drawLine(
-                start.first,
-                start.second,
-                end.first,
-                end.second,
-                paint
-            )
+            canvas.drawLine(start.first, start.second, end.first, end.second, paint)
         }
 
         // Draw line from last selected letter to finger
         if (selectedPoints.isNotEmpty()) {
-
             val last = selectedPoints.last()
-
-            canvas.drawLine(
-                last.first,
-                last.second,
-                fingerX,
-                fingerY,
-                paint
-            )
+            canvas.drawLine(last.first, last.second, fingerX, fingerY, paint)
         }
     }
 }
