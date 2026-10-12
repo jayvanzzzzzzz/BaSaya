@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quiz (Pagsusulit): space adventure, game-show answer tiles. -->
+<resources>
+    <color name="qz_bg_top">#2B2178</color>
+    <color name="qz_bg_mid">#4A33A8</color>
+    <color name="qz_bg_bottom">#7A55D8</color>
+
+    <color name="qz_ink">#2A1F5C</color>
+    <color name="qz_ink_soft">#5E5591</color>
+    <color name="qz_on_bg">#FFFFFF</color>
+    <color name="qz_on_bg_soft">#D9D0FF</color>
+    <color name="qz_card_lip">#D5CCF5</color>
+    <color name="qz_glass">#33FFFFFF</color>
+
+    <color name="qz_a">#F25C54</color>
+    <color name="qz_a_lip">#C9413A</color>
+    <color name="qz_b">#4F7CEC</color>
+    <color name="qz_b_lip">#3559C2</color>
+    <color name="qz_c">#E8890C</color>
+    <color name="qz_c_lip">#B86A05</color>
+    <color name="qz_d">#2FA84F</color>
+    <color name="qz_d_lip">#1F8139</color>
+
+    <color name="qz_gold">#FFC93C</color>
+    <color name="qz_gold_lip">#D99A12</color>
+    <color name="qz_disabled">#4DFFFFFF</color>
+    <color name="qz_disabled_lip">#26FFFFFF</color>
+</resources>

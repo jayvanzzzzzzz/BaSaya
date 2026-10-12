@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Friendly night sky: violet gradient, planets and stars. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/qz_bg_mid"
+                android:endColor="@color/qz_bg_bottom"
+                android:startColor="@color/qz_bg_top" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/qz_bg_decor"
+        android:gravity="top|fill_horizontal"
+        android:height="300dp" />
+    <item
+        android:drawable="@drawable/qz_bg_bottom"
+        android:gravity="bottom|fill_horizontal"
+        android:height="200dp" />
+</layer-list>
