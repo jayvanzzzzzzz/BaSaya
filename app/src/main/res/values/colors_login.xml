@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Login screen palette (light). Dark variants live in values-night/colors_login.xml. -->
+<resources>
+    <color name="login_bg_top">#F8FAFF</color>
+    <color name="login_bg_bottom">#EAF2FC</color>
+    <color name="login_primary">#0066CC</color>
+    <color name="login_on_primary">#FFFFFF</color>
+    <color name="login_surface">#FFFFFF</color>
+    <color name="login_on_surface">#1A1C22</color>
+    <color name="login_on_surface_variant">#545B69</color>
+    <color name="login_outline">#737A88</color>
+    <color name="login_outline_variant">#D6DEEA</color>
+    <color name="login_error">#BA1A1A</color>
+    <color name="login_on_error">#FFFFFF</color>
+    <color name="login_logo_container">#FFFFFF</color>
+</resources>

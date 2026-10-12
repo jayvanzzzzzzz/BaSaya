@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Applied to the login root so Material 3 components pick up the BaSaya blue
+         palette in both light and dark mode without changing the app-wide theme. -->
+    <style name="ThemeOverlay.BaSaya.Login" parent="ThemeOverlay.Material3">
+        <item name="colorPrimary">@color/login_primary</item>
+        <item name="colorOnPrimary">@color/login_on_primary</item>
+        <item name="colorSurface">@color/login_surface</item>
+        <item name="colorOnSurface">@color/login_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/login_on_surface_variant</item>
+        <item name="colorOutline">@color/login_outline</item>
+        <item name="colorOutlineVariant">@color/login_outline_variant</item>
+        <item name="colorError">@color/login_error</item>
+        <item name="colorOnError">@color/login_on_error</item>
+        <item name="android:textColorPrimary">@color/login_on_surface</item>
+        <item name="android:textColorSecondary">@color/login_on_surface_variant</item>
+    </style>
+
+    <style name="TextAppearance.BaSaya.Login.Brand" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/quicksand_medium</item>
+        <item name="fontFamily">@font/quicksand_medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <style name="TextAppearance.BaSaya.Login.Headline" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/be_vietnam_semi_bold</item>
+        <item name="fontFamily">@font/be_vietnam_semi_bold</item>
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.BaSaya.Login.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/be_vietnam_regular</item>
+        <item name="fontFamily">@font/be_vietnam_regular</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.BaSaya.Login.Tagline" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/be_vietnam_regular</item>
+        <item name="fontFamily">@font/be_vietnam_regular</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="TextAppearance.BaSaya.Login.Button" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/be_vietnam_semi_bold</item>
+        <item name="fontFamily">@font/be_vietnam_semi_bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Widget.BaSaya.Login.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="startIconTint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+</resources>

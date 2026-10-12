@@ -20,6 +20,9 @@ import android.util.Log
 import android.view.animation.LinearInterpolator
 import android.view.View
 import android.widget.ProgressBar
+import android.view.inputmethod.EditorInfo
+import androidx.core.widget.doAfterTextChanged
+import com.google.android.material.textfield.TextInputLayout
 
 class LogInActivity : AppCompatActivity() {
 
@@ -28,6 +31,8 @@ class LogInActivity : AppCompatActivity() {
 
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
+    private lateinit var tilEmail: TextInputLayout
+    private lateinit var tilPassword: TextInputLayout
 
     private lateinit var btnLogin : AppCompatButton
     private lateinit var tvRegister: TextView
@@ -42,7 +47,10 @@ class LogInActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_log_in)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Include the IME so the scrollable form shrinks above the keyboard (edge-to-edge).
+            val systemBars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime()
+            )
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
@@ -67,16 +75,39 @@ class LogInActivity : AppCompatActivity() {
             interpolator = LinearInterpolator()
         }
 
-        btnLogin.setOnClickListener {
+        etEmail = findViewById(R.id.etEmail)
+        etPassword = findViewById(R.id.etPassword)
+        tilEmail = findViewById(R.id.tilEmail)
+        tilPassword = findViewById(R.id.tilPassword)
 
-            etEmail = findViewById(R.id.etEmail)
-            etPassword = findViewById(R.id.etPassword)
+        // Clear a field's error as soon as the user edits it
+        etEmail.doAfterTextChanged { tilEmail.error = null }
+        etPassword.doAfterTextChanged { tilPassword.error = null }
+
+        // "Done" on the keyboard submits the form
+        etPassword.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                if (btnLogin.isEnabled) btnLogin.performClick()
+                true
+            } else {
+                false
+            }
+        }
+
+        btnLogin.setOnClickListener {
 
             val email = etEmail.text.toString()
             val password = etPassword.text.toString()
 
-            if(email.isBlank() || password.isBlank()){
-                Toast.makeText(this, "Please input email and password field.", Toast.LENGTH_SHORT).show()
+            tilEmail.error = if (email.isBlank()) getString(R.string.login_error_email_required) else null
+            tilPassword.error = if (password.isBlank()) getString(R.string.login_error_password_required) else null
+
+            if (email.isBlank()) {
+                etEmail.requestFocus()
+                return@setOnClickListener
+            }
+            if (password.isBlank()) {
+                etPassword.requestFocus()
                 return@setOnClickListener
             }
 
@@ -97,11 +128,7 @@ class LogInActivity : AppCompatActivity() {
                 } else {
                     Log.d("LOGIN_DEBUG", "Login failed: $result")
 
-                    Toast.makeText(
-                        this,
-                        "Email/username or password is incorrect.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    tilPassword.error = getString(R.string.login_error_invalid_credentials)
                 }
             }
         }

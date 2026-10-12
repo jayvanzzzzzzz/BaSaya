@@ -3,6 +3,15 @@
     <string name="register"><u>Wala pang account? Mag register</u></string>
     <string name="app_title">BaSaya</string>
     <string name="kumusta_kaibigan_nhanda_kanabang_mag_basa">Kumusta kaibigan!\nHanda kanabang mag basa?</string>
+    <string name="login_welcome_back">Bawat pahina, bagong saya.</string>
+    <string name="login_heading">Magandang pagbabalik!</string>
+    <string name="login_instruction">Mag-login upang magpatuloy sa pagbabasa.</string>
+    <string name="login_no_account">Wala pang account?</string>
+    <string name="login_register_action">Mag-register</string>
+    <string name="login_in_progress">Nagla-login…</string>
+    <string name="login_error_email_required">Kailangan ang email.</string>
+    <string name="login_error_password_required">Kailangan ang password.</string>
+    <string name="login_error_invalid_credentials">Mali ang email o password.</string>
     <string name="email">Email</string>
     <string name="ilagay_ang_iyong_email">Ilagay ang iyong email</string>
     <string name="password">Password</string>
