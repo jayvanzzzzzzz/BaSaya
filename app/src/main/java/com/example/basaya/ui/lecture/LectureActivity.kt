@@ -10,6 +10,8 @@ import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -18,6 +20,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -28,6 +32,7 @@ import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.data.model.Lecture
 import com.example.basaya.data.model.LecturePage
+import com.example.basaya.ui.lecture.TalkingBookView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback
@@ -42,6 +47,10 @@ class LectureActivity : AppCompatActivity() {
     private lateinit var ibClose: ImageButton
     private lateinit var llProgressBars: LinearLayout
     private lateinit var tvContinueHint: TextView
+    private lateinit var tvLectureTitle: TextView
+    private lateinit var tvPageLabel: TextView
+    private lateinit var talkingBook: TalkingBookView
+    private var activeSentenceView: TextView? = null
 
     private var speakerOn: Boolean = true
     private var mediaPlayer: MediaPlayer? = null
@@ -54,8 +63,8 @@ class LectureActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
     private val progressSegments = mutableListOf<View>()
 
-    private val colorIncomplete = Color.parseColor("#E4E7EC")
-    private val colorComplete = Color.parseColor("#2D63D7")
+    private val colorIncomplete by lazy { ContextCompat.getColor(this, R.color.lecture_progress_track) }
+    private val colorComplete by lazy { ContextCompat.getColor(this, R.color.lecture_primary) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,21 +95,22 @@ class LectureActivity : AppCompatActivity() {
 
         ibSpeaker = findViewById(R.id.ibSpeaker)
         ibSpeaker.setImageResource(R.drawable.ic_speaker_on)
-        ibSpeaker.setOnClickListener {
-            if (speakerOn) {
-                stopAudio()
-                ibSpeaker.setImageResource(R.drawable.ic_speaker_mute)
-                speakerOn = false
-            } else {
-                ibSpeaker.setImageResource(R.drawable.ic_speaker_on)
-                speakerOn = true
-            }
-        }
+        ibSpeaker.setOnClickListener { toggleSpeaker() }
 
         sentenceContainer = findViewById(R.id.allSentenceContainer)
         scrollContent = findViewById(R.id.scrollContent)
         btnNextPage = findViewById(R.id.btnNextPage)
         llProgressBars = findViewById(R.id.llProgressBars)
+        tvLectureTitle = findViewById(R.id.tvLectureTitle)
+        tvPageLabel = findViewById(R.id.tvPageLabel)
+        talkingBook = findViewById(R.id.talkingBook)
+
+        // Tapping the book replays the sentence just read (and turns sound back on if muted).
+        talkingBook.setOnClickListener {
+            if (!::lecture.isInitialized || currentSentenceIndex == 0) return@setOnClickListener
+            if (!speakerOn) toggleSpeaker()
+            playSentenceAudio(lecture.pages[currentPageIndex], currentSentenceIndex - 1)
+        }
 
         ibClose = findViewById(R.id.ibClose)
         ibClose.setOnClickListener {
@@ -119,6 +129,7 @@ class LectureActivity : AppCompatActivity() {
             }
 
             lecture = fetchedLecture
+            tvLectureTitle.text = lecture.title.ifBlank { getString(R.string.lecture_default_title) }
 
             setupProgressBars()
             showPage(currentPageIndex)
@@ -150,8 +161,8 @@ class LectureActivity : AppCompatActivity() {
         progressSegments.clear()
 
         val pageCount = lecture.pages.size
-        val gapPx = (5 * resources.displayMetrics.density).toInt()
-        val barHeightPx = (6 * resources.displayMetrics.density).toInt()
+        val gapPx = (8 * resources.displayMetrics.density).toInt()
+        val barHeightPx = (8 * resources.displayMetrics.density).toInt()
 
         for (i in 0 until pageCount) {
             val segment = View(this)
@@ -168,7 +179,7 @@ class LectureActivity : AppCompatActivity() {
     private fun makeBarDrawable(color: Int): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = 8f
+            cornerRadius = 8 * resources.displayMetrics.density
             setColor(color)
         }
     }
@@ -188,7 +199,9 @@ class LectureActivity : AppCompatActivity() {
     private fun showPage(pageIndex: Int) {
         stopAudio()
         sentenceContainer.removeAllViews()
+        activeSentenceView = null
         currentSentenceIndex = 0
+        tvPageLabel.text = getString(R.string.lecture_page_label, pageIndex + 1, lecture.pages.size)
         btnNextPage.visibility = View.GONE
         tvContinueHint.visibility = View.VISIBLE
         revealNextSentence()
@@ -199,21 +212,18 @@ class LectureActivity : AppCompatActivity() {
 
         if (currentSentenceIndex < page.sentences.size) {
             val sentence = page.sentences[currentSentenceIndex]
-            addBulletTextView(sentence)
+            addSentenceView(sentence)
 
             playSentenceAudio(page, currentSentenceIndex)
 
             currentSentenceIndex++
 
             if (currentSentenceIndex == page.sentences.size) {
-                btnNextPage.visibility = View.VISIBLE
+                btnNextPage.text = getString(
+                    if (currentPageIndex == lecture.pages.lastIndex) R.string.lecture_finish else R.string.next
+                )
                 tvContinueHint.visibility = View.GONE
-
-                btnNextPage.text = if (currentPageIndex == lecture.pages.lastIndex) {
-                    "TAPUSIN"
-                } else {
-                    "SUSUNOD"
-                }
+                showNextButton()
             }
 
             updateProgressBars()
@@ -224,19 +234,63 @@ class LectureActivity : AppCompatActivity() {
         }
     }
 
-    private fun addBulletTextView(sentence: String) {
+    /**
+     * Adds the sentence as the new "being read" line: it gets the highlighter, the
+     * previous line fades back to normal, and the new one slides up into place.
+     */
+    private fun addSentenceView(sentence: String) {
+        val density = resources.displayMetrics.density
+
+        activeSentenceView?.let { previous ->
+            previous.background = null
+            previous.setTextColor(ContextCompat.getColor(this, R.color.lecture_ink_soft))
+        }
+
         val tv = TextView(this).apply {
-            text = HtmlCompat.fromHtml(
-                "&#8226; $sentence",
-                HtmlCompat.FROM_HTML_MODE_LEGACY
-            )
-            setTextColor(Color.parseColor("#344054"))
-            textSize = 18f
-            setLineSpacing(8f, 1f)
+            text = HtmlCompat.fromHtml(sentence, HtmlCompat.FROM_HTML_MODE_LEGACY)
+            typeface = ResourcesCompat.getFont(this@LectureActivity, R.font.lexend)
+            setTextColor(ContextCompat.getColor(this@LectureActivity, R.color.lecture_ink))
+            textSize = 20f
+            setLineSpacing(6 * density, 1f)
             gravity = Gravity.START
-            setPadding(0, 0, 0, (28 * resources.displayMetrics.density).toInt())
+            background = ContextCompat.getDrawable(this@LectureActivity, R.drawable.bg_lecture_sentence_active)
+            setPadding((22 * density).toInt(), (12 * density).toInt(), (14 * density).toInt(), (12 * density).toInt())
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = (10 * density).toInt() }
+            alpha = 0f
+            translationY = 18 * density
         }
         sentenceContainer.addView(tv)
+        activeSentenceView = tv
+
+        tv.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(320)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+    }
+
+    private fun showNextButton() {
+        btnNextPage.visibility = View.VISIBLE
+        btnNextPage.alpha = 0f
+        btnNextPage.scaleX = 0.85f
+        btnNextPage.scaleY = 0.85f
+        btnNextPage.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(360)
+            .setInterpolator(OvershootInterpolator(2.2f))
+            .start()
+    }
+
+    private fun toggleSpeaker() {
+        speakerOn = !speakerOn
+        if (!speakerOn) stopAudio()
+        ibSpeaker.setImageResource(if (speakerOn) R.drawable.ic_speaker_on else R.drawable.ic_speaker_mute)
     }
 
     private fun goToNextPage() {
@@ -291,9 +345,16 @@ class LectureActivity : AppCompatActivity() {
             )
             player.setDataSource(source)
             // Ignore late callbacks from a player that was replaced while still buffering.
-            player.setOnPreparedListener { if (mediaPlayer === it && speakerOn) it.start() }
-            player.setOnErrorListener { _, what, extra ->
+            player.setOnPreparedListener {
+                if (mediaPlayer === it && speakerOn) {
+                    it.start()
+                    talkingBook.setTalking(true)
+                }
+            }
+            player.setOnCompletionListener { if (mediaPlayer === it) talkingBook.setTalking(false) }
+            player.setOnErrorListener { mp, what, extra ->
                 Log.w("LectureActivity", "Audio failed ($what/$extra): $source")
+                if (mediaPlayer === mp) talkingBook.setTalking(false)
                 true
             }
             player.prepareAsync()
@@ -311,14 +372,18 @@ class LectureActivity : AppCompatActivity() {
             return
         }
 
-        mediaPlayer = MediaPlayer.create(this, resId)
-        mediaPlayer?.start()
+        val player = MediaPlayer.create(this, resId) ?: return
+        mediaPlayer = player
+        player.setOnCompletionListener { if (mediaPlayer === it) talkingBook.setTalking(false) }
+        player.start()
+        talkingBook.setTalking(true)
     }
 
     private fun stopAudio() {
         // release() is valid in every state, including while a stream is still preparing.
         mediaPlayer?.release()
         mediaPlayer = null
+        if (::talkingBook.isInitialized) talkingBook.setTalking(false)
     }
 
     private fun showConfirmDialog() {

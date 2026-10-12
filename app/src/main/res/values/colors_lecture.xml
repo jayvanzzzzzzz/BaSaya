@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lecture screen (storybook style). Light-only, like the rest of the lesson flow. -->
+<resources>
+    <color name="lecture_bg_top">#DCEBFF</color>
+    <color name="lecture_bg_bottom">#FFF6E6</color>
+    <color name="lecture_ink">#1B2A4A</color>
+    <color name="lecture_ink_soft">#4A5878</color>
+    <color name="lecture_primary">#2D63D7</color>
+    <color name="lecture_primary_pressed">#2350BF</color>
+    <color name="lecture_paper">#FFFDF6</color>
+    <color name="lecture_paper_stroke">#F0E3C4</color>
+    <color name="lecture_highlight">#FFEFB3</color>
+    <color name="lecture_highlight_edge">#FFC94D</color>
+    <color name="lecture_progress_track">#C9DAF8</color>
+    <color name="lecture_button_surface">#FFFFFF</color>
+    <color name="lecture_button_stroke">#D5E2FA</color>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Highlighter behind the sentence currently being read aloud. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/lecture_highlight" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    <item
+        android:width="5dp"
+        android:gravity="start|fill_vertical"
+        android:bottom="10dp"
+        android:top="10dp"
+        android:start="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/lecture_highlight_edge" />
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+</layer-list>

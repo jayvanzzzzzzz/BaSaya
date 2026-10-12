@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft round toolbar button (close / speaker). -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#332D63D7">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/lecture_button_surface" />
+            <stroke
+                android:width="1.5dp"
+                android:color="@color/lecture_button_stroke" />
+        </shape>
+    </item>
+</ripple>
