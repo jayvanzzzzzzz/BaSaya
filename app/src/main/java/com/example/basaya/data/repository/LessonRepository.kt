@@ -1,6 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.LessonEntity
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,6 +17,7 @@ class LessonRepository(private val context: Context) {
         // 1. Find the student's class — no class, no lessons.
         val userDoc = firestore.collection("users").document(userId).get().await()
         val classId = userDoc.getString("classId")
+        Log.d(TAG, "syncLessons uid=$userId classId=$classId")
 
         if (classId.isNullOrBlank()) {
             db.lessonDao().deleteLessonsForUser(userId)
@@ -54,7 +56,15 @@ class LessonRepository(private val context: Context) {
             .get()
             .await()
 
-        val lessonIds = classLessonsSnapshot.documents.map { it.id }
+        // Link docs may be keyed by the lesson id, or carry it in a "lessonId" field
+        // (auto-id links written by the teacher side).
+        // The link's "order" is the teacher's ordering for this class.
+        val linkOrders = classLessonsSnapshot.documents.associate { link ->
+            (link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id) to
+                link.getLong("order")?.toInt()
+        }
+        val lessonIds = linkOrders.keys.toList()
+        Log.d(TAG, "classes/$classId/classLessons -> ${lessonIds.size} ids: $lessonIds")
 
         if (lessonIds.isEmpty()) {
             db.lessonDao().deleteLessonsForUser(userId)
@@ -69,6 +79,7 @@ class LessonRepository(private val context: Context) {
             .whereIn(com.google.firebase.firestore.FieldPath.documentId(), lessonIds)
             .get()
             .await()
+        Log.d(TAG, "lessons whereIn -> ${lessonsSnapshot.size()} docs")
 
         // preserve isDownloaded flags already stored locally
         val existingDownloadedIds = db.lessonDao().getLessonsForUser(userId)
@@ -86,7 +97,7 @@ class LessonRepository(private val context: Context) {
                 title = doc.getString("title") ?: "",
                 description = doc.getString("description") ?: "",
                 difficulty = doc.getString("difficulty") ?: "",
-                order = doc.getLong("order")?.toInt() ?: 0,
+                order = linkOrders[doc.id] ?: doc.getLong("order")?.toInt() ?: 0,
                 unlocked = true,
                 lectureFinished = progress?.lectureFinished ?: false,
                 gameFinished = progress?.gameFinished ?: false,
@@ -139,5 +150,9 @@ class LessonRepository(private val context: Context) {
         } catch (e: Exception) {
             false
         }
+    }
+
+    private companion object {
+        const val TAG = "LESSON_SYNC"
     }
 }
