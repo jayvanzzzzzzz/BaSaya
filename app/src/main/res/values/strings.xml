@@ -70,4 +70,12 @@
     <string name="error_checking_class_membership">May problema sa koneksyon. Subukan muli.</string>
 
     <string name="profile_picture">Profile picture</string>
+
+    <!-- Lesson list card -->
+    <string name="lesson_card_eyebrow">ARALIN</string>
+    <string name="lesson_card_eyebrow_numbered">ARALIN %1$d</string>
+    <string name="lesson_card_open">Buksan</string>
+    <string name="lesson_card_download_cd">I-download ang aralin</string>
+    <string name="lesson_card_downloading_cd">Dina-download ang aralin</string>
+    <string name="lesson_card_more_cd">Iba pang opsyon</string>
 </resources>

@@ -7,14 +7,14 @@
 
     <!-- Button surface -->
     <path
-        android:fillColor="#2D63D7"
+        android:fillColor="#1F4D3A"
         android:pathData="M12,2A10,10 0,1 0,12,22A10,10 0,1 0,12,2" />
 
     <!-- Refined inner border -->
     <path
         android:fillColor="@android:color/transparent"
         android:pathData="M12,3.15A8.85,8.85 0,1 0,12,20.85A8.85,8.85 0,1 0,12,3.15"
-        android:strokeColor="#5B85E3"
+        android:strokeColor="#3E6B55"
         android:strokeWidth="1" />
 
     <!-- Download arrow -->

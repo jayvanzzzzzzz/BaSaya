@@ -1,5 +1,6 @@
 package com.example.basaya.adapter
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
@@ -12,6 +13,8 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.basaya.R
 import com.example.basaya.data.entity.LessonEntity
@@ -22,12 +25,6 @@ class LessonAdapter(
     private val onDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit,
     private val onRemoveDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit
 ) : RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
-
-    private val lessonImages = intArrayOf(
-        R.drawable.lesson_bg_2,
-        R.drawable.lesson_bg_1,
-        R.drawable.lesson_bg_3
-    )
 
     private var highlightQuery: String = ""
 
@@ -46,7 +43,7 @@ class LessonAdapter(
         private val tvProgress: TextView = itemView.findViewById(R.id.tvProgress)
         private val tvDifficultyLabel: TextView = itemView.findViewById(R.id.tvDifficultyLabel)
         private val vDifficultyDot: View = itemView.findViewById(R.id.vDifficultyDot)
-        private val ivLessonImage: ImageView = itemView.findViewById(R.id.ivLessonImage)
+        private val tvLessonEyebrow: TextView = itemView.findViewById(R.id.tvLessonEyebrow)
         private val progressLesson: ProgressBar = itemView.findViewById(R.id.progressLesson)
         private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
         private val tvCheckDownload: TextView = itemView.findViewById(R.id.tvCheckDownload)
@@ -59,24 +56,28 @@ class LessonAdapter(
             tvTitle.text = buildHighlightedTitle(lesson.title, highlightQuery)
             tvDescription.text = lesson.description
             tvDifficultyLabel.text = lesson.difficulty.replaceFirstChar { it.uppercase() }
+            tvLessonEyebrow.text = if (lesson.order > 0) {
+                itemView.context.getString(R.string.lesson_card_eyebrow_numbered, lesson.order)
+            } else {
+                itemView.context.getString(R.string.lesson_card_eyebrow)
+            }
 
             bindProgressBadge(tvProgress, lesson)
             bindProgressBar(progressLesson, tvProgressPercent, lesson)
             bindDownloadState(lesson)
 
-            val imageIndex = Math.floorMod(lesson.id.hashCode(), lessonImages.size)
-            ivLessonImage.setImageResource(lessonImages[imageIndex])
+            val difficultyColor = ContextCompat.getColor(
+                itemView.context,
+                when (lesson.difficulty.lowercase()) {
+                    "beginner"     -> R.color.lesson_diff_beginner
+                    "intermediate" -> R.color.lesson_diff_intermediate
+                    "advanced"     -> R.color.lesson_diff_advanced
+                    else           -> R.color.lesson_diff_default
+                }
+            )
 
-            val (dotColor, labelColor) = when (lesson.difficulty.lowercase()) {
-                "beginner"     -> "#34C47C" to "#34C47C"
-                "intermediate" -> "#F5A623" to "#F5A623"
-                "advanced"     -> "#E8445A" to "#E8445A"
-                else           -> "#4A90E2" to "#4A90E2"
-            }
-
-            vDifficultyDot.backgroundTintList =
-                android.content.res.ColorStateList.valueOf(Color.parseColor(dotColor))
-            tvDifficultyLabel.setTextColor(Color.parseColor(labelColor))
+            vDifficultyDot.backgroundTintList = ColorStateList.valueOf(difficultyColor)
+            tvDifficultyLabel.setTextColor(difficultyColor)
 
             itemView.setOnClickListener { onItemClick(lesson) }
 
@@ -164,31 +165,38 @@ class LessonAdapter(
         val anyFinished = lectureFinished || gameFinished || activityFinished || quizFinished
         val allFinished = lectureFinished && gameFinished && activityFinished && quizFinished
 
-        when {
+        val foregroundRes = when {
             allFinished -> {
                 tvProgress.text = "Tapos na"
-                tvProgress.setBackgroundResource(R.drawable.bg_status_completed)
+                tvProgress.setBackgroundResource(R.drawable.bg_lesson_status_done)
                 tvProgress.setCompoundDrawablesWithIntrinsicBounds(
                     R.drawable.ic_status_check, 0, 0, 0
                 )
+                R.color.lesson_status_done_fg
             }
             anyFinished -> {
                 tvProgress.text = "Nasa progreso"
-                tvProgress.setBackgroundResource(R.drawable.bg_status_progress)
+                tvProgress.setBackgroundResource(R.drawable.bg_lesson_status_progress)
                 tvProgress.setCompoundDrawablesWithIntrinsicBounds(
                     R.drawable.ic_status_progress, 0, 0, 0
                 )
+                R.color.lesson_status_progress_fg
             }
             else -> {
                 tvProgress.text = "Hindi pa nasisimulan"
-                tvProgress.setBackgroundResource(R.drawable.bg_status_not_started)
+                tvProgress.setBackgroundResource(R.drawable.bg_lesson_status_new)
                 tvProgress.setCompoundDrawablesWithIntrinsicBounds(
                     R.drawable.ic_status_locked, 0, 0, 0
                 )
+                R.color.lesson_status_new_fg
             }
         }
 
-        tvProgress.compoundDrawablePadding = (6 * context.resources.displayMetrics.density).toInt()
+        // Status icons are white vectors; tint them to match the soft badge foreground.
+        val foreground = ContextCompat.getColor(context, foregroundRes)
+        tvProgress.setTextColor(foreground)
+        TextViewCompat.setCompoundDrawableTintList(tvProgress, ColorStateList.valueOf(foreground))
+        tvProgress.compoundDrawablePadding = (5 * context.resources.displayMetrics.density).toInt()
     }
 
     private fun bindProgressBar(progressLesson: ProgressBar, tvProgressPercent: TextView, lesson: LessonEntity) {

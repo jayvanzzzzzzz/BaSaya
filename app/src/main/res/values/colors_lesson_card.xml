@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lesson list card. Light-only on purpose: the Home screen that hosts it is light-only. -->
+    <color name="lesson_card_surface">#FFFFFF</color>
+    <color name="lesson_card_stroke">#E6E4DA</color>
+    <color name="lesson_card_divider">#EFECE3</color>
+    <color name="lesson_card_ripple">#141F4D3A</color>
+    <color name="lesson_card_primary">#1F4D3A</color>
+    <color name="lesson_card_primary_pressed">#163828</color>
+    <color name="lesson_card_eyebrow">#4E6E5A</color>
+    <color name="lesson_card_title">#1F2A24</color>
+    <color name="lesson_card_body">#56635C</color>
+    <color name="lesson_card_track">#E8E4D9</color>
+
+    <!-- Status badge (soft tint + readable foreground) -->
+    <color name="lesson_status_done_bg">#E1F0E6</color>
+    <color name="lesson_status_done_fg">#1E5C3A</color>
+    <color name="lesson_status_progress_bg">#FBF0DA</color>
+    <color name="lesson_status_progress_fg">#875A12</color>
+    <color name="lesson_status_new_bg">#F0EEE7</color>
+    <color name="lesson_status_new_fg">#5E625C</color>
+
+    <!-- Difficulty (same hue families as before, deepened for contrast on white) -->
+    <color name="lesson_diff_beginner">#2E7D4F</color>
+    <color name="lesson_diff_intermediate">#A8650F</color>
+    <color name="lesson_diff_advanced">#B83A4B</color>
+    <color name="lesson_diff_default">#4E6E5A</color>
+</resources>

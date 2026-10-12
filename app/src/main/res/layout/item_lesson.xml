@@ -2,220 +2,261 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="14dp"
+    android:layout_marginBottom="12dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="22dp"
+    app:cardBackgroundColor="@color/lesson_card_surface"
+    app:cardCornerRadius="20dp"
     app:cardElevation="0dp"
-    app:rippleColor="#E4EAFA"
-    app:strokeColor="#EAECF0"
+    app:rippleColor="@color/lesson_card_ripple"
+    app:strokeColor="@color/lesson_card_stroke"
     app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="18dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="6dp">
 
-        <FrameLayout
+        <!-- A. Metadata: lesson number + status badge -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="148dp"
-            android:background="#DCE7FF">
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/ivLessonImage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null"
-                android:scaleType="centerCrop" />
-
-            <!-- Keeps text legible regardless of the thumbnail supplied by the adapter. -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/scrim_lesson_card" />
+            <TextView
+                android:id="@+id/tvLessonEyebrow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/public_sans"
+                android:letterSpacing="0.12"
+                android:maxLines="1"
+                android:text="@string/lesson_card_eyebrow"
+                android:textColor="@color/lesson_card_eyebrow"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="ARALIN 3" />
 
             <TextView
                 android:id="@+id/tvProgress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|end"
-                android:layout_margin="12dp"
-                android:background="@drawable/bg_lesson_difficulty"
-                android:drawablePadding="6dp"
+                android:background="@drawable/bg_lesson_status_new"
+                android:drawablePadding="5dp"
+                android:fontFamily="@font/public_sans"
                 android:gravity="center_vertical"
-                android:letterSpacing="0.02"
-                android:paddingStart="10dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="6dp"
-                android:text="Hindi pa nasisimulan"
-                android:textColor="#FFFFFF"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-        </FrameLayout>
+                android:maxLines="1"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="4dp"
+                android:textColor="@color/lesson_status_new_fg"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:drawableStartCompat="@drawable/ic_status_locked"
+                app:drawableTint="@color/lesson_status_new_fg"
+                tools:text="Hindi pa nasisimulan" />
+        </LinearLayout>
+
+        <!-- B. Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/lexend"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
+            android:textColor="@color/lesson_card_title"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            tools:text="Mga Pangngalan sa Ating Paligid" />
+
+        <!-- C. Description -->
+        <TextView
+            android:id="@+id/tvDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/public_sans"
+            android:lineSpacingMultiplier="1.25"
+            android:maxLines="2"
+            android:textColor="@color/lesson_card_body"
+            android:textSize="14sp"
+            tools:text="Kilalanin ang mga pangngalan ng tao, bagay, hayop, at lugar." />
+
+        <!-- D. Difficulty + open action -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/vDifficultyDot"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_dot"
+                android:backgroundTint="@color/lesson_diff_default" />
+
+            <TextView
+                android:id="@+id/tvDifficultyLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/public_sans"
+                android:maxLines="1"
+                android:textColor="@color/lesson_diff_default"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="Beginner" />
+
+            <!-- Visual affordance only; the whole card handles the click. -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_lesson_open"
+                android:drawablePadding="2dp"
+                android:fontFamily="@font/public_sans"
+                android:gravity="center"
+                android:importantForAccessibility="no"
+                android:maxLines="1"
+                android:minHeight="34dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="8dp"
+                android:text="@string/lesson_card_open"
+                android:textColor="@color/lesson_card_surface"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:drawableEndCompat="@drawable/ic_lesson_chevron"
+                app:drawableTint="@color/lesson_card_surface" />
+        </LinearLayout>
+
+        <!-- E. Progress -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/progressLesson"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_lesson_card"
+                tools:progress="50" />
+
+            <TextView
+                android:id="@+id/tvProgressPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:fontFamily="@font/public_sans"
+                android:gravity="end"
+                android:minEms="2"
+                android:textColor="@color/lesson_card_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="50%" />
+        </LinearLayout>
+
+        <!-- F. Footer: offline download (secondary) -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="14dp"
+            android:background="@color/lesson_card_divider" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="18dp"
-            android:paddingTop="16dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="17dp">
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="@font/lexend"
-                android:lineSpacingMultiplier="1.15"
-                android:maxLines="2"
-                android:text="Introduction to Android"
-                android:textColor="#182230"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:ellipsize="end"
-                android:lineSpacingMultiplier="1.3"
-                android:maxLines="2"
-                android:text="Learn the fundamentals of Android development with Kotlin."
-                android:textColor="#667085"
-                android:textSize="13sp" />
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/downloadButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginStart="-8dp"
+                android:background="@drawable/bg_lesson_footer_action"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:minHeight="44dp"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingEnd="10dp">
 
-                <View
-                    android:id="@+id/vDifficultyDot"
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:background="@drawable/bg_dot"
-                    android:backgroundTint="#4A90E2" />
+                <ImageView
+                    android:id="@+id/ibDownload"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="@string/lesson_card_download_cd"
+                    android:src="@drawable/ic_download" />
+
+                <!-- Shown only while a download is in progress; takes the icon's slot -->
+                <ProgressBar
+                    android:id="@+id/pbDownload"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="@string/lesson_card_downloading_cd"
+                    android:indeterminateTint="@color/lesson_card_primary"
+                    android:padding="2dp"
+                    android:visibility="gone" />
 
                 <TextView
-                    android:id="@+id/tvDifficultyLabel"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="7dp"
-                    android:layout_weight="1"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Beginner"
-                    android:textColor="#4A90E2"
-                    android:textSize="12sp" />
-
-                <TextView
+                    android:id="@+id/tvCheckDownload"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_lesson_start"
-                    android:gravity="center"
-                    android:paddingStart="13dp"
-                    android:paddingTop="7dp"
-                    android:paddingEnd="13dp"
-                    android:paddingBottom="7dp"
-                    android:text="Buksan"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="@font/public_sans"
+                    android:maxLines="1"
+                    android:text="I-download"
+                    android:textColor="@color/lesson_card_body"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-                <ProgressBar
-                    android:id="@+id/progressLesson"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="0dp"
-                    android:layout_height="6dp"
-                    android:layout_weight="1"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/progress_lesson_bar" />
-
-                <TextView
-                    android:id="@+id/tvProgressPercent"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="0%"
-                    android:textColor="#667085"
-                    android:textSize="11sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <LinearLayout
-                    android:id="@+id/downloadButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/tvCheckDownload"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="I-download"
-                        android:textColor="#667085"
-                        android:fontFamily="@font/public_sans" />
-
-                    <ImageView
-                        android:id="@+id/ibDownload"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginStart="2dp"
-                        android:src="@drawable/ic_download"
-                        android:contentDescription="Download" />
-
-                </LinearLayout>
-
-                <!-- Shown only while a download is in progress -->
-                <ProgressBar
-                    android:id="@+id/pbDownload"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="4dp"
-                    android:indeterminateTint="#4A90E2"
-                    android:visibility="gone" />
-
-                <!-- Shown only when lesson.isDownloaded is true — opens the "Alisin ang Download" menu -->
-                <ImageButton
-                    android:id="@+id/ibMoreOptions"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginStart="2dp"
-                    android:background="@android:color/transparent"
-                    android:contentDescription="Iba pang opsyon"
-                    android:src="@drawable/ic_more_vert"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-
+            <!-- Shown only when lesson.isDownloaded is true — opens the "Alisin ang Download" menu -->
+            <ImageButton
+                android:id="@+id/ibMoreOptions"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="-10dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/lesson_card_more_cd"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_more_vert"
+                android:visibility="gone"
+                app:tint="@color/lesson_card_body" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

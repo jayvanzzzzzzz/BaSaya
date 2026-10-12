@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Subtle rounded ripple for the download action in the lesson card footer. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/lesson_card_ripple">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</ripple>
