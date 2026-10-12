@@ -1,25 +1,40 @@
 package com.example.basaya.ui.activity
 
+import android.animation.ObjectAnimator
 import android.content.Intent
-import android.graphics.Typeface
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
-import com.example.basaya.data.repository.ActivityRepository
 import com.example.basaya.data.model.PracticeActivityData
+import com.example.basaya.data.repository.ActivityRepository
+import com.example.basaya.ui.game.ConfettiView
+import com.example.basaya.ui.pronunciation.PronunciationBookView
 import com.google.android.flexbox.FlexboxLayout
-import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -39,25 +54,37 @@ class PracticeActivity : AppCompatActivity() {
     private lateinit var tvInstruction: TextView
     private lateinit var chipsContainer: FlexboxLayout
     private lateinit var feedbackContainer: LinearLayout
+    private lateinit var feedbackBuddy: PronunciationBookView
     private lateinit var tvFeedback: TextView
-    private lateinit var btnAction: MaterialButton
+    private lateinit var btnAction: TextView
     private lateinit var llProgressBars: LinearLayout
+    private lateinit var confettiView: ConfettiView
 
     private val trackSegments = mutableListOf<View>()
-    private val colorIncomplete = 0xFFD9DDE3.toInt()
-    private val colorComplete = 0xFF0066CC.toInt()
+
+    private enum class TileState(
+        @param:ColorRes val fill: Int,
+        @param:ColorRes val lip: Int,
+        @param:ColorRes val text: Int,
+        @param:DrawableRes val icon: Int?
+    ) {
+        IDLE(R.color.ac_tile, R.color.ac_tile_lip, R.color.ac_ink, null),
+        PICKED(R.color.ac_pick, R.color.ac_pick_lip, R.color.ac_ink, null),
+        RIGHT(R.color.ac_right, R.color.ac_right_lip, android.R.color.white, R.drawable.ac_ic_check),
+        WRONG(R.color.ac_wrong, R.color.ac_wrong_lip, android.R.color.white, R.drawable.ac_ic_cross)
+    }
+
+    private val density by lazy { resources.displayMetrics.density }
+    private fun dp(value: Float): Int = (value * density).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_practice)
 
-        val statusBarBg = findViewById<View>(R.id.statusBarBg)
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            statusBarBg.layoutParams.height = statusBarHeight
-            statusBarBg.requestLayout()
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
 
@@ -66,7 +93,7 @@ class PracticeActivity : AppCompatActivity() {
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
         if (lessonId.isBlank()) {
-            Toast.makeText(this, "Missing lesson data.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.ac_missing_lesson), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -76,24 +103,22 @@ class PracticeActivity : AppCompatActivity() {
         tvInstruction = findViewById(R.id.tvInstruction)
         chipsContainer = findViewById(R.id.chipsContainer)
         feedbackContainer = findViewById(R.id.feedbackContainer)
+        feedbackBuddy = findViewById(R.id.feedbackBuddy)
         tvFeedback = findViewById(R.id.tvFeedback)
         btnAction = findViewById(R.id.btnAction)
         llProgressBars = findViewById(R.id.llProgressBars)
+        confettiView = findViewById(R.id.confettiView)
 
-        activityRepository = ActivityRepository(this)
+        findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
+        announceAsButton(btnAction)
 
         activityRepository = ActivityRepository(this)
 
         lifecycleScope.launch {
-            val t0 = System.currentTimeMillis()
-            Log.d("PerfCheck", "Starting getActivity()")
-
             val fetched = activityRepository.getActivity(lessonId)
 
-            Log.d("PerfCheck", "getActivity() returned after ${System.currentTimeMillis() - t0}ms")
-
             if (fetched == null || fetched.pages.isEmpty()) {
-                Toast.makeText(this@PracticeActivity, "Activity not found.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@PracticeActivity, getString(R.string.ac_not_found), Toast.LENGTH_SHORT).show()
                 finish()
                 return@launch
             }
@@ -103,10 +128,10 @@ class PracticeActivity : AppCompatActivity() {
             tvInstruction.text = practiceData.instruction
 
             setupProgressTrack()
-            showPage(currentPageIndex)
-            Log.d("PerfCheck", "UI fully rendered at ${System.currentTimeMillis() - t0}ms")
+            showPage(currentPageIndex, animateIn = false)
 
             btnAction.setOnClickListener {
+                pressBounce(btnAction)
                 if (!hasChecked) {
                     checkAnswer()
                 } else {
@@ -116,84 +141,156 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
+    // ───────────────────────────── Progress ─────────────────────────────
+
     private fun setupProgressTrack() {
         llProgressBars.removeAllViews()
         trackSegments.clear()
 
-        val pageCount = practiceData.pages.size
-        val dashHeightPx = (4 * resources.displayMetrics.density).toInt()
-        val gapPx = (10 * resources.displayMetrics.density).toInt()
-
-        for (i in 0 until pageCount) {
-            val dash = View(this).apply {
-                setBackgroundResource(R.drawable.dash_track)
+        val gapPx = dp(8f)
+        for (i in practiceData.pages.indices) {
+            val segment = View(this).apply {
+                setBackgroundResource(R.drawable.ac_track)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
+                    if (i != 0) marginStart = gapPx
+                }
             }
-            val params = LinearLayout.LayoutParams(0, dashHeightPx, 1f).apply {
-                if (i != 0) marginStart = gapPx
-            }
-            dash.layoutParams = params
-            llProgressBars.addView(dash)
-            trackSegments.add(dash)
+            llProgressBars.addView(segment)
+            trackSegments.add(segment)
         }
     }
 
     private fun updateProgressTrack() {
-        for (i in trackSegments.indices) {
-            val isDone = i < currentPageIndex || (i == currentPageIndex && hasChecked)
-            trackSegments[i].setBackgroundColor(if (isDone) colorComplete else colorIncomplete)
+        trackSegments.forEachIndexed { i, segment ->
+            val isDone = i < currentPageIndex || (i == currentPageIndex && hasChecked && isCurrentAnswerCorrect())
+            val wasDone = segment.tag == true
+            if (isDone != wasDone) {
+                segment.tag = isDone
+                segment.setBackgroundResource(if (isDone) R.drawable.ac_track_done else R.drawable.ac_track)
+                if (isDone) {
+                    segment.scaleY = 1.6f
+                    segment.animate().scaleY(1f).setDuration(380)
+                        .setInterpolator(OvershootInterpolator(3f)).start()
+                }
+            }
         }
-        tvPageTag.text = "PAHINA ${currentPageIndex + 1}/${practiceData.pages.size}"
+        tvPageTag.text = getString(R.string.ac_page, currentPageIndex + 1, practiceData.pages.size)
     }
 
-    private fun showPage(index: Int) {
+    // ───────────────────────────── Page & tiles ─────────────────────────────
+
+    private fun showPage(index: Int, animateIn: Boolean = true) {
         val page = practiceData.pages[index]
 
         selectedIndices.clear()
         hasChecked = false
-        feedbackContainer.visibility = View.GONE
-        btnAction.text = "Suriin ang Sagot"
+        hideFeedback()
+        setButton(R.string.ac_check, R.drawable.ac_btn_check)
         btnAction.isEnabled = false
 
         chipsContainer.removeAllViews()
 
         page.words.forEachIndexed { wordIndex, word ->
-            val chip = TextView(this).apply {
+            val tile = TextView(this).apply {
                 text = word
-                textSize = 17f
-                typeface = Typeface.MONOSPACE
-                setTextColor(0xFF1B2430.toInt())
-                setPadding(12, 8, 12, 8)
+                typeface = ResourcesCompat.getFont(this@PracticeActivity, R.font.be_vietnam_bold)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
                 gravity = Gravity.CENTER
-                background = null
-                rotation = if (wordIndex % 2 == 0) -1.2f else 1.2f
+                minHeight = dp(52f)
+                minWidth = dp(48f)
+                compoundDrawablePadding = dp(6f)
+                setPadding(dp(16f), dp(8f), dp(16f), dp(12f))
+                isClickable = true
+                isFocusable = true
+                announceAsButton(this)
 
-                val params = FlexboxLayout.LayoutParams(
+                layoutParams = FlexboxLayout.LayoutParams(
                     FlexboxLayout.LayoutParams.WRAP_CONTENT,
                     FlexboxLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    setMargins(4, 4, 4, 4)
+                    setMargins(dp(5f), dp(6f), dp(5f), dp(6f))
                 }
-                layoutParams = params
 
                 setOnClickListener {
                     if (hasChecked) return@setOnClickListener
 
                     if (selectedIndices.contains(wordIndex)) {
                         selectedIndices.remove(wordIndex)
-                        background = null
+                        applyTileState(this, word, TileState.IDLE)
+                        animate().rotation(0f).setDuration(200).start()
                     } else {
                         selectedIndices.add(wordIndex)
-                        setBackgroundResource(R.drawable.highlight_yellow)
+                        applyTileState(this, word, TileState.PICKED)
+                        animate().rotation(if (wordIndex % 2 == 0) -2.5f else 2.5f).setDuration(200).start()
                     }
+                    performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    pop(this, 1.12f)
 
                     btnAction.isEnabled = selectedIndices.isNotEmpty()
                 }
             }
-            chipsContainer.addView(chip)
+            applyTileState(tile, word, TileState.IDLE)
+            chipsContainer.addView(tile)
+
+            // Tiles pop onto the worksheet one after another
+            tile.alpha = 0f
+            tile.scaleX = 0.6f
+            tile.scaleY = 0.6f
+            tile.animate()
+                .alpha(1f).scaleX(1f).scaleY(1f)
+                .setStartDelay((if (animateIn) 160L else 80L) + wordIndex * 45L)
+                .setDuration(320)
+                .setInterpolator(OvershootInterpolator(2f))
+                .start()
+        }
+
+        if (animateIn) {
+            chipsContainer.translationX = chipsContainer.width * 0.3f
+            chipsContainer.alpha = 0f
+            chipsContainer.animate().translationX(0f).alpha(1f).setDuration(320)
+                .setInterpolator(DecelerateInterpolator()).start()
         }
 
         updateProgressTrack()
     }
+
+    private fun applyTileState(tile: TextView, word: String, state: TileState) {
+        tile.background = candyTile(
+            ContextCompat.getColor(this, state.fill),
+            ContextCompat.getColor(this, state.lip)
+        )
+        tile.setTextColor(ContextCompat.getColor(this, state.text))
+        tile.setCompoundDrawablesRelativeWithIntrinsicBounds(state.icon ?: 0, 0, 0, 0)
+        tile.contentDescription = when (state) {
+            TileState.IDLE -> word
+            TileState.PICKED -> getString(R.string.ac_word_selected, word)
+            TileState.RIGHT -> getString(R.string.ac_word_correct, word)
+            TileState.WRONG -> getString(R.string.ac_word_wrong, word)
+        }
+    }
+
+    /** A rounded word tile with a darker lip underneath, like a real game piece. */
+    private fun candyTile(fill: Int, lip: Int): Drawable {
+        val radius = dp(16f).toFloat()
+        val lipHeight = dp(4f)
+        val base = GradientDrawable().apply {
+            cornerRadius = radius
+            setColor(lip)
+        }
+        val face = GradientDrawable().apply {
+            cornerRadius = radius
+            setColor(fill)
+        }
+        return LayerDrawable(arrayOf(base, face)).apply {
+            setLayerInset(0, 0, lipHeight, 0, 0)
+            setLayerInset(1, 0, 0, 0, lipHeight)
+        }
+    }
+
+    // ───────────────────────────── Checking ─────────────────────────────
+
+    private fun isCurrentAnswerCorrect(): Boolean =
+        selectedIndices == practiceData.pages[currentPageIndex].correctIndices.toSet()
 
     private fun checkAnswer() {
         val page = practiceData.pages[currentPageIndex]
@@ -201,38 +298,44 @@ class PracticeActivity : AppCompatActivity() {
         val isCorrect = selectedIndices == correctSet
 
         for (i in 0 until chipsContainer.childCount) {
-            val chip = chipsContainer.getChildAt(i) as TextView
+            val tile = chipsContainer.getChildAt(i) as TextView
             val wasSelected = selectedIndices.contains(i)
             val shouldBeSelected = correctSet.contains(i)
 
-            chip.isEnabled = false
+            tile.isEnabled = false
 
             when {
                 wasSelected && shouldBeSelected -> {
-                    chip.setBackgroundResource(R.drawable.highlight_green)
-                    chip.text = "${page.words[i]} ✓"
+                    applyTileState(tile, page.words[i], TileState.RIGHT)
+                    tile.animate().rotation(0f).setDuration(200).start()
+                    tile.postDelayed({ pop(tile, 1.18f) }, i * 60L)
                 }
                 wasSelected && !shouldBeSelected -> {
-                    chip.setBackgroundResource(R.drawable.highlight_red)
-                    chip.text = "${page.words[i]} ✕"
+                    applyTileState(tile, page.words[i], TileState.WRONG)
+                    tile.animate().rotation(0f).setDuration(200).start()
+                    tile.postDelayed({ shake(tile) }, i * 60L)
                 }
                 else -> {
-                    chip.background = null
+                    // Unpicked tiles fade back so the result stands out
+                    tile.animate().alpha(0.55f).setDuration(250).start()
                 }
             }
         }
 
         hasChecked = true
-        feedbackContainer.visibility = View.VISIBLE
         updateProgressTrack()
 
         if (isCorrect) {
             score++
-            tvFeedback.text = "Mahusay! ${practiceData.explanation}"
-            btnAction.text = if (currentPageIndex == practiceData.pages.lastIndex) "Tapusin" else "Susunod"
+            showFeedback(good = true, text = "${getString(R.string.ac_good)} ${practiceData.explanation}".trim())
+            setButton(
+                if (currentPageIndex == practiceData.pages.lastIndex) R.string.ac_finish else R.string.ac_next,
+                R.drawable.ac_btn_next
+            )
+            celebrate()
         } else {
-            tvFeedback.text = "Subukan muli. ${practiceData.explanation}"
-            btnAction.text = "Subukan Muli"
+            showFeedback(good = false, text = "${getString(R.string.ac_try_again)} ${practiceData.explanation}".trim())
+            setButton(R.string.ac_retry, R.drawable.ac_btn_retry)
         }
     }
 
@@ -256,6 +359,7 @@ class PracticeActivity : AppCompatActivity() {
     private fun finishActivity() {
         val total = practiceData.pages.size
         val uid = FirebaseAuth.getInstance().currentUser?.uid
+        btnAction.isEnabled = false
 
         lifecycleScope.launch {
             if (uid != null) {
@@ -276,4 +380,90 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
+    // ───────────────────────────── Feedback ─────────────────────────────
+
+    private fun showFeedback(good: Boolean, text: String) {
+        feedbackContainer.setBackgroundResource(if (good) R.drawable.ac_feedback_good else R.drawable.ac_feedback_retry)
+        tvFeedback.setTextColor(ContextCompat.getColor(this, if (good) R.color.ac_good_text else R.color.ac_retry_text))
+        tvFeedback.text = text
+
+        feedbackContainer.animate().cancel()
+        feedbackContainer.visibility = View.VISIBLE
+        feedbackContainer.alpha = 0f
+        feedbackContainer.translationY = dp(24f).toFloat()
+        feedbackContainer.animate()
+            .alpha(1f).translationY(0f)
+            .setDuration(340)
+            .setInterpolator(OvershootInterpolator(1.4f))
+            .start()
+
+        // Make sure the bubble is visible on short screens
+        val scroll = findViewById<android.widget.ScrollView>(R.id.worksheetScroll)
+        scroll.post { scroll.smoothScrollTo(0, feedbackContainer.bottom) }
+
+        feedbackBuddy.setMood(if (good) PronunciationBookView.Mood.HAPPY else PronunciationBookView.Mood.CHEER)
+    }
+
+    private fun hideFeedback() {
+        feedbackContainer.animate().cancel()
+        feedbackContainer.visibility = View.GONE
+        feedbackBuddy.setMood(PronunciationBookView.Mood.IDLE)
+    }
+
+    private fun setButton(textRes: Int, backgroundRes: Int) {
+        btnAction.setText(textRes)
+        btnAction.setBackgroundResource(backgroundRes)
+    }
+
+    private fun celebrate() {
+        btnAction.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        val cardLoc = IntArray(2)
+        val confettiLoc = IntArray(2)
+        chipsContainer.getLocationInWindow(cardLoc)
+        confettiView.getLocationInWindow(confettiLoc)
+        confettiView.burst(
+            cardLoc[0] - confettiLoc[0] + chipsContainer.width / 2f,
+            cardLoc[1] - confettiLoc[1] + chipsContainer.height / 2f,
+            34
+        )
+    }
+
+    // ───────────────────────────── Motion helpers ─────────────────────────────
+
+    private fun pop(view: View, peak: Float) {
+        view.animate().cancel()
+        view.scaleX = peak
+        view.scaleY = peak
+        view.animate().scaleX(1f).scaleY(1f).setStartDelay(0).setDuration(320)
+            .setInterpolator(OvershootInterpolator(3f)).start()
+    }
+
+    private fun shake(view: View) {
+        ObjectAnimator.ofFloat(
+            view, View.TRANSLATION_X,
+            0f, -dp(8f).toFloat(), dp(8f).toFloat(), -dp(5f).toFloat(), dp(5f).toFloat(), 0f
+        ).apply {
+            duration = 380
+            start()
+        }
+    }
+
+    private fun pressBounce(view: View) {
+        view.animate().scaleX(0.96f).scaleY(0.96f).setDuration(70)
+            .withEndAction {
+                view.animate().scaleX(1f).scaleY(1f).setDuration(220)
+                    .setInterpolator(OvershootInterpolator(3f)).start()
+            }
+            .start()
+    }
+
+    /** Lets TalkBack announce custom tiles and the action bar as buttons. */
+    private fun announceAsButton(view: View) {
+        view.accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = Button::class.java.name
+            }
+        }
+    }
 }

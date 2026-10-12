@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Score medal: gold rim with a darker lip and a white face. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="6dp">
+        <shape android:shape="oval">
+            <solid android:color="#E0A800" />
+        </shape>
+    </item>
+    <item android:bottom="6dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFD54A" />
+        </shape>
+    </item>
+    <item android:bottom="16dp" android:left="10dp" android:right="10dp" android:top="10dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list>
