@@ -40,6 +40,7 @@ import com.example.basaya.R
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.CrosswordProgress
 import com.example.basaya.data.model.CrosswordGameLevel
+import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.CrosswordRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -66,6 +67,9 @@ class CrosswordActivity : AppCompatActivity() {
     private var isSelecting = false
     private var isShuffling = false
     private var levelCompleted = false
+
+    /** Swiped words that aren't in the level; lowers the Talasalitaan accuracy. */
+    private var wrongTries = 0
 
     private val letterViews = mutableListOf<TextView>()
     private val selectedLetters = mutableListOf<TextView>()
@@ -678,7 +682,12 @@ class CrosswordActivity : AppCompatActivity() {
 
             wordIndex == -1 -> {
                 // A single tapped letter is just a cancel, not a wrong answer
-                if (word.length < 2) hidePreview() else previewError()
+                if (word.length < 2) {
+                    hidePreview()
+                } else {
+                    wrongTries++
+                    previewError()
+                }
             }
 
             isWordFound(currentLevelWords!![wordIndex]) -> previewAlreadyFound(wordIndex)
@@ -756,6 +765,18 @@ class CrosswordActivity : AppCompatActivity() {
                             .await()
                     } catch (e: Exception) {
                         Log.e("CrosswordActivity", "Failed to sync game progress", e)
+                    }
+
+                    // Talasalitaan skill: words found vs. wrong swipes in this level
+                    try {
+                        SkillProgressRepository().addCrosswordLevel(
+                            uid, lessonId,
+                            wordsFound = currentLevelWords.orEmpty().size,
+                            wrongTries = wrongTries
+                        )
+                        SkillProgressRepository.refreshInBackground(uid)
+                    } catch (e: Exception) {
+                        Log.e("CrosswordActivity", "Failed to save vocabulary progress", e)
                     }
                 }
 

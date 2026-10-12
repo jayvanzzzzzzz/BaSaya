@@ -31,6 +31,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.model.PracticeActivityData
+import com.example.basaya.data.progress.Skill
+import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.ActivityRepository
 import com.example.basaya.ui.game.ConfettiView
 import com.example.basaya.ui.pronunciation.PronunciationBookView
@@ -47,7 +49,10 @@ class PracticeActivity : AppCompatActivity() {
     private var currentPageIndex = 0
     private var hasChecked = false
     private val selectedIndices = mutableSetOf<Int>()
+    /** Pages answered correctly on the first check. */
     private var score = 0
+    private val checkedPages = mutableSetOf<Int>()
+    private var retries = 0
 
     private lateinit var tvPageTag: TextView
     private lateinit var tvActivityTitle: TextView
@@ -325,8 +330,13 @@ class PracticeActivity : AppCompatActivity() {
         hasChecked = true
         updateProgressTrack()
 
+        // Only a page that is right on its first check earns the point; retries are counted
+        // separately so they still show up in the student's progress.
+        val firstCheck = checkedPages.add(currentPageIndex)
+        if (!isCorrect) retries++
+
         if (isCorrect) {
-            score++
+            if (firstCheck) score++
             showFeedback(good = true, text = "${getString(R.string.ac_good)} ${practiceData.explanation}".trim())
             setButton(
                 if (currentPageIndex == practiceData.pages.lastIndex) R.string.ac_finish else R.string.ac_next,
@@ -367,6 +377,18 @@ class PracticeActivity : AppCompatActivity() {
                     activityRepository.markActivityFinished(uid, lessonId, score, total)
                 } catch (e: Exception) {
                     Log.e("PracticeActivity", "Failed to save activity result", e)
+                }
+
+                // Pagkilala sa salita skill
+                try {
+                    SkillProgressRepository().recordResult(
+                        uid, lessonId, Skill.PAGKILALA,
+                        correct = score, attempts = total, items = total,
+                        extras = mapOf("retries" to retries)
+                    )
+                    SkillProgressRepository.refreshInBackground(uid)
+                } catch (e: Exception) {
+                    Log.e("PracticeActivity", "Failed to save word recognition progress", e)
                 }
             }
 

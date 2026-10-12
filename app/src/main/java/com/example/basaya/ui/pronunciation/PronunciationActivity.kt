@@ -40,6 +40,8 @@ import com.example.basaya.R
 import com.example.basaya.data.audio.PronunciationAudioStore
 import com.example.basaya.data.model.PronunciationActivityData
 import com.example.basaya.data.model.PronunciationWord
+import com.example.basaya.data.progress.Skill
+import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.PronunciationRepository
 import com.example.basaya.speech.PronunciationChecker
 import com.example.basaya.speech.PronunciationScorer
@@ -105,6 +107,11 @@ class PronunciationActivity : AppCompatActivity() {
     private var currentWordIndex = 0
     private var livesRemaining = MAX_LIVES
     private var correctCount = 0
+
+    // Pagbigkas skill tracking. "No speech heard" is not a miss; only scored attempts count.
+    private var firstTryCorrect = 0
+    private var missesOnWord = 0
+    private val hardWords = linkedSetOf<String>()
     private var isProcessing = false
 
     /** Set once Whisper is unavailable (e.g. free daily limit reached) so we stop retrying it. */
@@ -255,6 +262,7 @@ class PronunciationActivity : AppCompatActivity() {
     private fun showCurrentWord(animate: Boolean) {
         val currentWord = wordList[currentWordIndex]
         livesRemaining = MAX_LIVES
+        missesOnWord = 0
         updateLivesDisplay(animate = false)
         updateProgressBar()
         hideResult()
@@ -453,6 +461,7 @@ class PronunciationActivity : AppCompatActivity() {
         when (result.scoreBand) {
             PronunciationScorer.ScoreBand.GREAT, PronunciationScorer.ScoreBand.OKAY -> {
                 correctCount++
+                if (missesOnWord == 0) firstTryCorrect++
                 setButtonsEnabled(false)
                 bookView.setMood(PronunciationBookView.Mood.HAPPY)
                 celebrate()
@@ -473,6 +482,8 @@ class PronunciationActivity : AppCompatActivity() {
     /** Wrong answers only encourage; the misheard text is not shown. */
     private fun handleFailedAttempt() {
         livesRemaining--
+        missesOnWord++
+        hardWords.add(wordList[currentWordIndex].word)
         updateLivesDisplay(animate = true)
         bookView.setMood(PronunciationBookView.Mood.CHEER)
 
@@ -578,6 +589,21 @@ class PronunciationActivity : AppCompatActivity() {
                     pronunciationRepository.markActivityFinished(uid, lessonId, correctCount, wordList.size)
                 } catch (e: Exception) {
                     Log.e("PronunciationActivity", "Failed to save pronunciation result", e)
+                }
+
+                // Pagbigkas skill: first-try correct words, plus the words that needed help
+                try {
+                    SkillProgressRepository().recordResult(
+                        uid, lessonId, Skill.PAGBIGKAS,
+                        correct = firstTryCorrect, attempts = wordList.size, items = wordList.size,
+                        extras = mapOf(
+                            "eventuallyCorrect" to correctCount,
+                            "hardWords" to hardWords.toList()
+                        )
+                    )
+                    SkillProgressRepository.refreshInBackground(uid)
+                } catch (e: Exception) {
+                    Log.e("PronunciationActivity", "Failed to save pronunciation progress", e)
                 }
             }
 

@@ -33,6 +33,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.model.Quiz
+import com.example.basaya.data.progress.Skill
+import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.QuizRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -333,6 +335,17 @@ class QuizActivity : AppCompatActivity() {
                     quizRepository.saveQuizResult(uid, lessonId, score, total)
                 } catch (e: Exception) {
                     android.util.Log.e("QuizActivity", "Failed to save quiz result", e)
+                }
+
+                // Pagsusulit skill
+                try {
+                    SkillProgressRepository().recordResult(
+                        uid, lessonId, Skill.PAGSUSULIT,
+                        correct = score, attempts = total, items = total
+                    )
+                    SkillProgressRepository.refreshInBackground(uid)
+                } catch (e: Exception) {
+                    android.util.Log.e("QuizActivity", "Failed to save quiz progress", e)
                 }
             }
 
