@@ -7,7 +7,8 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
+import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -55,12 +56,77 @@ class CrosswordActivity : AppCompatActivity() {
 
     private lateinit var lineView: LineView
     private lateinit var tempTv: TextView
-    private lateinit var wordContainer: LinearLayout
+    private lateinit var wordContainer: FrameLayout
+    private lateinit var boardHorizontalScroll: HorizontalScrollView
 
     val wordLetterBoxes = mutableListOf<List<TextView>>()
 
     private var currentLevel: CrosswordGameLevel? = null
     private var currentLevelWords: List<String>? = null
+
+    private fun renderCrosswordGrid(words: List<String>, foundWords: List<String>) {
+        val grid = CrosswordGridBuilder.build(words)
+        wordContainer.removeAllViews()
+        wordLetterBoxes.clear()
+
+        val density = resources.displayMetrics.density
+        val cellSize = (32 * density).toInt()
+        val cellStep = (38 * density).toInt()
+        val boardPadding = (12 * density).toInt()
+        val gridWidth = boardPadding * 2 + (grid.columns - 1) * cellStep + cellSize
+        val gridHeight = boardPadding * 2 + (grid.rows - 1) * cellStep + cellSize
+        val boardWidth = maxOf(gridWidth, boardHorizontalScroll.width)
+
+        wordContainer.layoutParams = FrameLayout.LayoutParams(
+            boardWidth,
+            gridHeight
+        )
+
+        val leftOffset = (boardWidth - gridWidth) / 2 + boardPadding
+        val cellViews = mutableMapOf<CrosswordCellPosition, TextView>()
+
+        grid.placements.forEach { placement ->
+            val word = words[placement.wordIndex]
+            val boxes = word.indices.map { letterIndex ->
+                val position = placement.positionAt(letterIndex)
+                cellViews.getOrPut(position) {
+                    TextView(this).apply {
+                        gravity = Gravity.CENTER
+                        textSize = 21f
+                        includeFontPadding = false
+                        elevation = 3f * density
+                        setTextColor(android.graphics.Color.WHITE)
+                        background = ContextCompat.getDrawable(
+                            this@CrosswordActivity,
+                            R.drawable.letter_box_background
+                        )
+                        layoutParams = FrameLayout.LayoutParams(cellSize, cellSize).apply {
+                            gravity = Gravity.TOP or Gravity.LEFT
+                            leftMargin = leftOffset + position.column * cellStep
+                            topMargin = boardPadding + position.row * cellStep
+                        }
+                    }.also { cell -> wordContainer.addView(cell) }
+                }
+            }
+            wordLetterBoxes.add(boxes)
+        }
+
+        foundWords.forEach { foundWord ->
+            val wordIndex = words.indexOfFirst { it.equals(foundWord, ignoreCase = true) }
+            if (wordIndex >= 0) {
+                wordLetterBoxes[wordIndex].forEachIndexed { index, box ->
+                    setCellFound(box, words[wordIndex][index])
+                }
+            }
+        }
+    }
+
+    private fun setCellFound(box: TextView, letter: Char) {
+        box.text = letter.toString()
+        box.background = ContextCompat.getDrawable(this, R.drawable.correct_word_tv_bg)
+        box.typeface = ResourcesCompat.getFont(this, R.font.lexend)
+        box.setTextColor(android.graphics.Color.WHITE)
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +156,6 @@ class CrosswordActivity : AppCompatActivity() {
                 // button (LessonRepository.downloadLesson -> syncLevels) does.
                 allGameLevels = repo.fetchLevelsRemote(lessonId)
             }
-
             // Student's own progress state (not lesson content) — still fine
             // to persist locally regardless of download status.
             repo.syncProgress(lessonId)
@@ -112,7 +177,7 @@ class CrosswordActivity : AppCompatActivity() {
             }
 
             currentLevel = allGameLevels.firstOrNull { it.level == currentLevelNumber }
-            currentLevelWords = currentLevel?.words
+            currentLevelWords = currentLevel?.words?.map { it.trim() }
 
             if (currentLevel == null) {
                 Log.e("CrosswordActivity", "No matching level entity for level=$currentLevelNumber among ${allGameLevels.map { it.level }}")
@@ -121,75 +186,22 @@ class CrosswordActivity : AppCompatActivity() {
                 return@launch
             }
 
-            wordContainer = findViewById(R.id.wordContainer)
-
-            //box generation
-            currentLevelWords?.forEach { word ->
-
-                val row = LinearLayout(this@CrosswordActivity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER
-                    clipChildren = false
-                    clipToPadding = false
-                }
-
-                val letterBoxes = mutableListOf<TextView>()
-
-                repeat(word.length) {
-
-                    val tv = TextView(this@CrosswordActivity).apply {
-
-                        val size = (30 * resources.displayMetrics.density).toInt()
-
-                        text = ""
-                        gravity = Gravity.CENTER
-                        textSize = 24f
-                        includeFontPadding = false
-                        elevation = 12f
-
-                        layoutParams = LinearLayout.LayoutParams(
-                            size,
-                            size
-                        ).apply {
-                            setMargins(0, 0, 5, 15)
-                        }
-
-                        background = ContextCompat.getDrawable(
-                            this@CrosswordActivity,
-                            R.drawable.letter_box_background
-                        )
-                    }
-
-                    row.addView(tv)
-                    letterBoxes.add(tv)
-
-                }
-
-                wordLetterBoxes.add(letterBoxes)
-                wordContainer.addView(row)
-
+            val words = currentLevelWords.orEmpty()
+            if (words.isEmpty() || words.any { it.isEmpty() }) {
+                Log.e("CrosswordActivity", "Level ${currentLevel?.level} has no usable words")
+                Toast.makeText(this@CrosswordActivity, "May problema sa mga salita ng laro.", Toast.LENGTH_SHORT).show()
+                finish()
+                return@launch
             }
 
+            wordContainer = findViewById(R.id.wordContainer)
+            boardHorizontalScroll = findViewById(R.id.boardHorizontalScroll)
             val savedFoundWords = progress?.foundWords ?: ""
             if (savedFoundWords.isNotEmpty()) {
                 findWord.addAll(savedFoundWords.split(","))
             }
-
-            findWord.forEach { foundWord ->
-                val wordIndex = currentLevelWords?.indexOf(foundWord) ?: -1
-                if (wordIndex != -1) {
-                    val boxes = wordLetterBoxes[wordIndex]
-                    boxes.forEachIndexed { i, box ->
-                        box.text = foundWord[i].toString()
-                        box.background = ContextCompat.getDrawable(
-                            this@CrosswordActivity,
-                            R.drawable.correct_word_tv_bg
-                        )
-                        box.typeface =
-                            ResourcesCompat.getFont(this@CrosswordActivity, R.font.lexend)
-                        box.setTextColor(android.graphics.Color.WHITE)
-                    }
-                }
+            boardHorizontalScroll.post {
+                renderCrosswordGrid(words, findWord)
             }
 
             val letters =
@@ -343,14 +355,7 @@ class CrosswordActivity : AppCompatActivity() {
                                         }.start()
                                 }
 
-                                box.text = word[i].toString()
-                                box.background = ContextCompat.getDrawable(
-                                    this@CrosswordActivity,
-                                    R.drawable.correct_word_tv_bg
-                                )
-                                box.setTextColor(android.graphics.Color.WHITE)
-                                box.typeface =
-                                    ResourcesCompat.getFont(this@CrosswordActivity, R.font.lexend)
+                                setCellFound(box, word[i])
 
                             }, i * 100L)
 
