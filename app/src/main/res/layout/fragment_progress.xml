@@ -1,528 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Student progress: buddy hero, five separate skill cards, and words to practice. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F7F5"
+    android:background="@drawable/pg_bg"
     android:clipToPadding="false"
     android:fillViewport="true"
+    android:scrollbars="none"
     tools:context=".ui.fragment.ProgressFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="32dp"
+        android:paddingTop="24dp"
         android:paddingEnd="20dp"
         android:paddingBottom="36dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Aking kasanayan"
-            android:textColor="#172033"
-            android:textSize="30sp"
+            android:accessibilityHeading="true"
+            android:fontFamily="@font/lexend"
+            android:text="@string/pg_title"
+            android:textColor="@color/pg_ink"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:lineSpacingExtra="2dp"
-            android:text="Subaybayan ang mga kasanayang natatapos mo sa bawat aralin."
-            android:textColor="#667085"
-            android:textSize="15sp" />
+            android:layout_marginTop="4dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:text="@string/pg_subtitle"
+            android:textColor="@color/pg_ink_soft"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-        <!-- Summary is deliberately quiet so the actual skill cards remain the focus. -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- ═══ Hero: buddy + greeting + lessons finished ═══ -->
+        <LinearLayout
+            android:id="@+id/heroCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="30dp"
-            app:cardBackgroundColor="#223A72"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="0dp">
+            android:layout_marginTop="20dp"
+            android:background="@drawable/pg_hero"
+            android:elevation="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp">
+
+            <com.example.basaya.ui.pronunciation.PronunciationBookView
+                android:id="@+id/buddy"
+                android:layout_width="92dp"
+                android:layout_height="108dp"
+                android:importantForAccessibility="no" />
 
             <LinearLayout
-                android:id="@+id/lessonProgressContainer"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="20dp"
-                android:paddingTop="19dp"
-                android:paddingEnd="20dp"
-                android:paddingBottom="19dp">
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvGreeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="@string/pg_greeting_plain"
+                    android:textColor="@color/pg_ink"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvHeroMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/quicksand_medium"
+                    android:lineSpacingExtra="1dp"
+                    android:textColor="@color/pg_ink"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Ang galing mo! Tingnan ang mga bituing nakuha mo." />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/lessonRing"
+                android:layout_width="78dp"
+                android:layout_height="78dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/pg_circle">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/progressLessons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:max="100"
+                    app:indicatorColor="@color/pg_talasalitaan"
+                    app:indicatorSize="72dp"
+                    app:trackColor="@color/pg_track"
+                    app:trackCornerRadius="4dp"
+                    app:trackThickness="7dp" />
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvLessonsDone"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kabuuang Progreso"
-                        android:textColor="#C5D2F0"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:fontFamily="@font/lexend"
+                        android:textColor="@color/pg_ink"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:text="8/10" />
 
                     <TextView
-                        android:id="@+id/tvLessonProgressFraction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="0/0 aralin natapos"
-                        android:textColor="#FFFFFF"
-                        android:textSize="19sp"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="0.85"
+                        android:text="@string/pg_lessons_label"
+                        android:textColor="@color/pg_ink_soft"
+                        android:textSize="9sp"
                         android:textStyle="bold"
-                        tools:text="0/2 aralin natapos" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progressLessonOverall"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="12dp"
-                        android:max="100"
-                        android:progress="0"
-                        app:indicatorColor="#7FA0F0"
-                        app:trackColor="#33487A"
-                        app:trackCornerRadius="8dp"
-                        app:trackThickness="8dp"
-                        tools:progress="50" />
-
+                        tools:ignore="SmallSp" />
                 </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvLessonProgressPercent"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="0%"
-                    android:textColor="#FFFFFF"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
-                    tools:text="0%" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+        <!-- ═══ Skills ═══ -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
             android:layout_marginBottom="12dp"
-            android:letterSpacing="0.08"
-            android:text="MGA KASANAYAN"
-            android:textColor="#667085"
-            android:textSize="11sp"
+            android:accessibilityHeading="true"
+            android:fontFamily="@font/lexend"
+            android:text="@string/pg_section_skills"
+            android:textColor="@color/pg_ink"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- Pag-unawa sa Binasa -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
+            android:id="@+id/skillsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#E8EAF0"
-            app:strokeWidth="1dp">
+            android:clipChildren="false"
+            android:orientation="vertical" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_progress_dot_blue" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pag-unawa sa Binasa"
-                            android:textColor="#172033"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvComprehensionStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="Hindi pa nasisimulan"
-                            android:padding="0dp"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:textColor="#667085"
-                            android:textSize="13sp"
-                            tools:text="4 sa 6 na aralin" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvComprehensionPercent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0%"
-                        android:textColor="#2F5FC5"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        tools:text="67%" />
-                </LinearLayout>
-
-                <!-- Bind this indicator to the lesson/skill's progress when it is available. -->
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressComprehension"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="17dp"
-                    android:max="100"
-                    android:progress="0"
-                    app:indicatorColor="#3B6FE2"
-                    app:trackColor="#E8EEFC"
-                    app:trackCornerRadius="8dp"
-                    app:trackThickness="8dp"
-                    tools:progress="67" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Talasalitaan -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- ═══ Words to practice (Pagbigkas hard words) ═══ -->
+        <LinearLayout
+            android:id="@+id/wordsCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#E8EAEF"
-            app:strokeWidth="1dp">
+            android:layout_marginTop="12dp"
+            android:background="@drawable/pg_card"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="21dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
-            <LinearLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:accessibilityHeading="true"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/lexend"
+                android:gravity="center_vertical"
+                android:text="@string/pg_section_words"
+                android:textColor="@color/pg_ink"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                app:drawableStartCompat="@drawable/ic_mic"
+                app:drawableTint="@color/pg_pagbigkas" />
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/quicksand_medium"
+                android:text="@string/pg_words_hint"
+                android:textColor="@color/pg_ink_soft"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_progress_dot_green" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Talasalitaan"
-                            android:textColor="#172033"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvVocabStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="Hindi pa nasisimulan"
-                            android:padding="0dp"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:textColor="#667085"
-                            android:textSize="13sp"
-                            tools:text="3 sa 8 na aralin" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvVocabPercent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0%"
-                        android:textColor="#17775B"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        tools:text="38%" />
-                </LinearLayout>
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressVocab"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="17dp"
-                    android:max="100"
-                    android:progress="0"
-                    app:indicatorColor="#1B9270"
-                    app:trackColor="#E5F3EE"
-                    app:trackCornerRadius="8dp"
-                    app:trackThickness="8dp"
-                    tools:progress="38" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Pagkilala ng Salita -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EDE9E5"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/wordsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_progress_dot_orange" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pagkilala ng Salita"
-                            android:textColor="#172033"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvWordRecognitionStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="Hindi pa nasisimulan"
-                            android:padding="0dp"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:textColor="#667085"
-                            android:textSize="13sp"
-                            tools:text="7 sa 10 na aralin" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvWordRecognitionPercent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0%"
-                        android:textColor="#B95A28"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        tools:text="70%" />
-                </LinearLayout>
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressWordRecognition"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="17dp"
-                    android:max="100"
-                    android:progress="0"
-                    app:indicatorColor="#D16B34"
-                    app:trackColor="#F8ECE4"
-                    app:trackCornerRadius="8dp"
-                    app:trackThickness="8dp"
-                    tools:progress="70" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Pagbigkas -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EAECF0"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_progress_dot_blue" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pagbigkas"
-                            android:textColor="#172033"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvPronunciationStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="Hindi pa nasisimulan"
-                            android:textColor="#667085"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvPronunciationPercent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0%"
-                        android:textColor="#2F5FC5"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressPronunciation"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="17dp"
-                    android:max="100"
-                    android:progress="0"
-                    app:indicatorColor="#3B6FE2"
-                    app:trackColor="#E8EEFC"
-                    app:trackCornerRadius="8dp"
-                    app:trackThickness="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Pagsusulit -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EDE9E5"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:background="@drawable/bg_progress_dot_orange" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pagsusulit"
-                            android:textColor="#172033"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvQuizStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="Hindi pa nasisimulan"
-                            android:textColor="#667085"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvQuizPercent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0%"
-                        android:textColor="#B95A28"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressQuiz"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="17dp"
-                    android:max="100"
-                    android:progress="0"
-                    app:indicatorColor="#D16B34"
-                    app:trackColor="#F8ECE4"
-                    app:trackCornerRadius="8dp"
-                    app:trackThickness="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+                android:layout_marginTop="10dp"
+                app:flexWrap="wrap" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

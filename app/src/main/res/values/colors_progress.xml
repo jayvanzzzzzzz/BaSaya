@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Student progress screen: one color family per skill. -->
+<resources>
+    <color name="pg_bg_top">#EAF1FF</color>
+    <color name="pg_bg_bottom">#FFF8EE</color>
+    <color name="pg_ink">#1F2547</color>
+    <color name="pg_ink_soft">#5D6585</color>
+    <color name="pg_card_lip">#DCE3F3</color>
+    <color name="pg_track">#EEF1F8</color>
+    <color name="pg_star_off">#DDE2EE</color>
+    <color name="pg_star_on">#FFC93C</color>
+
+    <color name="pg_hero_top">#FFE08A</color>
+    <color name="pg_hero_bottom">#FFB86B</color>
+    <color name="pg_hero_lip">#E89A4C</color>
+
+    <color name="pg_unawa">#4F7CEC</color>
+    <color name="pg_unawa_tint">#E6EDFF</color>
+    <color name="pg_talasalitaan">#24994A</color>
+    <color name="pg_talasalitaan_tint">#E2F6E7</color>
+    <color name="pg_pagkilala">#D9780A</color>
+    <color name="pg_pagkilala_tint">#FFF0DB</color>
+    <color name="pg_pagbigkas">#E5503E</color>
+    <color name="pg_pagbigkas_tint">#FFE6E1</color>
+    <color name="pg_pagsusulit">#7A55D8</color>
+    <color name="pg_pagsusulit_tint">#EEE8FF</color>
+
+    <color name="pg_up">#1E8A44</color>
+    <color name="pg_up_tint">#DFF5E5</color>
+    <color name="pg_down">#C0392B</color>
+    <color name="pg_down_tint">#FFE4E1</color>
+</resources>

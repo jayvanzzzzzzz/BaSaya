@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pg_title">Aking Progreso</string>
+    <string name="pg_subtitle">Tingnan kung gaano ka na kagaling sa bawat kasanayan!</string>
+    <string name="pg_greeting">Kumusta, %1$s!</string>
+    <string name="pg_greeting_plain">Kumusta!</string>
+    <string name="pg_hero_great">Ang galing mo! Tingnan ang mga bituing nakuha mo.</string>
+    <string name="pg_hero_help">May kasanayang kailangan nating sanayin. Kaya natin \'to!</string>
+    <string name="pg_hero_going">Tuloy lang ang pag-aaral, umuunlad ka!</string>
+    <string name="pg_hero_start">Simulan ang unang aralin para makita ang iyong progreso.</string>
+    <string name="pg_lessons_done">%1$d/%2$d</string>
+    <string name="pg_lessons_label">aralin\nnatapos</string>
+    <string name="pg_lessons_cd">%1$d sa %2$d na aralin ang natapos</string>
+    <string name="pg_section_skills">Mga kasanayan ko</string>
+    <string name="pg_section_words">Mga salitang sanayin</string>
+    <string name="pg_words_hint">Mga salitang medyo nahirapan ka sa Pagbigkas. Subukan mo ulit!</string>
+
+    <string name="pg_skill_unawa">Pag-unawa sa Binasa</string>
+    <string name="pg_skill_unawa_sub">Lektura</string>
+    <string name="pg_skill_talasalitaan">Talasalitaan</string>
+    <string name="pg_skill_talasalitaan_sub">Crossword</string>
+    <string name="pg_skill_pagkilala">Pagkilala sa Salita</string>
+    <string name="pg_skill_pagkilala_sub">Gawain</string>
+    <string name="pg_skill_pagbigkas">Pagbigkas</string>
+    <string name="pg_skill_pagbigkas_sub">Pronunciation</string>
+    <string name="pg_skill_pagsusulit">Pagsusulit</string>
+    <string name="pg_skill_pagsusulit_sub">Quiz</string>
+
+    <string name="pg_level_mahusay">Mahusay</string>
+    <string name="pg_level_umuunlad">Umuunlad</string>
+    <string name="pg_level_nagsisimula">Nagsisimula</string>
+    <string name="pg_level_tulong">Kailangan ng tulong</string>
+    <string name="pg_level_kulang">Kulang pa ang datos</string>
+    <string name="pg_level_not_started">Hindi pa nasisimulan</string>
+    <string name="pg_level_done">Tapos na</string>
+    <string name="pg_level_in_progress">Nasa progreso</string>
+
+    <string name="pg_msg_mahusay">Ang galing mo! Ituloy mo lang.</string>
+    <string name="pg_msg_umuunlad">Malapit ka na! Kaunting ensayo pa.</string>
+    <string name="pg_msg_nagsisimula">Magandang simula! Magsanay pa tayo.</string>
+    <string name="pg_msg_tulong">Kaya mo \'yan! Balikan natin ang aralin.</string>
+    <string name="pg_msg_kulang">Tapusin pa ang ilang aralin para makita ang iyong antas.</string>
+    <string name="pg_msg_not_started">Simulan mo na ang unang aralin!</string>
+    <string name="pg_msg_lecture_done">Natapos mo ang lahat ng lektura!</string>
+    <string name="pg_msg_lecture_progress">Ituloy ang pagbasa ng mga lektura.</string>
+
+    <string name="pg_trend_up">↑ Umaangat</string>
+    <string name="pg_trend_down">↓ Bumaba</string>
+    <string name="pg_percent">%1$d%%</string>
+    <string name="pg_fraction">%1$d/%2$d</string>
+    <string name="pg_skill_cd">%1$s: %2$s, %3$s, %4$d sa 3 bituin</string>
+</resources>
