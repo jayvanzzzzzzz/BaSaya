@@ -2,6 +2,7 @@ package com.example.basaya.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.LessonEntity
 import com.google.firebase.firestore.FirebaseFirestore
@@ -144,6 +145,7 @@ class LessonRepository(private val context: Context) {
             db.quizDao().deleteByLessonId(lessonId)
             db.crosswordLevelDao().deleteByLessonId(lessonId)
             db.pronunciationDao().deleteByLessonId(lessonId)
+            LectureAudioStore.delete(context, lessonId)
 
             db.lessonDao().markLessonRemoved(lessonId)
             true

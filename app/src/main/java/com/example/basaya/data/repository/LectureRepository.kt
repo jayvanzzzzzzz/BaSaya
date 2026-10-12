@@ -1,6 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.LectureEntity
 import com.example.basaya.data.model.Lecture
@@ -68,6 +69,9 @@ class LectureRepository(private val context: Context) {
     private suspend fun fetchAndCache(lessonId: String): Lecture? {
         val lecture = fetchFromFirestore(lessonId) ?: return null
 
+        // Throws on failure so the lesson download is reported as failed, not half-saved.
+        LectureAudioStore.download(context, lessonId, lecture.pages)
+
         db.lectureDao().insert(
             LectureEntity(
                 lessonId = lessonId,
@@ -100,7 +104,13 @@ class LectureRepository(private val context: Context) {
                 LecturePage(
                     pageNumber = (pageMap["pageNumber"] as? Long)?.toInt() ?: 0,
                     sentences = pageMap["sentences"] as? List<String> ?: emptyList(),
-                    audioResNames = pageMap["audioResNames"] as? List<String> ?: emptyList()
+                    audioResNames = pageMap["audioResNames"] as? List<String> ?: emptyList(),
+                    // cloudAudio: [{ audioUrl, storageKey, text } | null] written by basaya-web
+                    audioUrls = (pageMap["cloudAudio"] as? List<*>).orEmpty().map { entry ->
+                        ((entry as? Map<*, *>)?.get("audioUrl") as? String)
+                            ?.takeIf { it.startsWith("https://") }
+                            .orEmpty()
+                    }
                 )
             }
 

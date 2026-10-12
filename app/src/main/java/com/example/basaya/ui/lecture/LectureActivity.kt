@@ -2,6 +2,7 @@ package com.example.basaya.ui
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
@@ -23,8 +24,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
+import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.data.model.Lecture
+import com.example.basaya.data.model.LecturePage
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback
@@ -198,9 +201,7 @@ class LectureActivity : AppCompatActivity() {
             val sentence = page.sentences[currentSentenceIndex]
             addBulletTextView(sentence)
 
-            page.audioResNames.getOrNull(currentSentenceIndex)?.let { resName ->
-                playSentenceAudio(resName)
-            }
+            playSentenceAudio(page, currentSentenceIndex)
 
             currentSentenceIndex++
 
@@ -261,26 +262,62 @@ class LectureActivity : AppCompatActivity() {
         }
     }
 
-    private fun playSentenceAudio(resName: String) {
+    /**
+     * Audio source priority: downloaded file (offline) -> Cloudflare R2 stream -> bundled res/raw.
+     */
+    private fun playSentenceAudio(page: LecturePage, sentenceIndex: Int) {
         stopAudio()
+        if (!speakerOn) return
 
-        if (!speakerOn || resName.isBlank()) return
+        val localFile = LectureAudioStore.localFile(this, lessonId, page.pageNumber, sentenceIndex)
+        val cloudUrl = page.audioUrls?.getOrNull(sentenceIndex).orEmpty()
+
+        when {
+            localFile.exists() -> playFromSource(localFile.absolutePath)
+            cloudUrl.isNotBlank() -> playFromSource(cloudUrl)
+            else -> playRawResource(page.audioResNames.getOrNull(sentenceIndex).orEmpty())
+        }
+    }
+
+    private fun playFromSource(source: String) {
+        val player = MediaPlayer()
+        mediaPlayer = player
+        try {
+            player.setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+            )
+            player.setDataSource(source)
+            // Ignore late callbacks from a player that was replaced while still buffering.
+            player.setOnPreparedListener { if (mediaPlayer === it && speakerOn) it.start() }
+            player.setOnErrorListener { _, what, extra ->
+                Log.w("LectureActivity", "Audio failed ($what/$extra): $source")
+                true
+            }
+            player.prepareAsync()
+        } catch (e: Exception) {
+            Log.w("LectureActivity", "Could not play $source", e)
+            stopAudio()
+        }
+    }
+
+    private fun playRawResource(resName: String) {
+        if (resName.isBlank()) return
 
         val resId = resources.getIdentifier(resName, "raw", packageName)
         if (resId == 0) {
             return
         }
 
-        mediaPlayer?.release()
         mediaPlayer = MediaPlayer.create(this, resId)
         mediaPlayer?.start()
     }
 
     private fun stopAudio() {
-        mediaPlayer?.let {
-            if (it.isPlaying) it.stop()
-            it.release()
-        }
+        // release() is valid in every state, including while a stream is still preparing.
+        mediaPlayer?.release()
         mediaPlayer = null
     }
 
