@@ -5,142 +5,149 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/dirty_white"
+    android:background="#F7F8FC"
     tools:context=".ui.fragment.HomeFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/topSectionWrapper"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/toolbar_bar_color"
+        android:background="#F7F8FC"
+        android:orientation="vertical"
+        android:paddingStart="18dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/topSection"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_fragment_top_rounded"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:background="@drawable/bg_dashboard_hero"
+            android:minHeight="130dp"
+            android:paddingStart="18dp"
+            android:paddingTop="17dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="17dp">
 
-        <!--
-        <TextView
-            android:id="@+id/tvMgaGawain"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/lexend"
-            android:text="@string/mga_gawain"
-            android:textColor="#182230"
-            android:textSize="25sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-        -->
+            <TextView
+                android:id="@+id/tvDashboardEyebrow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/public_sans"
+                android:letterSpacing="0.08"
+                android:text="@string/dashboard_greeting"
+                android:textColor="#775B2A"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@id/ivDashboardBook"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
+            <TextView
+                android:id="@+id/tvDashboardTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:fontFamily="@font/lexend"
+                android:lineSpacingMultiplier="1.08"
+                android:maxLines="2"
+                android:text="@string/dashboard_title"
+                android:textColor="#263B66"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/ivDashboardBook"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvDashboardEyebrow"
+                app:layout_constraintVertical_bias="0.0" />
 
-    <!--
-        <TextView
-            android:id="@+id/tvMasiglangAraw"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:fontFamily="@font/lexend"
-            android:text="@string/masiglang_araw_ng_pagbabasa"
-            android:textColor="#667085"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvMgaGawain" />
-    -->
+            <ImageView
+                android:id="@+id/ivDashboardBook"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:layout_marginEnd="2dp"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/book_1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <EditText
             android:id="@+id/etSearch"
-            android:layout_width="0dp"
-            android:layout_height="45dp"
-            android:layout_marginTop="22dp"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="13dp"
             android:autofillHints="name"
-            android:background="@drawable/bg_home_search"
+            android:background="@drawable/bg_dashboard_search"
             android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="11dp"
+            android:drawablePadding="10dp"
             android:hint="@string/maghanap_dito_ng_paksa"
             android:inputType="text"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
             android:singleLine="true"
-            android:textColor="#182230"
-            android:textColorHint="#667085"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:textColor="#26334D"
+            android:textColorHint="#778199"
+            android:textSize="14sp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvClassName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Class: "
         android:layout_marginStart="20dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginTop="10dp"
-        android:textSize="18sp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_dashboard_class"
+        android:drawableStart="@drawable/ic_book"
+        android:drawablePadding="7dp"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:paddingStart="12dp"
+        android:paddingTop="7dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="7dp"
+        android:textColor="#356547"
+        android:textSize="13sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/topSectionWrapper"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/divider"/>
+        app:layout_constraintTop_toBottomOf="@id/topSectionWrapper"
+        tools:text="Masayang Pagbasa" />
 
-   <View
-       android:id="@+id/divider"
-       android:layout_width="match_parent"
-       android:layout_height="1dp"
-       app:layout_constraintStart_toStartOf="parent"
-       app:layout_constraintTop_toBottomOf="@id/tvClassName"
-       android:background="@color/muted"
-       android:alpha=".3"
-       android:layout_marginStart="20dp"
-       android:layout_marginEnd="20dp"
-       android:layout_marginTop="10dp"
-       android:layout_marginBottom="10dp"/>
-    
     <TextView
         android:id="@+id/tvSectionLabel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="17dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="5dp"
-        android:layout_marginTop="15dp"
-        android:letterSpacing="0.08"
-        android:text="MGA NAKATALAGANG ARALIN"
-        android:textColor="#667085"
-        android:textSize="11sp"
+        android:fontFamily="@font/lexend"
+        android:text="@string/dashboard_lessons_title"
+        android:textColor="#26334D"
+        android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/btnRefresh"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider"
-        app:layout_constraintBottom_toTopOf="@id/recyclerLessons" />
+        app:layout_constraintTop_toBottomOf="@id/tvClassName" />
 
     <ImageButton
         android:id="@+id/btnRefresh"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginEnd="20dp"
-        android:background="@drawable/bg_refresh_btn"
-        android:contentDescription="Refresh lessons"
-        android:layout_marginTop="5dp"
-        android:padding="8dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="18dp"
+        android:background="@drawable/bg_dashboard_refresh"
+        android:contentDescription="@string/refresh_lessons"
+        android:padding="10dp"
         android:src="@drawable/ic_refresh"
-        app:tint="#5B4FE8"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider"/>
+        app:layout_constraintTop_toBottomOf="@id/tvClassName"
+        app:tint="#5374BD" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerLessons"
@@ -148,9 +155,9 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingStart="16dp"
-        android:paddingTop="12dp"
+        android:paddingTop="8dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="20dp"
+        android:paddingBottom="88dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -159,33 +166,33 @@
 
     <ImageButton
         android:id="@+id/btnJoinClass"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="58dp"
+        android:layout_height="58dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="20dp"
         android:background="@drawable/bg_join_class_action"
         android:contentDescription="@string/cta_add_class_description"
         android:elevation="8dp"
-        android:padding="10dp"
+        android:padding="15dp"
         android:src="@drawable/ic_join_class"
-        app:tint="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-    
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="#FFFFFF" />
+
     <TextView
         android:id="@+id/tvEmptyLessons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
+        android:layout_marginStart="34dp"
+        android:layout_marginEnd="34dp"
         android:background="@drawable/bg_home_empty_state"
         android:drawableTop="@drawable/ic_empty_lessons"
         android:drawablePadding="14dp"
         android:gravity="center"
         android:lineSpacingExtra="4dp"
-        android:padding="28dp"
-        android:text="Wala pang nakatalagang aralin.\nBumalik muli para tingnan ang mga bagong gawain."
-        android:textColor="#667085"
+        android:padding="24dp"
+        android:text="@string/empty_no_lessons"
+        android:textColor="#59647A"
         android:textSize="15sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -240,9 +247,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
-            android:text="Inihahanda ang iyong mga aralin"
-            android:textColor="#667085"
+            android:text="@string/dashboard_loading_lessons"
+            android:textColor="#69758D"
             android:textSize="14sp" />
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

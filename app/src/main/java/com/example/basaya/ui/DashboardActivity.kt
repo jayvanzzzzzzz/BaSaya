@@ -1,6 +1,7 @@
 package com.example.basaya.ui
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -14,6 +15,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import android.widget.TextView
 import com.google.firebase.firestore.FirebaseFirestore
@@ -88,16 +90,20 @@ class DashboardActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_dashboard)
 
-        val statusBarBg = findViewById<View>(R.id.statusBarBg)
-
+        val header = findViewById<View>(R.id.dashboardHeader)
+        val content = findViewById<View>(R.id.dashboardContent)
+        val headerTop = header.paddingTop
+        val contentBottom = content.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            statusBarBg.layoutParams.height = statusBarHeight
-            statusBarBg.requestLayout()
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.updatePadding(left = bars.left, right = bars.right)
+            header.updatePadding(top = headerTop + bars.top)
+            content.updatePadding(bottom = contentBottom + bars.bottom)
             insets
         }
 
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        val isNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNight
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
@@ -200,6 +206,14 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
+        quizLockOverlay.setOnClickListener {
+            showLessonDialog(
+                iconRes = R.drawable.ic_lock_small,
+                title = "Naka-lock",
+                message = getString(R.string.lesson_dash_locked_msg)
+            )
+        }
+
         pronunciationCard.setOnClickListener {
             if (pronunciationIsFinished) {
                 showLessonDialog(
@@ -228,14 +242,19 @@ class DashboardActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val isFinished = lectureRepository.checkCompletion(uid, lessonId)
 
-            if (isFinished) {
-                quizCard.isClickable = true
-                quizLockOverlay.visibility = View.GONE
-            } else {
-                quizCard.isClickable = false
-                quizLockOverlay.visibility = View.VISIBLE
-            }
+            // A finished quiz stays unlocked even if the lecture flag lags behind
+            setQuizLocked(!isFinished && !quizIsFinished)
         }
+    }
+
+    private fun setQuizLocked(locked: Boolean) {
+        quizCard.isClickable = !locked
+        quizCard.importantForAccessibility = if (locked) {
+            View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        } else {
+            View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+        }
+        quizLockOverlay.visibility = if (locked) View.VISIBLE else View.GONE
     }
 
     private fun loadCompletionState() {
@@ -253,7 +272,6 @@ class DashboardActivity : AppCompatActivity() {
                 hasGameScore = true
             }
             gameCompletedBadge.visibility = if (cached.gameFinished) View.VISIBLE else View.GONE
-            gameCard.alpha = if (cached.gameFinished) 0.85f else 1f
 
             activityIsFinished = cached.activityFinished
             if (cached.activityScore != null && cached.activityTotal != null) {
@@ -261,7 +279,6 @@ class DashboardActivity : AppCompatActivity() {
                 hasActivityScore = true
             }
             activityCompletedBadge.visibility = if (cached.activityFinished) View.VISIBLE else View.GONE
-            activityCard.alpha = if (cached.activityFinished) 0.85f else 1f
 
             quizIsFinished = cached.quizFinished
             if (cached.quizScore != null && cached.quizTotal != null) {
@@ -269,8 +286,7 @@ class DashboardActivity : AppCompatActivity() {
                 hasQuizScore = true
             }
             quizCompletedBadge.visibility = if (cached.quizFinished) View.VISIBLE else View.GONE
-            quizCard.alpha = if (cached.quizFinished) 0.85f else 1f
-            if (cached.quizFinished) quizLockOverlay.visibility = View.GONE
+            if (cached.quizFinished) setQuizLocked(false)
 
             pronunciationIsFinished = cached.pronunciationFinished
             if (cached.pronunciationScore != null && cached.pronunciationTotal != null) {
@@ -278,7 +294,6 @@ class DashboardActivity : AppCompatActivity() {
                 hasPronunciationScore = true
             }
             pronunciationCompletedBadge.visibility = if (cached.pronunciationFinished) View.VISIBLE else View.GONE
-            pronunciationCard.alpha = if (cached.pronunciationFinished) 0.85f else 1f
         }
 
         lifecycleScope.launch {
@@ -309,10 +324,8 @@ class DashboardActivity : AppCompatActivity() {
 
                 if (gameFinished) {
                     gameCompletedBadge.visibility = View.VISIBLE
-                    gameCard.alpha = 0.85f
                 } else {
                     gameCompletedBadge.visibility = View.GONE
-                    gameCard.alpha = 1f
                 }
 
                 // Activity score shows as soon as it exists; lock only depends on finished
@@ -329,10 +342,8 @@ class DashboardActivity : AppCompatActivity() {
 
                 if (activityFinished) {
                     activityCompletedBadge.visibility = View.VISIBLE
-                    activityCard.alpha = 0.85f
                 } else {
                     activityCompletedBadge.visibility = View.GONE
-                    activityCard.alpha = 1f
                 }
 
                 // Quiz score shows as soon as it exists; lock only depends on finished
@@ -349,11 +360,9 @@ class DashboardActivity : AppCompatActivity() {
 
                 if (quizFinished) {
                     quizCompletedBadge.visibility = View.VISIBLE
-                    quizCard.alpha = 0.85f
-                    quizLockOverlay.visibility = View.GONE
+                    setQuizLocked(false)
                 } else {
                     quizCompletedBadge.visibility = View.GONE
-                    quizCard.alpha = 1f
                 }
 
                 // score shows as soon as it exists; lock only depends on finished
@@ -370,10 +379,8 @@ class DashboardActivity : AppCompatActivity() {
 
                 if (pronunciationFinished) {
                     pronunciationCompletedBadge.visibility = View.VISIBLE
-                    pronunciationCard.alpha = 0.85f
                 } else {
                     pronunciationCompletedBadge.visibility = View.GONE
-                    pronunciationCard.alpha = 1f
                 }
 
                 completionCache.save(

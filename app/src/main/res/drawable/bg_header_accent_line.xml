@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#9A8C72" />
+    <solid android:color="@color/dash_accent_gold" />
     <corners android:radius="2dp" />
-    <size android:width="36dp" android:height="3dp" />
+    <size
+        android:width="@dimen/dash_accent_line_w"
+        android:height="@dimen/dash_accent_line_h" />
 </shape>

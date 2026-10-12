@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lesson dashboard (activity_dashboard.xml) -->
+    <dimen name="dash_screen_padding_h">20dp</dimen>
+    <dimen name="dash_header_padding_top">16dp</dimen>
+    <dimen name="dash_header_padding_bottom">20dp</dimen>
+    <dimen name="dash_content_padding_top">24dp</dimen>
+    <dimen name="dash_content_padding_bottom">32dp</dimen>
+    <dimen name="dash_section_gap">28dp</dimen>
+    <dimen name="dash_section_heading_gap">12dp</dimen>
+    <dimen name="dash_card_gap">12dp</dimen>
+    <dimen name="dash_card_padding">16dp</dimen>
+    <dimen name="dash_card_padding_hero">20dp</dimen>
+    <dimen name="dash_radius_s">8dp</dimen>
+    <dimen name="dash_radius_m">12dp</dimen>
+    <dimen name="dash_radius_l">20dp</dimen>
+    <dimen name="dash_radius_pill">100dp</dimen>
+    <dimen name="dash_icon_container">44dp</dimen>
+    <dimen name="dash_icon_container_hero">52dp</dimen>
+    <dimen name="dash_icon_padding">10dp</dimen>
+    <dimen name="dash_icon_padding_hero">12dp</dimen>
+    <dimen name="dash_badge_padding_h">10dp</dimen>
+    <dimen name="dash_badge_padding_v">4dp</dimen>
+    <dimen name="dash_badge_min_height">24dp</dimen>
+    <dimen name="dash_pill_icon">14dp</dimen>
+    <dimen name="dash_pill_gap">4dp</dimen>
+    <dimen name="dash_stroke">1dp</dimen>
+    <dimen name="dash_accent_line_w">32dp</dimen>
+    <dimen name="dash_accent_line_h">3dp</dimen>
+
+    <dimen name="dash_text_eyebrow">11sp</dimen>
+    <dimen name="dash_text_title">24sp</dimen>
+    <dimen name="dash_text_desc">14sp</dimen>
+    <dimen name="dash_text_section">15sp</dimen>
+    <dimen name="dash_text_card_title_hero">18sp</dimen>
+    <dimen name="dash_text_card_title">16sp</dimen>
+    <dimen name="dash_text_card_sub">13sp</dimen>
+    <dimen name="dash_text_badge">12sp</dimen>
+    <dimen name="dash_text_pill">11sp</dimen>
+</resources>

@@ -212,11 +212,14 @@ class HomeFragment : Fragment() {
 
                 if (classId.isNullOrBlank()) {
                     tvClassName.text = ""
+                    tvClassName.visibility = View.GONE
                     loadingContainer.visibility = View.GONE
                     dotsAnimatorSet?.cancel()
                     showEmptyState(EmptyLessonsState.NOT_IN_CLASS)
                 } else {
-                    tvClassName.text = className ?: ""
+                    tvClassName.text = className.orEmpty()
+                    tvClassName.visibility =
+                        if (className.isNullOrBlank()) View.GONE else View.VISIBLE
                     fetchLessons(isManualRefresh = false)
                 }
             }
@@ -224,6 +227,7 @@ class HomeFragment : Fragment() {
                 Log.e("HomeFragment", "Failed to check class membership", e)
                 if (!isAdded) return@addOnFailureListener
                 loadingContainer.visibility = View.GONE
+                tvClassName.visibility = View.GONE
                 dotsAnimatorSet?.cancel()
                 tvEmptyLessons.text = getString(R.string.error_checking_class_membership)
                 tvEmptyLessons.visibility = View.VISIBLE

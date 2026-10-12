@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lesson dashboard palette (dark) -->
+    <color name="dash_bg">#121714</color>
+    <color name="dash_header_bg">#161C19</color>
+    <color name="dash_surface">#1B221E</color>
+    <color name="dash_stroke">#2C3530</color>
+    <color name="dash_divider">#26302A</color>
+    <color name="dash_primary">#9FD4B8</color>
+    <color name="dash_text_primary">#E6ECE8</color>
+    <color name="dash_text_secondary">#A9B5AE</color>
+    <color name="dash_sage">#A3C2AE</color>
+    <color name="dash_sage_soft">#24302A</color>
+    <color name="dash_accent_gold">#D9B56A</color>
+    <color name="dash_lecture">#B4BEF2</color>
+    <color name="dash_lecture_tint">#262C45</color>
+    <color name="dash_lecture_stroke">#4DB4BEF2</color>
+    <color name="dash_laro">#8FD0AE</color>
+    <color name="dash_laro_tint">#1F3329</color>
+    <color name="dash_gawain">#F0B08F</color>
+    <color name="dash_gawain_tint">#3A2A20</color>
+    <color name="dash_bigkas">#E7A4BE</color>
+    <color name="dash_bigkas_tint">#3A2430</color>
+    <color name="dash_quiz">#9CC0E6</color>
+    <color name="dash_quiz_tint">#1F2E3D</color>
+    <color name="dash_done_bg">#1E3A2B</color>
+    <color name="dash_done_fg">#A8DDBF</color>
+    <color name="dash_lock_scrim">#F21B221E</color>
+    <color name="dash_lock_stroke">#3A3F37</color>
+    <color name="dash_lock_fg">#E2DCC8</color>
+    <color name="dash_lock_icon">#CDBB8A</color>
+</resources>

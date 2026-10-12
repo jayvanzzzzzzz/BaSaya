@@ -49,6 +49,11 @@
     <string name="mga_gawain">Mga Gawain</string>
     <string name="name">Name</string>
     <string name="maghanap_dito_ng_paksa">Maghanap dito ng paksa...</string>
+    <string name="dashboard_greeting">KUMUSTA, KAIBIGAN!</string>
+    <string name="dashboard_title">Handa ka na bang\nmagbasa?</string>
+    <string name="dashboard_lessons_title">Mga aralin para sa’yo</string>
+    <string name="dashboard_loading_lessons">Inihahanda ang iyong mga aralin</string>
+    <string name="refresh_lessons">I-refresh ang mga aralin</string>
     <string name="masiglang_araw_ng_pagbabasa">Masiglang Araw ng Pagbabasa!</string>
     <string name="tap_to_continue">Pumindot upang magpatuloy.</string>
     <string name="next_page">Next Page</string>
@@ -79,6 +84,25 @@
     <string name="error_checking_class_membership">May problema sa koneksyon. Subukan muli.</string>
 
     <string name="profile_picture">Profile picture</string>
+
+    <!-- Lesson dashboard (activity_dashboard.xml) -->
+    <string name="lesson_dash_eyebrow">ARALIN</string>
+    <string name="lesson_dash_section_start">Pumili ng gawain</string>
+    <string name="lesson_dash_section_practice">Oras para magsanay!</string>
+    <string name="lesson_dash_lecture_title">Lecture</string>
+    <string name="lesson_dash_lecture_sub">Unawain ang aralin</string>
+    <string name="lesson_dash_game_title">Laro</string>
+    <string name="lesson_dash_game_sub">Hanapin ang tamang salita</string>
+    <string name="lesson_dash_activity_title">Gawain</string>
+    <string name="lesson_dash_activity_sub">Sanayin ang natutuhan</string>
+    <string name="lesson_dash_pron_title">Bigkas</string>
+    <string name="lesson_dash_pron_sub">Bigkasin ang bawat salita</string>
+    <string name="lesson_dash_quiz_title">Pagsusulit</string>
+    <string name="lesson_dash_quiz_sub">Subukan ang iyong galing</string>
+    <string name="lesson_dash_done">Tapos na</string>
+    <string name="lesson_dash_locked_msg">Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
+    <string name="lesson_dash_locked_cd">Naka-lock. Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
+    <string name="lesson_dash_count_placeholder">…</string>
 
     <!-- Register screen -->
     <string name="register_heading">Sumali sa BaSaya!</string>
