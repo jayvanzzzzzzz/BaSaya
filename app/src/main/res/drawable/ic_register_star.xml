@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rounded star for the "sticker" on the register logo tile. Tinted in layout. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M12,3.2L14.6,8.6L20.5,9.4L16.2,13.5L17.3,19.4L12,16.6L6.7,19.4L7.8,13.5L3.5,9.4L9.4,8.6Z" />
+</vector>

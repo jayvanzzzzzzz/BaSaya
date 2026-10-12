@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Register screen accents (light). Base palette comes from colors_login.xml. -->
+<resources>
+    <color name="register_step_name_bg">#FFE49A</color>
+    <color name="register_step_name_fg">#5C4300</color>
+    <color name="register_step_account_bg">#D6E6FF</color>
+    <color name="register_step_account_fg">#0B4A8F</color>
+    <color name="register_sticker_bg">#FFC94D</color>
+    <color name="register_sticker_fg">#5C4300</color>
+    <color name="register_divider">#E6ECF5</color>
+</resources>

@@ -5,416 +5,426 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background_gradient"
+    android:background="@drawable/bg_login_screen"
+    android:theme="@style/ThemeOverlay.BaSaya.Login"
     tools:context=".ui.RegisterActivity">
 
-  <!-- Decorative Book Left (matches login) -->
-  <ImageView
-      android:id="@+id/imgBgBookLeft"
-      android:layout_width="140dp"
-      android:layout_height="140dp"
-      android:layout_marginLeft="-30dp"
-      android:layout_marginTop="10dp"
-      android:alpha="0.8"
-      android:rotation="-15"
-      android:src="@drawable/book_1"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintLeft_toLeftOf="parent"
-      app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.10"
-      tools:ignore="ContentDescription" />
+    <!-- Decorative floating books (animated from RegisterActivity), same treatment as login. -->
+    <ImageView
+        android:id="@+id/imgBgBookLeft"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="-40dp"
+        android:alpha="0.22"
+        android:importantForAccessibility="no"
+        android:rotation="-15"
+        android:src="@drawable/book_1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.62"
+        tools:ignore="ContentDescription" />
 
-  <!-- Decorative Book Right (matches login) -->
-  <ImageView
-      android:id="@+id/imgBgBookRight"
-      android:layout_width="150dp"
-      android:layout_height="150dp"
-      android:layout_marginRight="-40dp"
-      android:alpha="0.8"
-      android:rotation="10"
-      android:src="@drawable/book_2"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintRight_toRightOf="parent"
-      app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.88"
-      tools:ignore="ContentDescription" />
+    <ImageView
+        android:id="@+id/imgBgBookRight"
+        android:layout_width="105dp"
+        android:layout_height="105dp"
+        android:layout_marginEnd="-36dp"
+        android:alpha="0.22"
+        android:importantForAccessibility="no"
+        android:rotation="10"
+        android:src="@drawable/book_2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.12"
+        tools:ignore="ContentDescription" />
 
-  <!-- Scrollable Form -->
-  <ScrollView
-      android:layout_width="0dp"
-      android:layout_height="0dp"
-      android:scrollbars="none"
-      android:fillViewport="true"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="parent">
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:paddingTop="48dp"
-        android:paddingBottom="36dp">
-
-      <!-- Header Subtitle -->
-      <TextView
-          android:id="@+id/txtSubtitle"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="32dp"
-          android:gravity="center"
-          android:text="@string/gumawa_ng_bagong_account"
-          android:textColor="@color/main_text_color"
-          android:textStyle="bold"
-          android:textSize="18sp" />
-
-      <!-- ─── SECTION DIVIDER: Personal Info ─── -->
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="16dp"
-          android:gravity="center_vertical"
-          android:orientation="horizontal">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1"
-            android:background="#CCCCCC" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:text="@string/personal_information"
-            android:textColor="#7F8C8D"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1"
-            android:background="#CCCCCC" />
-
-      </LinearLayout>
-
-      <!-- First Name -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="@string/first_name"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etFirstName"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:hint="@string/ilagay_ang_iyong_first_name"
-          android:textSize="15sp"
-          android:inputType="textCapWords"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          tools:ignore="Autofill" />
-
-      <!-- Middle Name -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="@string/middle_name"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etMiddleName"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:hint="@string/ilagay_ang_iyong_middle_name"
-          android:inputType="textCapWords"
-          android:textSize="15sp"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          tools:ignore="Autofill" />
-
-      <!-- Last Name -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="@string/last_name"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etLastName"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:hint="@string/ilagay_ang_iyong_last_name"
-          android:textSize="15sp"
-          android:inputType="textCapWords"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          tools:ignore="Autofill" />
-
-      <!-- Gender (Spinner) -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="@string/gender"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <Spinner
-          android:id="@+id/spinnerGender"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:textSize="15sp"
-          android:background="@drawable/bg_spinner_white"
-          android:spinnerMode="dropdown"/>
-
-      <!-- Date of Birth -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="@string/date_of_birth"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etDOB"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:drawableStart="@drawable/ic_calendar"
-          android:drawablePadding="12dp"
-          android:textSize="15sp"
-          android:hint="@string/mm_dd_yyyy"
-          android:inputType="none"
-          android:focusable="false"
-          android:clickable="true"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          tools:ignore="Autofill" />
-
-      <!-- ─── SECTION DIVIDER: Account Info ─── -->
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="8dp"
-          android:layout_marginBottom="16dp"
-          android:gravity="center_vertical"
-          android:orientation="horizontal">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1"
-            android:background="#CCCCCC" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:text="@string/account_information"
-            android:textColor="#7F8C8D"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1"
-            android:background="#CCCCCC" />
-
-      </LinearLayout>
-
-      <!-- Email -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="@string/email"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etEmail"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:drawableStart="@drawable/ic_email"
-          android:drawablePadding="12dp"
-          android:hint="@string/ilagay_ang_iyong_email"
-          android:textSize="15sp"
-          android:inputType="textEmailAddress"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          tools:ignore="Autofill" />
-
-      <!-- Username -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="Username"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etUsername"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:drawableStart="@drawable/ic_user"
-          android:drawablePadding="12dp"
-          android:hint="@string/ilagay_ang_iyong_username"
-          android:inputType="text"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          android:textSize="15sp"
-          tools:ignore="Autofill" />
-
-      <!-- Password -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="Password"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etPassword"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="20dp"
-          android:background="@drawable/bg_input_field"
-          android:drawableStart="@drawable/ic_lock"
-          android:drawablePadding="12dp"
-          android:hint="Ilagay ang iyong password"
-          android:inputType="textPassword"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          android:textSize="15sp"
-          tools:ignore="Autofill" />
-
-      <!-- Confirm Password -->
-      <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="8dp"
-          android:text="Confirm Password"
-          android:textColor="@color/main_text_color"
-          android:textSize="15sp"
-          android:textStyle="bold" />
-
-      <EditText
-          android:id="@+id/etConfirmPassword"
-          android:layout_width="match_parent"
-          android:layout_height="55dp"
-          android:layout_marginBottom="36dp"
-          android:background="@drawable/bg_input_field"
-          android:drawableStart="@drawable/ic_lock"
-          android:drawablePadding="12dp"
-          android:hint="Ulitin ang iyong password"
-          android:inputType="textPassword"
-          android:paddingStart="16dp"
-          android:paddingEnd="16dp"
-          android:textColor="@color/main_text_color"
-          android:textColorHint="@color/hint"
-          android:textSize="15sp"
-          tools:ignore="Autofill" />
-
-      <!-- Register Button -->
-      <!-- Register Button -->
-      <FrameLayout
-          android:layout_width="match_parent"
-          android:layout_height="55dp">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnRegister"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_login_button"
-            android:drawableEnd="@drawable/ic_right_arrow"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:fontFamily="@font/quicksand_medium"
-            android:text="@string/mag_register"
-            android:textAllCaps="false"
-            android:textColor="#0066CC"
-            android:textSize="18sp" />
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="8dp">
 
-        <ProgressBar
-            android:id="@+id/progressRegister"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            android:indeterminateTint="#0066CC" />
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="-8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/register_back"
+                android:src="@drawable/ic_register_back"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="?attr/colorOnSurface" />
 
-      </FrameLayout>
+            <LinearLayout
+                android:id="@+id/registerContent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toTopOf="@id/registerFooter"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/btnBack"
+                app:layout_constraintVertical_bias="0"
+                app:layout_constraintWidth_max="480dp">
 
-      <!-- Back to Login -->
-      <TextView
-          android:id="@+id/tvBackToLogin"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="20dp"
-          android:layout_marginBottom="8dp"
-          android:background="?attr/selectableItemBackground"
-          android:padding="8dp"
-          android:text="@string/may_account_na_mag_login"
-          android:textColor="#0066CC"
-          android:textSize="14sp"
-          android:textStyle="bold" />
+                <!-- Playful brand mark: tilted logo tile with a star "sticker". -->
+                <FrameLayout
+                    android:layout_width="84dp"
+                    android:layout_height="80dp"
+                    android:layout_marginBottom="14dp"
+                    android:clipChildren="false">
 
-    </LinearLayout>
-  </ScrollView>
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.Material3.CardView.Elevated"
+                        android:layout_width="68dp"
+                        android:layout_height="68dp"
+                        android:layout_gravity="bottom|start"
+                        android:layout_margin="4dp"
+                        android:rotation="-6"
+                        app:cardBackgroundColor="@color/login_logo_container"
+                        app:cardCornerRadius="22dp"
+                        app:cardElevation="3dp">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/app_name"
+                            android:padding="10dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/logo" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/bg_register_sticker"
+                        android:elevation="4dp"
+                        android:importantForAccessibility="no"
+                        android:padding="6dp"
+                        android:rotation="12"
+                        android:src="@drawable/ic_register_star"
+                        app:tint="@color/register_sticker_fg"
+                        tools:ignore="ContentDescription" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:accessibilityHeading="true"
+                    android:gravity="center"
+                    android:text="@string/register_heading"
+                    android:textAppearance="@style/TextAppearance.BaSaya.Login.Brand"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="28sp"
+                    tools:targetApi="p" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="20dp"
+                    android:gravity="center"
+                    android:maxWidth="320dp"
+                    android:text="@string/register_subtitle"
+                    android:textAppearance="@style/TextAppearance.BaSaya.Login.Body"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <!-- Form surface -->
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Material3.CardView.Elevated"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="20dp"
+                        android:paddingTop="22dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="22dp">
+
+                        <!-- Step 1: name -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="14dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:background="@drawable/bg_register_step_name"
+                                android:gravity="center"
+                                android:importantForAccessibility="no"
+                                android:text="@string/register_step_one"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
+                                android:textColor="@color/register_step_name_fg"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:accessibilityHeading="true"
+                                android:text="@string/register_section_name"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Headline"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="17sp"
+                                tools:targetApi="p" />
+                        </LinearLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilFirstName"
+                            style="@style/Widget.BaSaya.Login.TextInputLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/first_name"
+                            app:placeholderText="@string/ilagay_ang_iyong_first_name"
+                            app:startIconDrawable="@drawable/ic_user">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etFirstName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autofillHints="personGivenName"
+                                android:imeOptions="actionNext"
+                                android:inputType="textPersonName|textCapWords"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilMiddleName"
+                            style="@style/Widget.BaSaya.Login.TextInputLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:hint="@string/middle_name"
+                            app:helperText="@string/register_optional"
+                            app:placeholderText="@string/ilagay_ang_iyong_middle_name"
+                            app:startIconDrawable="@drawable/ic_user">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etMiddleName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autofillHints="personMiddleName"
+                                android:imeOptions="actionNext"
+                                android:inputType="textPersonName|textCapWords"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilLastName"
+                            style="@style/Widget.BaSaya.Login.TextInputLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:hint="@string/last_name"
+                            app:placeholderText="@string/ilagay_ang_iyong_last_name"
+                            app:startIconDrawable="@drawable/ic_user">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etLastName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autofillHints="personFamilyName"
+                                android:imeOptions="actionNext"
+                                android:inputType="textPersonName|textCapWords"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="22dp"
+                            android:layout_marginBottom="20dp"
+                            android:background="@color/register_divider" />
+
+                        <!-- Step 2: account -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="14dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:background="@drawable/bg_register_step_account"
+                                android:gravity="center"
+                                android:importantForAccessibility="no"
+                                android:text="@string/register_step_two"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
+                                android:textColor="@color/register_step_account_fg"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:accessibilityHeading="true"
+                                android:text="@string/register_section_account"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Headline"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="17sp"
+                                tools:targetApi="p" />
+                        </LinearLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilEmail"
+                            style="@style/Widget.BaSaya.Login.TextInputLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/email"
+                            app:placeholderText="@string/ilagay_ang_iyong_email"
+                            app:startIconDrawable="@drawable/ic_email">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etEmail"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autofillHints="emailAddress"
+                                android:imeOptions="actionNext"
+                                android:inputType="textEmailAddress"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilPassword"
+                            style="@style/Widget.BaSaya.Login.TextInputLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:hint="@string/password"
+                            app:endIconMode="password_toggle"
+                            app:errorIconDrawable="@null"
+                            app:helperText="@string/register_password_helper"
+                            app:placeholderText="@string/ilagay_ang_iyong_password"
+                            app:startIconDrawable="@drawable/ic_lock">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etPassword"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autofillHints="newPassword"
+                                android:imeOptions="actionDone"
+                                android:inputType="textPassword"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Primary action. imgRegisterArrow / progressRegister overlay the button
+                             and are swapped by RegisterActivity.setLoading(). -->
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="24dp">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnRegister"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minHeight="56dp"
+                                android:paddingStart="48dp"
+                                android:paddingEnd="48dp"
+                                android:stateListAnimator="@null"
+                                android:text="@string/register_action"
+                                android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
+                                app:cornerRadius="16dp" />
+
+                            <ImageView
+                                android:id="@+id/imgRegisterArrow"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="end|center_vertical"
+                                android:layout_marginEnd="20dp"
+                                android:elevation="2dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_right_arrow"
+                                app:tint="?attr/colorOnPrimary"
+                                tools:ignore="ContentDescription" />
+
+                            <ProgressBar
+                                android:id="@+id/progressRegister"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="end|center_vertical"
+                                android:layout_marginEnd="18dp"
+                                android:contentDescription="@string/register_in_progress"
+                                android:elevation="2dp"
+                                android:indeterminateTint="?attr/colorPrimary"
+                                android:visibility="gone" />
+                        </FrameLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Secondary action: back to login. -->
+            <LinearLayout
+                android:id="@+id/registerFooter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/register_have_account"
+                    android:textAppearance="@style/TextAppearance.BaSaya.Login.Body"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/tvBackToLogin"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="@string/register_login_action"
+                    android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

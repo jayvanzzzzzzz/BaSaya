@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Register screen accents (dark). -->
+<resources>
+    <color name="register_step_name_bg">#4A3B12</color>
+    <color name="register_step_name_fg">#FFDD85</color>
+    <color name="register_step_account_bg">#1E3657</color>
+    <color name="register_step_account_fg">#A6C8FF</color>
+    <color name="register_sticker_bg">#FFC94D</color>
+    <color name="register_sticker_fg">#3D2C00</color>
+    <color name="register_divider">#2A3446</color>
+</resources>

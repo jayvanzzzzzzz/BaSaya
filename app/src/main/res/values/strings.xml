@@ -80,6 +80,28 @@
 
     <string name="profile_picture">Profile picture</string>
 
+    <!-- Register screen -->
+    <string name="register_heading">Sumali sa BaSaya!</string>
+    <string name="register_subtitle">Ilang hakbang na lang, magsisimula na ang iyong pagbabasa.</string>
+    <string name="register_step_one">1</string>
+    <string name="register_step_two">2</string>
+    <string name="register_section_name">Ang iyong pangalan</string>
+    <string name="register_section_account">Ang iyong account</string>
+    <string name="register_optional">Opsyonal</string>
+    <string name="register_password_helper">Hindi bababa sa 8 karakter</string>
+    <string name="register_action">Gumawa ng account</string>
+    <string name="register_in_progress">Ginagawa ang account…</string>
+    <string name="register_have_account">May account na?</string>
+    <string name="register_login_action">Mag-login</string>
+    <string name="register_back">Bumalik</string>
+    <string name="register_error_first_name">Kailangan ang first name.</string>
+    <string name="register_error_last_name">Kailangan ang last name.</string>
+    <string name="register_error_email_invalid">Mukhang mali ang email.</string>
+    <string name="register_error_password_short">Dapat hindi bababa sa 8 karakter.</string>
+    <string name="register_success">Matagumpay! Maaari ka nang mag-login.</string>
+    <string name="register_failed">Hindi nagawa ang account. Subukan muli.</string>
+    <string name="register_save_failed">Hindi na-save ang iyong impormasyon. Subukan muli.</string>
+
     <!-- Lesson list card -->
     <string name="lesson_card_eyebrow">ARALIN</string>
     <string name="lesson_card_eyebrow_numbered">ARALIN %1$d</string>
