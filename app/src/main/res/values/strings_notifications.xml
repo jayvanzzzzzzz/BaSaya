@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Deadline reminders (made on the phone) -->
+    <string name="notif_due_day_title">⏰ Bukas na ang deadline!</string>
+    <string name="notif_due_hour_title">⏳ 1 oras na lang!</string>
+    <string name="notif_due_body">Tapusin ang “%1$s” bago mag-%2$s.</string>
+    <string name="notif_closed_title">🔒 Sarado na ang aralin</string>
+    <string name="notif_closed_body">Lumipas na ang deadline ng “%1$s” (%2$s).</string>
+
+    <string name="notif_channel_deadline_name">Mga paalala sa deadline</string>
+    <string name="notif_channel_deadline_desc">Paalala bago at pagkatapos ng deadline ng aralin</string>
+
+    <!-- Bell -->
+    <string name="notif_bell_cd_none">Mga abiso, walang bago</string>
+    <plurals name="notif_bell_cd_unread">
+        <item quantity="one">Mga abiso, %d bago</item>
+        <item quantity="other">Mga abiso, %d bago</item>
+    </plurals>
+
+    <!-- Notification screen -->
+    <string name="notif_screen_title">Mga Abiso</string>
+    <plurals name="notif_screen_bubble_unread">
+        <item quantity="one">May %d bagong abiso para sa’yo!</item>
+        <item quantity="other">May %d bagong abiso para sa’yo!</item>
+    </plurals>
+    <string name="notif_screen_bubble_none">Nabasa mo na lahat. Ang galing mo!</string>
+    <string name="notif_screen_bubble_empty">Wala ka pang abiso. Babalitaan kita!</string>
+    <string name="notif_section_new">BAGO</string>
+    <string name="notif_section_earlier">NAKARAAN</string>
+    <string name="notif_empty_title">Tahimik pa dito</string>
+    <string name="notif_empty_body">Dito lalabas ang mga bagong aralin at paalala sa deadline.</string>
+    <string name="notif_open_lesson_cd">Buksan ang aralin</string>
+
+    <!-- Time beside each notification -->
+    <string name="notif_time_just_now">Ngayon lang</string>
+    <string name="notif_time_minutes">%d min</string>
+    <string name="notif_time_today">Ngayong araw</string>
+    <string name="notif_time_yesterday">Kahapon</string>
+</resources>

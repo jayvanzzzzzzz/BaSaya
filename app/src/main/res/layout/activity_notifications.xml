@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notifications: violet header with the book buddy, then the list of "new lesson" and deadline cards. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tb_page_bg"
+    tools:context=".ui.notifications.NotificationsActivity">
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- ═══ Header (top padding = status bar, set in code) ═══ -->
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/jc_header"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/tb_glass"
+                    android:contentDescription="@string/close"
+                    android:padding="11dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/cw_ic_back"
+                    app:tint="@color/tb_on" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:accessibilityHeading="true"
+                    android:fontFamily="@font/lexend"
+                    android:text="@string/notif_screen_title"
+                    android:textColor="@color/tb_on"
+                    android:textSize="21sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Buddy + speech bubble with the unread summary -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.example.basaya.ui.pronunciation.PronunciationBookView
+                    android:id="@+id/buddy"
+                    android:layout_width="92dp"
+                    android:layout_height="108dp"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/tvBubble"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:accessibilityLiveRegion="polite"
+                    android:background="@drawable/jc_bubble"
+                    android:elevation="3dp"
+                    android:fontFamily="@font/quicksand_medium"
+                    android:lineSpacingExtra="2dp"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp"
+                    android:textColor="@color/pg_ink"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="May 3 bagong abiso para sa’yo!" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ═══ Body ═══ -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerNotifications"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="24dp"
+                tools:listitem="@layout/item_notification" />
+
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="40dp"
+                android:paddingEnd="40dp"
+                android:paddingBottom="60dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <FrameLayout
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:background="@drawable/nt_icon_tile"
+                    android:backgroundTint="@color/pg_pagsusulit_tint">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_notifications"
+                        app:tint="@color/pg_pagsusulit" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:fontFamily="@font/lexend"
+                    android:text="@string/notif_empty_title"
+                    android:textColor="@color/pg_ink"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/quicksand_medium"
+                    android:gravity="center"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/notif_empty_body"
+                    android:textColor="@color/pg_ink_soft"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

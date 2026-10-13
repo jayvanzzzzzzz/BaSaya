@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lesson dashboard "adventure path": one numbered stop + card per activity. Colors are set per row. -->
+<resources>
+
+    <style name="Dl.Row" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="android:baselineAligned">false</item>
+    </style>
+
+    <!-- Left rail: trail segment + numbered stop -->
+    <style name="Dl.Rail" parent="">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:importantForAccessibility">noHideDescendants</item>
+    </style>
+
+    <style name="Dl.Trail" parent="">
+        <item name="android:layout_width">6dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:background">@drawable/pg_round</item>
+    </style>
+
+    <style name="Dl.Step" parent="">
+        <item name="android:layout_width">38dp</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:layout_gravity">top|center_horizontal</item>
+        <item name="android:layout_marginTop">29dp</item>
+        <item name="android:background">@drawable/pg_circle</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:fontFamily">@font/lexend</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Dl.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="cardBackgroundColor">@android:color/white</item>
+        <item name="cardCornerRadius">@dimen/dash_radius_l</item>
+        <item name="cardElevation">3dp</item>
+        <item name="strokeWidth">2dp</item>
+    </style>
+
+    <style name="Dl.CardBody" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">96dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">14dp</item>
+    </style>
+
+    <style name="Dl.Icon" parent="">
+        <item name="android:layout_width">54dp</item>
+        <item name="android:layout_height">54dp</item>
+        <item name="android:background">@drawable/pg_circle</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:padding">13dp</item>
+    </style>
+
+    <style name="Dl.Texts" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Dl.Title" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/lexend</item>
+        <item name="android:textColor">@color/pg_ink</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Dl.Sub" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">1dp</item>
+        <item name="android:fontFamily">@font/quicksand_medium</item>
+        <item name="android:textColor">@color/pg_ink_soft</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Dl.Meta" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="alignItems">center</item>
+        <item name="flexWrap">wrap</item>
+    </style>
+
+    <style name="Dl.Count" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginEnd">6dp</item>
+        <item name="android:background">@drawable/pg_round</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:text">@string/lesson_dash_count_placeholder</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Completion pill (LinearLayout root; shown by DashboardActivity) -->
+    <style name="Dl.Badge" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:background">@drawable/bg_dashboard_done</item>
+        <item name="android:contentDescription">@string/lesson_dash_done</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="Dl.BadgeIcon" parent="">
+        <item name="android:layout_width">14dp</item>
+        <item name="android:layout_height">14dp</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:src">@drawable/ic_check</item>
+        <item name="tint">@color/dash_done_fg</item>
+    </style>
+
+    <style name="Dl.BadgeText" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:text">@string/lesson_dash_done</item>
+        <item name="android:textColor">@color/dash_done_fg</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Dl.Play" parent="">
+        <item name="android:layout_width">38dp</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:background">@drawable/pg_circle</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:src">@drawable/ic_chevron_right</item>
+        <item name="tint">@android:color/white</item>
+    </style>
+</resources>

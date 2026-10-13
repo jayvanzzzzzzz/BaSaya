@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tb_greeting_morning">Magandang umaga,</string>
+    <string name="tb_greeting_afternoon">Magandang hapon,</string>
+    <string name="tb_greeting_evening">Magandang gabi,</string>
+</resources>

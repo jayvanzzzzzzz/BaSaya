@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jc_title">Sumali sa Klase</string>
+    <string name="jc_code_label">Class code mula sa guro</string>
+    <string name="jc_code_hint">Halimbawa: ABC123</string>
+    <string name="jc_error_empty">Ilagay ang class code</string>
+    <string name="jc_error_not_found">Walang klaseng natagpuan sa code na ito</string>
+    <string name="jc_joining">Sumasali…</string>
+    <string name="jc_success">Yehey! Kasali ka na sa %1$s</string>
+    <string name="jc_need_login">Kailangan mong mag-log in muli.</string>
+    <string name="jc_save_failed">Hindi na-save. Subukan muli.</string>
+    <string name="jc_connection">May problema sa koneksyon. Subukan muli.</string>
+</resources>

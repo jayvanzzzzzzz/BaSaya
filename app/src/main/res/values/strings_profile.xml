@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pf_student">Estudyante</string>
+
+    <string name="pf_section_info">Impormasyon ko</string>
+    <string name="pf_section_security">Seguridad</string>
+    <string name="pf_edit">I-edit</string>
+    <string name="pf_edit_cd">I-edit ang impormasyon ng account</string>
+    <string name="pf_name">Pangalan</string>
+    <string name="pf_gender">Kasarian</string>
+    <string name="pf_birthday">Kaarawan</string>
+    <string name="pf_not_set">Hindi pa nailalagay</string>
+
+    <string name="pf_change_password">Palitan ang password</string>
+    <string name="pf_change_password_sub">Kailangan ang kasalukuyang password</string>
+
+    <string name="pf_logout">Mag-logout</string>
+    <string name="pf_logout_confirm">Sigurado ka bang gusto mong mag-logout?</string>
+    <string name="pf_yes">Oo</string>
+    <string name="pf_no">Hindi</string>
+    <string name="pf_version">BaSaya v%1$s</string>
+
+    <!-- Edit profile sheet -->
+    <string name="pf_edit_title">I-edit ang account</string>
+    <string name="pf_first_name">Pangalan (First name)</string>
+    <string name="pf_middle_name">Gitnang pangalan (opsyonal)</string>
+    <string name="pf_last_name">Apelyido</string>
+    <string name="pf_gender_male">Lalaki</string>
+    <string name="pf_gender_female">Babae</string>
+    <string name="pf_gender_unsaid">Ayokong sabihin</string>
+    <string name="pf_birthday_hint">Piliin ang kaarawan</string>
+    <string name="pf_cancel">Kanselahin</string>
+    <string name="pf_save">I-save</string>
+    <string name="pf_saving">Sine-save…</string>
+    <string name="pf_saved">Na-save ang iyong impormasyon.</string>
+    <string name="pf_save_failed">Hindi na-save. Subukan muli.</string>
+    <string name="pf_error_first_name">Ilagay ang iyong pangalan</string>
+    <string name="pf_error_last_name">Ilagay ang iyong apelyido</string>
+
+    <!-- Change password sheet -->
+    <string name="pf_password_title">Palitan ang password</string>
+    <string name="pf_password_current">Kasalukuyang password</string>
+    <string name="pf_password_new">Bagong password</string>
+    <string name="pf_password_confirm">Ulitin ang bagong password</string>
+    <string name="pf_password_hint">Hindi bababa sa 8 karakter</string>
+    <string name="pf_password_save">Palitan</string>
+    <string name="pf_password_changed">Napalitan na ang iyong password.</string>
+    <string name="pf_password_error_current">Ilagay ang kasalukuyang password</string>
+    <string name="pf_password_error_wrong">Mali ang kasalukuyang password</string>
+    <string name="pf_password_error_short">Dapat hindi bababa sa 8 karakter</string>
+    <string name="pf_password_error_match">Hindi magkapareho ang password</string>
+    <string name="pf_password_error_same">Iba dapat sa kasalukuyang password</string>
+    <string name="pf_password_error_weak">Masyadong mahina ang password</string>
+    <string name="pf_password_error_retry">Masyadong maraming subok. Maghintay muna bago umulit.</string>
+    <string name="pf_password_failed">Hindi napalitan ang password. Subukan muli.</string>
+</resources>

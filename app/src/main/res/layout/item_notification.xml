@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One notification: colored icon tile, title + message, and when it arrived on the side. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/notificationCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/nt_card"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="top"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="18dp">
+
+    <FrameLayout
+        android:id="@+id/iconTile"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:background="@drawable/nt_icon_tile"
+        android:backgroundTint="@color/pg_pagsusulit_tint">
+
+        <ImageView
+            android:id="@+id/ivKind"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_book"
+            app:tint="@color/pg_pagsusulit" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/lexend"
+            android:maxLines="2"
+            android:textColor="@color/pg_ink"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            tools:text="📘 Bagong aralin: Mga Pangngalan" />
+
+        <TextView
+            android:id="@+id/tvBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/public_sans"
+            android:lineSpacingMultiplier="1.2"
+            android:maxLines="3"
+            android:textColor="@color/pg_ink_soft"
+            android:textSize="13sp"
+            tools:text="Deadline: Okt 20, 11:59 PM" />
+    </LinearLayout>
+
+    <!-- When it arrived -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvDay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:maxLines="1"
+            android:textColor="@color/pg_pagsusulit"
+            android:textSize="11sp"
+            tools:ignore="SmallSp"
+            tools:text="Kahapon" />
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="@font/be_vietnam_medium"
+            android:maxLines="1"
+            android:textColor="@color/pg_ink_soft"
+            android:textSize="11sp"
+            tools:ignore="SmallSp"
+            tools:text="3:15 PM" />
+
+        <View
+            android:id="@+id/unreadDot"
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/nt_dot"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+</LinearLayout>

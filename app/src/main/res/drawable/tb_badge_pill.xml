@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unread badge on the bell: grows from a circle ("3") to a pill ("12", "99+"). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/tb_badge" />
+    <stroke android:width="2dp" android:color="#FFFFFF" />
+    <corners android:radius="10dp" />
+</shape>

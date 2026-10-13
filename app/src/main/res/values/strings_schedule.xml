@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lesson schedule: the teacher's open date and deadline -->
+    <string name="schedule_opens">Bubukas: %1$s</string>
+    <string name="schedule_due">Deadline: %1$s</string>
+    <string name="schedule_closed">Sarado na · Deadline: %1$s</string>
+
+    <string name="schedule_not_open_title">Hindi pa bukas</string>
+    <string name="schedule_not_open_msg">Mabubuksan mo ang “%1$s” sa %2$s.</string>
+    <string name="schedule_needs_internet_msg">Bubukas ang “%1$s” sa %2$s. Kumonekta sa internet para malaman kung bukas na ito.</string>
+    <string name="schedule_closed_title">Sarado na</string>
+    <string name="schedule_closed_msg">Lumampas na ang deadline ng “%1$s” (%2$s). Hindi na ito maaaring sagutan.</string>
+    <string name="schedule_closed_part_msg">Lumampas na ang deadline ng araling ito. Hindi na ito maaaring sagutan.</string>
+    <string name="schedule_download_locked">Mada-download mo ang aralin kapag bukas na ito.</string>
+
+    <!-- Push notifications -->
+    <string name="notif_channel_name">Mga bagong aralin</string>
+    <string name="notif_channel_desc">Abiso kapag nagdagdag ang guro ng bagong aralin</string>
+</resources>
