@@ -22,7 +22,9 @@ import android.view.View
 import android.widget.ProgressBar
 import android.view.inputmethod.EditorInfo
 import androidx.core.widget.doAfterTextChanged
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LogInActivity : AppCompatActivity() {
 
@@ -114,18 +116,43 @@ class LogInActivity : AppCompatActivity() {
             setLoading(true)
 
             authHelper.login(email, password) { success, result ->
-                setLoading(false)
-
                 if (success) {
-                    val uid = result ?: return@login
+                    val uid = result ?: run {
+                        setLoading(false)
+                        return@login
+                    }
 
-                    Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
+                    // Teachers and admins share the same Firebase project but must use
+                    // their own tools — this app is for students only.
+                    FirebaseFirestore.getInstance().collection("users").document(uid).get()
+                        .addOnSuccessListener { doc ->
+                            setLoading(false)
+                            val role = doc.getString("role")?.trim()?.lowercase()
+                            if (role == "teacher" || role == "admin") {
+                                authHelper.logout()
+                                showStudentsOnlyDialog()
+                                return@addOnSuccessListener
+                            }
 
-                    val intent = Intent(this@LogInActivity, MainActivity::class.java)
-                    intent.putExtra("uid", uid)
-                    startActivity(intent)
-                    finish()
+                            Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
+
+                            val intent = Intent(this@LogInActivity, MainActivity::class.java)
+                            intent.putExtra("uid", uid)
+                            startActivity(intent)
+                            finish()
+                        }
+                        .addOnFailureListener { e ->
+                            Log.d("LOGIN_DEBUG", "Role check failed: ${e.message}")
+                            setLoading(false)
+                            authHelper.logout()
+                            Toast.makeText(
+                                this,
+                                R.string.login_error_role_check_failed,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                 } else {
+                    setLoading(false)
                     Log.d("LOGIN_DEBUG", "Login failed: $result")
 
                     tilPassword.error = getString(R.string.login_error_invalid_credentials)
@@ -142,6 +169,16 @@ class LogInActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+    }
+
+    private fun showStudentsOnlyDialog() {
+        if (isFinishing || isDestroyed) return
+        etPassword.text?.clear()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.login_students_only_title)
+            .setMessage(R.string.login_students_only_message)
+            .setPositiveButton(R.string.login_students_only_ok, null)
+            .show()
     }
 
     private fun setLoading(isLoading: Boolean) {

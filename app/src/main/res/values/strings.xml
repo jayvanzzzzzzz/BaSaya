@@ -12,6 +12,10 @@
     <string name="login_error_email_required">Kailangan ang email.</string>
     <string name="login_error_password_required">Kailangan ang password.</string>
     <string name="login_error_invalid_credentials">Mali ang email o password.</string>
+    <string name="login_students_only_title">Para sa mga mag-aaral lamang</string>
+    <string name="login_students_only_message">Ang app na ito ay para sa mga mag-aaral lamang. Ang mga guro at admin ay hindi maaaring mag-login dito.</string>
+    <string name="login_students_only_ok">Sige</string>
+    <string name="login_error_role_check_failed">Hindi ma-verify ang iyong account. Subukan muli.</string>
     <string name="email">Email</string>
     <string name="ilagay_ang_iyong_email">Ilagay ang iyong email</string>
     <string name="password">Password</string>
