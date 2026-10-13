@@ -1,6 +1,12 @@
 package com.example.basaya.ui.fragment
 
+import android.app.Dialog
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -28,7 +34,9 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.basaya.ui.pronunciation.PronunciationBookView
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -65,6 +73,19 @@ class ProfileFragment : Fragment() {
     private lateinit var pfInfoGender: TextView
     private lateinit var pfInfoBirthday: TextView
 
+    // "Aking Klase": leaving needs the teacher's approval (classes/{id}/students/{uid}.leaveRequest)
+    private lateinit var pfClassName: TextView
+    private lateinit var pfLeaveStatus: View
+    private lateinit var pfLeaveStatusTitle: TextView
+    private lateinit var pfLeaveStatusText: TextView
+    private lateinit var btnLeaveStatusAction: MaterialButton
+    private lateinit var pfLeaveDivider: View
+    private lateinit var rowLeaveClass: View
+
+    private enum class LeaveState { NO_CLASS, IN_CLASS, PENDING, DECLINED }
+    private var leaveState = LeaveState.NO_CLASS
+    private var declinedNote = ""
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
@@ -74,6 +95,18 @@ class ProfileFragment : Fragment() {
         pfInfoName = view.findViewById(R.id.pfInfoName)
         pfInfoGender = view.findViewById(R.id.pfInfoGender)
         pfInfoBirthday = view.findViewById(R.id.pfInfoBirthday)
+        pfClassName = view.findViewById(R.id.pfClassName)
+        pfLeaveStatus = view.findViewById(R.id.pfLeaveStatus)
+        pfLeaveStatusTitle = view.findViewById(R.id.pfLeaveStatusTitle)
+        pfLeaveStatusText = view.findViewById(R.id.pfLeaveStatusText)
+        btnLeaveStatusAction = view.findViewById(R.id.btnLeaveStatusAction)
+        pfLeaveDivider = view.findViewById(R.id.pfLeaveDivider)
+        rowLeaveClass = view.findViewById(R.id.rowLeaveClass)
+        rowLeaveClass.setOnClickListener { showLeaveDialog(cancelling = false) }
+        btnLeaveStatusAction.setOnClickListener {
+            if (leaveState == LeaveState.PENDING) showLeaveDialog(cancelling = true) else dismissDeclined()
+        }
+        showClassSection()
 
         pfEmail.text = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
         view.findViewById<View>(R.id.btnEditProfile).setOnClickListener { showEditSheet() }
@@ -102,6 +135,7 @@ class ProfileFragment : Fragment() {
                     className = doc.getString("className").orEmpty()
                 )
                 showProfile()
+                loadLeaveState()
             }
             .addOnFailureListener { e ->
                 Log.e("ProfileFragment", "Failed to fetch user info", e)
@@ -117,6 +151,173 @@ class ProfileFragment : Fragment() {
         setValue(pfInfoName, profile.fullName)
         setValue(pfInfoGender, profile.gender)
         setValue(pfInfoBirthday, formatBirthday(profile.dob))
+    }
+
+    // The bottom nav hides/shows fragments instead of recreating them: refresh when shown,
+    // e.g. after the teacher approved leaving the class.
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && isAdded) loadProfile()
+    }
+
+    // ───────────────────────────── My class / leaving ─────────────────────────────
+
+    private fun rosterRef() = AuthHelper().getCurrentUser()?.uid?.let { uid ->
+        profile.classId.takeIf { it.isNotBlank() }?.let { classId ->
+            firestore.collection("classes").document(classId).collection("students").document(uid)
+        }
+    }
+
+    private fun loadLeaveState() {
+        val ref = rosterRef()
+        if (ref == null) {
+            leaveState = LeaveState.NO_CLASS
+            showClassSection()
+            return
+        }
+        ref.get()
+            .addOnSuccessListener { doc ->
+                if (!isAdded) return@addOnSuccessListener
+                val declined = doc.get("leaveDeclined") as? Map<*, *>
+                declinedNote = (declined?.get("note") as? String).orEmpty()
+                leaveState = when {
+                    doc.get("leaveRequest") != null -> LeaveState.PENDING
+                    declined != null -> LeaveState.DECLINED
+                    else -> LeaveState.IN_CLASS
+                }
+                showClassSection()
+            }
+            .addOnFailureListener { e ->
+                Log.w("ProfileFragment", "Could not read class membership", e)
+                if (!isAdded) return@addOnFailureListener
+                leaveState = LeaveState.IN_CLASS
+                showClassSection()
+            }
+    }
+
+    private fun showClassSection() {
+        val hasClass = profile.classId.isNotBlank()
+        setValue(pfClassName, if (hasClass) profile.className.ifBlank { profile.classId } else "")
+        if (!hasClass) pfClassName.text = getString(R.string.pf_class_none)
+
+        when (leaveState) {
+            LeaveState.PENDING -> {
+                pfLeaveStatus.setBackgroundResource(R.drawable.pf_status_pending)
+                pfLeaveStatusTitle.setText(R.string.pf_leave_pending_title)
+                pfLeaveStatusText.setText(R.string.pf_leave_pending_text)
+                btnLeaveStatusAction.setText(R.string.pf_leave_cancel)
+            }
+            LeaveState.DECLINED -> {
+                pfLeaveStatus.setBackgroundResource(R.drawable.pf_status_declined)
+                pfLeaveStatusTitle.setText(R.string.pf_leave_declined_title)
+                pfLeaveStatusText.text = if (declinedNote.isNotBlank()) {
+                    getString(R.string.pf_leave_declined_note, declinedNote)
+                } else {
+                    getString(R.string.pf_leave_declined_none)
+                }
+                btnLeaveStatusAction.setText(R.string.pf_leave_declined_ok)
+            }
+            else -> Unit
+        }
+
+        val showStatus = hasClass && (leaveState == LeaveState.PENDING || leaveState == LeaveState.DECLINED)
+        // While a request is waiting, the "leave" row is replaced by the status box.
+        val showLeaveRow = hasClass && leaveState != LeaveState.PENDING
+        pfLeaveStatus.visibility = if (showStatus) View.VISIBLE else View.GONE
+        pfLeaveDivider.visibility = if (showLeaveRow) View.VISIBLE else View.GONE
+        rowLeaveClass.visibility = if (showLeaveRow) View.VISIBLE else View.GONE
+    }
+
+    /** Ask to leave (with an optional reason), or cancel a request that's waiting. */
+    private fun showLeaveDialog(cancelling: Boolean) {
+        val className = profile.className.ifBlank { getString(R.string.pf_section_class) }
+        val dialog = Dialog(requireContext())
+        val content = layoutInflater.inflate(R.layout.dialog_leave_class, null)
+        val buddy = content.findViewById<PronunciationBookView>(R.id.leaveBuddy)
+        val tilReason = content.findViewById<TextInputLayout>(R.id.tilLeaveReason)
+        val etReason = content.findViewById<TextInputEditText>(R.id.etLeaveReason)
+        val btnConfirm = content.findViewById<MaterialButton>(R.id.btnLeaveConfirm)
+        val btnCancel = content.findViewById<TextView>(R.id.btnLeaveCancel)
+
+        if (cancelling) {
+            content.findViewById<TextView>(R.id.tvLeaveTitle).setText(R.string.pf_leave_cancel_title)
+            content.findViewById<TextView>(R.id.tvLeaveMessage).text = getString(R.string.pf_leave_cancel_message, className)
+            tilReason.visibility = View.GONE
+            btnConfirm.setText(R.string.pf_leave_cancel_confirm)
+            btnConfirm.backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.pg_unawa)
+            btnCancel.setText(R.string.pf_leave_cancel_back)
+        } else {
+            content.findViewById<TextView>(R.id.tvLeaveTitle).setText(R.string.pf_leave_dialog_title)
+            content.findViewById<TextView>(R.id.tvLeaveMessage).text = getString(R.string.pf_leave_dialog_message, className)
+            btnConfirm.setText(R.string.pf_leave_dialog_confirm)
+            btnCancel.setText(R.string.pf_leave_dialog_stay)
+        }
+        buddy.postDelayed({
+            buddy.setMood(if (cancelling) PronunciationBookView.Mood.HAPPY else PronunciationBookView.Mood.THINKING)
+        }, 250)
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+        btnConfirm.setOnClickListener {
+            if (!hasInternet()) {
+                Toast.makeText(requireContext(), R.string.pf_leave_need_internet, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val ref = rosterRef() ?: return@setOnClickListener
+            btnConfirm.isEnabled = false
+            val update: Map<String, Any> = if (cancelling) {
+                mapOf("leaveRequest" to FieldValue.delete())
+            } else {
+                mapOf(
+                    "leaveRequest" to mapOf(
+                        "reason" to etReason.text?.toString()?.trim().orEmpty(),
+                        "requestedAt" to FieldValue.serverTimestamp()
+                    ),
+                    "leaveDeclined" to FieldValue.delete()
+                )
+            }
+            ref.update(update)
+                .addOnSuccessListener {
+                    if (!isAdded) return@addOnSuccessListener
+                    dialog.dismiss()
+                    Toast.makeText(
+                        requireContext(),
+                        if (cancelling) R.string.pf_leave_cancelled else R.string.pf_leave_sent,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    leaveState = if (cancelling) LeaveState.IN_CLASS else LeaveState.PENDING
+                    showClassSection()
+                }
+                .addOnFailureListener { e ->
+                    Log.e("ProfileFragment", "Leave request failed", e)
+                    if (!isAdded) return@addOnFailureListener
+                    btnConfirm.isEnabled = true
+                    Toast.makeText(requireContext(), R.string.pf_leave_failed, Toast.LENGTH_SHORT).show()
+                }
+        }
+
+        dialog.setContentView(content)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    /** "Sige" on the declined box: hide the teacher's answer. */
+    private fun dismissDeclined() {
+        val ref = rosterRef() ?: return
+        leaveState = LeaveState.IN_CLASS
+        showClassSection()
+        ref.update("leaveDeclined", FieldValue.delete())
+            .addOnFailureListener { e -> Log.w("ProfileFragment", "Could not dismiss", e) }
+    }
+
+    private fun hasInternet(): Boolean {
+        val manager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = manager.activeNetwork ?: return false
+        val capabilities = manager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     /** Shows the value, or a soft "Hindi pa nailalagay" when empty. */

@@ -53,4 +53,32 @@
     <string name="pf_password_error_weak">Masyadong mahina ang password</string>
     <string name="pf_password_error_retry">Masyadong maraming subok. Maghintay muna bago umulit.</string>
     <string name="pf_password_failed">Hindi napalitan ang password. Subukan muli.</string>
+
+    <!-- My class: leave the class (the teacher has to approve) -->
+    <string name="pf_section_class">Aking Klase</string>
+    <string name="pf_class_current">Kasalukuyang klase</string>
+    <string name="pf_class_none">Wala ka pang klase</string>
+    <string name="pf_class_none_sub">Sumali gamit ang class code sa Home.</string>
+    <string name="pf_leave_class">Umalis sa klase</string>
+    <string name="pf_leave_class_sub">Kailangan ng pahintulot ng iyong guro</string>
+    <string name="pf_leave_pending_title">Hinihintay ang iyong guro</string>
+    <string name="pf_leave_pending_text">Humiling kang umalis sa klase. Puwede ka pa ring mag-aral habang naghihintay.</string>
+    <string name="pf_leave_cancel">Kanselahin ang paghiling</string>
+    <string name="pf_leave_declined_title">Hindi pumayag ang iyong guro</string>
+    <string name="pf_leave_declined_note">Sabi ng guro: “%1$s”</string>
+    <string name="pf_leave_declined_none">Mananatili ka sa klase.</string>
+    <string name="pf_leave_declined_ok">Sige</string>
+    <string name="pf_leave_dialog_title">Aalis ka ba sa klase?</string>
+    <string name="pf_leave_dialog_message">Kapag pumayag ang iyong guro, aalis ka sa %1$s at mabubura ang iyong progreso sa klaseng ito.</string>
+    <string name="pf_leave_dialog_reason">Dahilan (hindi kailangan)</string>
+    <string name="pf_leave_dialog_confirm">Humiling na umalis</string>
+    <string name="pf_leave_dialog_stay">Manatili sa klase</string>
+    <string name="pf_leave_cancel_title">Kanselahin ang paghiling?</string>
+    <string name="pf_leave_cancel_message">Mananatili ka sa %1$s.</string>
+    <string name="pf_leave_cancel_confirm">Oo, kanselahin</string>
+    <string name="pf_leave_cancel_back">Huwag muna</string>
+    <string name="pf_leave_sent">Naipadala na sa iyong guro!</string>
+    <string name="pf_leave_cancelled">Kinansela na ang paghiling.</string>
+    <string name="pf_leave_failed">Hindi naipadala. Subukan muli.</string>
+    <string name="pf_leave_need_internet">Kailangan ng internet para dito.</string>
 </resources>

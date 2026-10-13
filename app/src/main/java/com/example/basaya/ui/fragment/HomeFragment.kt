@@ -61,6 +61,8 @@ class HomeFragment : Fragment() {
     private lateinit var etSearch: EditText
     private lateinit var btnRefresh: ImageButton
     private lateinit var tvClassName: TextView
+    // Shown only while the student has no class (leaving is on the account screen).
+    private lateinit var btnJoinClass: ImageButton
 
     private val authHelper = AuthHelper()
     private var currentClassId: String? = null
@@ -94,7 +96,8 @@ class HomeFragment : Fragment() {
 
         startDotsAnimation(dot1, dot2, dot3)
 
-        val btnJoinClass = view.findViewById<ImageButton>(R.id.btnJoinClass)
+        btnJoinClass = view.findViewById(R.id.btnJoinClass)
+        btnJoinClass.visibility = View.GONE // Until membership is known.
         btnJoinClass.setOnClickListener {
             if(hasInternetConnection())showJoinClassSheet()
             else Toast.makeText(requireContext(),
@@ -221,7 +224,8 @@ class HomeFragment : Fragment() {
 
                 val classId = doc.getString("classId")
                 val className = doc.getString("className")
-                currentClassId = classId
+                currentClassId = classId?.takeIf { it.isNotBlank() }
+                btnJoinClass.visibility = if (currentClassId == null) View.VISIBLE else View.GONE
                 // "New lesson" pushes come from this class only.
                 ClassNotifications.syncTopic(requireContext(), classId)
 
@@ -241,6 +245,7 @@ class HomeFragment : Fragment() {
             .addOnFailureListener { e ->
                 Log.e("HomeFragment", "Failed to check class membership", e)
                 if (!isAdded) return@addOnFailureListener
+                btnJoinClass.visibility = if (currentClassId == null) View.VISIBLE else View.GONE
                 loadingContainer.visibility = View.GONE
                 tvClassName.visibility = View.GONE
                 dotsAnimatorSet?.cancel()
@@ -506,6 +511,20 @@ class HomeFragment : Fragment() {
         val offset = (24 * resources.displayMetrics.density).toInt()
         (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
         adapter.highlight(ids)
+    }
+
+    // The bottom nav hides/shows fragments: when Home comes back, pick up a class change
+    // (e.g. the teacher approved leaving) without reloading the list every time.
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (hidden || !isAdded) return
+        val uid = authHelper.getCurrentUser()?.uid ?: return
+        firestore.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                if (!isAdded) return@addOnSuccessListener
+                val classId = doc.getString("classId")?.takeIf { it.isNotBlank() }
+                if (classId != currentClassId) checkClassMembershipAndLoad()
+            }
     }
 
     override fun onResume() {
