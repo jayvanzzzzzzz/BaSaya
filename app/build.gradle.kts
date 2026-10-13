@@ -64,6 +64,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
 
     implementation("com.google.firebase:firebase-firestore-ktx")
+    // "New lesson" push notifications (FCM topic class_<classId>)
+    implementation("com.google.firebase:firebase-messaging")
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

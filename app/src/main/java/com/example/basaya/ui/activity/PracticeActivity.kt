@@ -30,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
+import com.example.basaya.data.model.ActivityPage
 import com.example.basaya.data.model.PracticeActivityData
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillProgressRepository
@@ -63,6 +64,7 @@ class PracticeActivity : AppCompatActivity() {
     private lateinit var tvFeedback: TextView
     private lateinit var btnAction: TextView
     private lateinit var llProgressBars: LinearLayout
+    private lateinit var tvPickCount: TextView
     private lateinit var confettiView: ConfettiView
 
     private val trackSegments = mutableListOf<View>()
@@ -112,6 +114,7 @@ class PracticeActivity : AppCompatActivity() {
         tvFeedback = findViewById(R.id.tvFeedback)
         btnAction = findViewById(R.id.btnAction)
         llProgressBars = findViewById(R.id.llProgressBars)
+        tvPickCount = findViewById(R.id.tvPickCount)
         confettiView = findViewById(R.id.confettiView)
 
         findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
@@ -186,6 +189,11 @@ class PracticeActivity : AppCompatActivity() {
 
     private fun showPage(index: Int, animateIn: Boolean = true) {
         val page = practiceData.pages[index]
+
+        // Tell the child how many words to pick (pages can have more than one answer)
+        val pickCount = page.correctIndices.distinct().size
+        tvPickCount.visibility = if (pickCount > 0) View.VISIBLE else View.GONE
+        tvPickCount.text = getString(R.string.ac_pick_count, pickCount)
 
         selectedIndices.clear()
         hasChecked = false
@@ -294,13 +302,24 @@ class PracticeActivity : AppCompatActivity() {
 
     // ───────────────────────────── Checking ─────────────────────────────
 
-    private fun isCurrentAnswerCorrect(): Boolean =
-        selectedIndices == practiceData.pages[currentPageIndex].correctIndices.toSet()
+    /**
+     * A page is right when the child picked exactly the correct words. A page saved in
+     * basaya-web without any correct answers can't be answered, so it never blocks the child.
+     */
+    private fun isPageCorrect(page: ActivityPage): Boolean {
+        val correctSet = page.correctIndices.toSet()
+        return correctSet.isEmpty() || selectedIndices == correctSet
+    }
+
+    private fun isCurrentAnswerCorrect(): Boolean = isPageCorrect(practiceData.pages[currentPageIndex])
 
     private fun checkAnswer() {
         val page = practiceData.pages[currentPageIndex]
         val correctSet = page.correctIndices.toSet()
-        val isCorrect = selectedIndices == correctSet
+        val isCorrect = isPageCorrect(page)
+        // Every pick is right, but some correct words are still missing
+        val isIncomplete = !isCorrect && selectedIndices.isNotEmpty() && correctSet.containsAll(selectedIndices)
+        val explanation = page.explanation ?: practiceData.explanation
 
         for (i in 0 until chipsContainer.childCount) {
             val tile = chipsContainer.getChildAt(i) as TextView
@@ -337,21 +356,29 @@ class PracticeActivity : AppCompatActivity() {
 
         if (isCorrect) {
             if (firstCheck) score++
-            showFeedback(good = true, text = "${getString(R.string.ac_good)} ${practiceData.explanation}".trim())
+            val text = if (correctSet.isEmpty()) {
+                getString(R.string.ac_no_answer_set)
+            } else {
+                "${getString(R.string.ac_good)} $explanation".trim()
+            }
+            showFeedback(good = true, text = text)
             setButton(
                 if (currentPageIndex == practiceData.pages.lastIndex) R.string.ac_finish else R.string.ac_next,
                 R.drawable.ac_btn_next
             )
             celebrate()
+        } else if (isIncomplete) {
+            showFeedback(good = false, text = getString(R.string.ac_incomplete, correctSet.size))
+            setButton(R.string.ac_retry, R.drawable.ac_btn_retry)
         } else {
-            showFeedback(good = false, text = "${getString(R.string.ac_try_again)} ${practiceData.explanation}".trim())
+            showFeedback(good = false, text = "${getString(R.string.ac_try_again)} $explanation".trim())
             setButton(R.string.ac_retry, R.drawable.ac_btn_retry)
         }
     }
 
     private fun goToNext() {
         val page = practiceData.pages[currentPageIndex]
-        val wasCorrect = selectedIndices == page.correctIndices.toSet()
+        val wasCorrect = isPageCorrect(page)
 
         if (!wasCorrect) {
             showPage(currentPageIndex)

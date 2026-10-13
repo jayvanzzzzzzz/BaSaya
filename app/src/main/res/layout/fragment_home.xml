@@ -21,62 +21,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_dashboard_hero"
-            android:minHeight="130dp"
-            android:paddingStart="18dp"
-            android:paddingTop="17dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="17dp">
-
-            <TextView
-                android:id="@+id/tvDashboardEyebrow"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/public_sans"
-                android:letterSpacing="0.08"
-                android:text="@string/dashboard_greeting"
-                android:textColor="#775B2A"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@id/ivDashboardBook"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tvDashboardTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/lexend"
-                android:lineSpacingMultiplier="1.08"
-                android:maxLines="2"
-                android:text="@string/dashboard_title"
-                android:textColor="#263B66"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/ivDashboardBook"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvDashboardEyebrow"
-                app:layout_constraintVertical_bias="0.0" />
-
-            <ImageView
-                android:id="@+id/ivDashboardBook"
-                android:layout_width="92dp"
-                android:layout_height="92dp"
-                android:layout_marginEnd="2dp"
-                android:contentDescription="@null"
-                android:scaleType="fitCenter"
-                android:src="@drawable/book_1"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
+        
         <EditText
             android:id="@+id/etSearch"
             android:layout_width="match_parent"
@@ -149,6 +94,14 @@
         app:layout_constraintTop_toBottomOf="@id/tvClassName"
         app:tint="#5374BD" />
 
+    <!-- Bottom edge of the section header row (the refresh button is taller than the label) -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/sectionHeaderBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="tvSectionLabel,btnRefresh" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerLessons"
         android:layout_width="0dp"
@@ -161,7 +114,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSectionLabel"
+        app:layout_constraintTop_toBottomOf="@id/sectionHeaderBottom"
         tools:listitem="@layout/item_lesson" />
 
     <ImageButton
@@ -179,26 +132,49 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="#FFFFFF" />
 
-    <TextView
-        android:id="@+id/tvEmptyLessons"
+    <!--
+      Empty state lives in its own scroll area below the header: centered when it fits,
+      scrollable when the screen is short, so the message is never clipped and never
+      overlaps the section label or refresh button. Shown/hidden with tvEmptyLessons.
+    -->
+    <ScrollView
+        android:id="@+id/emptyStateScroll"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="34dp"
-        android:layout_marginEnd="34dp"
-        android:background="@drawable/bg_home_empty_state"
-        android:drawableTop="@drawable/ic_empty_lessons"
-        android:drawablePadding="14dp"
-        android:gravity="center"
-        android:lineSpacingExtra="4dp"
-        android:padding="24dp"
-        android:text="@string/empty_no_lessons"
-        android:textColor="#59647A"
-        android:textSize="15sp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingTop="16dp"
+        android:paddingBottom="88dp"
+        android:scrollbars="none"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSectionLabel" />
+        app:layout_constraintTop_toBottomOf="@id/sectionHeaderBottom">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvEmptyLessons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="34dp"
+                android:layout_marginEnd="34dp"
+                android:background="@drawable/bg_home_empty_state"
+                android:drawableTop="@drawable/ic_empty_lessons"
+                android:drawablePadding="14dp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:padding="24dp"
+                android:text="@string/empty_no_lessons"
+                android:textColor="#59647A"
+                android:textSize="15sp"
+                android:visibility="gone" />
+        </FrameLayout>
+    </ScrollView>
 
     <LinearLayout
         android:id="@+id/loadingContainer"
@@ -210,7 +186,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSectionLabel">
+        app:layout_constraintTop_toBottomOf="@id/sectionHeaderBottom">
 
         <LinearLayout
             android:layout_width="wrap_content"

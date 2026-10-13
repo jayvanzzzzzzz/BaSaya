@@ -4,7 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.basaya.data.dao.ActivityDao
+import com.example.basaya.data.dao.ClassNotificationDao
 import com.example.basaya.data.dao.CrosswordLevelDao
 import com.example.basaya.data.dao.CrosswordProgressDao
 import com.example.basaya.data.dao.LectureDao
@@ -12,6 +15,7 @@ import com.example.basaya.data.dao.LessonDao
 import com.example.basaya.data.dao.PronunciationDao
 import com.example.basaya.data.dao.QuizDao
 import com.example.basaya.data.entity.ActivityEntity
+import com.example.basaya.data.entity.ClassNotificationEntity
 import com.example.basaya.data.entity.CrosswordProgress
 import com.example.basaya.data.entity.LectureEntity
 import com.example.basaya.data.entity.LessonEntity
@@ -27,9 +31,10 @@ import com.example.basaya.data.entity.QuizEntity
         LectureEntity::class,
         ActivityEntity::class,
         QuizEntity::class,
-        PronunciationEntity::class
+        PronunciationEntity::class,
+        ClassNotificationEntity::class
     ],
-    version = 10
+    version = 13
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -40,8 +45,37 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
     abstract fun quizDao(): QuizDao
     abstract fun pronunciationDao(): PronunciationDao
+    abstract fun classNotificationDao(): ClassNotificationDao
 
     companion object {
+        /** v11: lessons.gameSkipped. Keeps downloaded lessons instead of wiping the database. */
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE lessons ADD COLUMN gameSkipped INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /** v12: lessons.openAt / lessons.dueAt (teacher's schedule). */
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE lessons ADD COLUMN openAt INTEGER")
+                db.execSQL("ALTER TABLE lessons ADD COLUMN dueAt INTEGER")
+            }
+        }
+
+        /** v13: lessons.assignedAt and the class_notifications table (notification list). */
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE lessons ADD COLUMN assignedAt INTEGER")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS class_notifications (" +
+                        "id TEXT NOT NULL, classId TEXT NOT NULL, title TEXT NOT NULL, " +
+                        "body TEXT NOT NULL, lessonIds TEXT NOT NULL, visibleAt INTEGER NOT NULL, " +
+                        "PRIMARY KEY(id))"
+                )
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -52,6 +86,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "game_database"
                 )
+                    .addMigrations(MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                     .fallbackToDestructiveMigration()
                     .build()
 

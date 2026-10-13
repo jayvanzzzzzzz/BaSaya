@@ -27,8 +27,12 @@ import com.example.basaya.R
 import com.example.basaya.adapter.LessonAdapter
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.entity.LessonEntity
+import com.example.basaya.data.notifications.ClassNotifications
 import com.example.basaya.data.repository.LessonRepository
+import com.example.basaya.data.schedule.LessonSchedule
+import com.example.basaya.data.schedule.LessonSchedule.Availability
 import com.example.basaya.ui.DashboardActivity
+import android.widget.ImageView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import android.content.Context
@@ -52,6 +56,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmptyLessons: TextView
+    private lateinit var emptyStateScroll: View
     private lateinit var loadingContainer: LinearLayout
     private lateinit var etSearch: EditText
     private lateinit var btnRefresh: ImageButton
@@ -99,6 +104,7 @@ class HomeFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.recyclerLessons)
         tvEmptyLessons = view.findViewById(R.id.tvEmptyLessons)
+        emptyStateScroll = view.findViewById(R.id.emptyStateScroll)
         loadingContainer = view.findViewById(R.id.loadingContainer)
         etSearch = view.findViewById(R.id.etSearch)
         btnRefresh = view.findViewById(R.id.btnRefresh)
@@ -148,11 +154,11 @@ class HomeFragment : Fragment() {
                         icon?.setBounds(0, 0, icon.intrinsicWidth, icon.intrinsicHeight)
                         tvEmptyLessons.setCompoundDrawables(null, icon, null, null)
 
-                        tvEmptyLessons.visibility = View.VISIBLE
+                        setEmptyVisible(true)
                     }
                 } else {
                     recyclerView.visibility = View.VISIBLE
-                    tvEmptyLessons.visibility = View.GONE
+                    setEmptyVisible(false)
                 }
 
                 this@HomeFragment.adapter.updateList(filtered, query)
@@ -166,9 +172,16 @@ class HomeFragment : Fragment() {
 
     private lateinit var adapter: LessonAdapter
 
+    /** The empty message and its scroll area are always shown and hidden together. */
+    private fun setEmptyVisible(visible: Boolean) {
+        val visibility = if (visible) View.VISIBLE else View.GONE
+        tvEmptyLessons.visibility = visibility
+        emptyStateScroll.visibility = visibility
+    }
+
     private fun showEmptyState(state: EmptyLessonsState) {
         recyclerView.visibility = View.GONE
-        tvEmptyLessons.visibility = View.VISIBLE
+        setEmptyVisible(true)
 
         val (iconRes, message) = when (state) {
             EmptyLessonsState.NOT_IN_CLASS -> Pair(
@@ -197,7 +210,7 @@ class HomeFragment : Fragment() {
 
         loadingContainer.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
-        tvEmptyLessons.visibility = View.GONE
+        setEmptyVisible(false)
 
         firestore
             .collection("users")
@@ -209,6 +222,8 @@ class HomeFragment : Fragment() {
                 val classId = doc.getString("classId")
                 val className = doc.getString("className")
                 currentClassId = classId
+                // "New lesson" pushes come from this class only.
+                ClassNotifications.syncTopic(requireContext(), classId)
 
                 if (classId.isNullOrBlank()) {
                     tvClassName.text = ""
@@ -230,12 +245,17 @@ class HomeFragment : Fragment() {
                 tvClassName.visibility = View.GONE
                 dotsAnimatorSet?.cancel()
                 tvEmptyLessons.text = getString(R.string.error_checking_class_membership)
-                tvEmptyLessons.visibility = View.VISIBLE
+                setEmptyVisible(true)
                 recyclerView.visibility = View.GONE
             }
     }
 
     private fun handleDownload(lesson: LessonEntity, onResult: (Boolean) -> Unit) {
+        if (!LessonSchedule.canOpen(requireContext(), lesson)) {
+            Toast.makeText(requireContext(), getString(R.string.schedule_download_locked), Toast.LENGTH_SHORT).show()
+            onResult(false)
+            return
+        }
         lifecycleScope.launch {
             val repo = LessonRepository(requireContext())
             val success = repo.downloadLesson(lesson.id)
@@ -298,8 +318,9 @@ class HomeFragment : Fragment() {
                 showEmptyState(EmptyLessonsState.NO_LESSONS_IN_CLASS)
             } else {
                 recyclerView.visibility = View.VISIBLE
-                tvEmptyLessons.visibility = View.GONE
+                setEmptyVisible(false)
                 adapter.updateList(lessons, "")
+                applyHighlight()
             }
 
             if (isManualRefresh) {
@@ -386,6 +407,11 @@ class HomeFragment : Fragment() {
     private fun openLessonIfAvailable(lesson: LessonEntity) {
         if (!isAdded || requireActivity().isFinishing) return
 
+        if (!LessonSchedule.canOpen(requireContext(), lesson)) {
+            showScheduleLockedDialog(lesson)
+            return
+        }
+
         if (lesson.isDownloaded || hasInternetConnection()) {
             startActivity(
                 Intent(requireContext(), DashboardActivity::class.java).apply {
@@ -418,6 +444,74 @@ class HomeFragment : Fragment() {
         }
 
         dialog.show()
+    }
+
+    /** Before the open date, or after the deadline of an unfinished lesson. */
+    private fun showScheduleLockedDialog(lesson: LessonEntity) {
+        val opens = LessonSchedule.format(lesson.openAt)
+        val (title, message) = when (LessonSchedule.availability(requireContext(), lesson)) {
+            Availability.NEEDS_INTERNET ->
+                getString(R.string.schedule_not_open_title) to
+                    getString(R.string.schedule_needs_internet_msg, lesson.title, opens)
+            Availability.CLOSED ->
+                getString(R.string.schedule_closed_title) to
+                    getString(R.string.schedule_closed_msg, lesson.title, LessonSchedule.format(lesson.dueAt))
+            else ->
+                getString(R.string.schedule_not_open_title) to
+                    getString(R.string.schedule_not_open_msg, lesson.title, opens)
+        }
+
+        val dialog = Dialog(requireContext())
+        val dialogView = layoutInflater.inflate(R.layout.dialog_lesson_status, null)
+        dialogView.findViewById<ImageView>(R.id.ivDialogIcon).setImageResource(R.drawable.ic_lock_small)
+        dialogView.findViewById<TextView>(R.id.tvDialogTitle).text = title
+        dialogView.findViewById<TextView>(R.id.tvDialogMessage).text = message
+        dialogView.findViewById<MaterialButton>(R.id.btnDialogPrimary).apply {
+            text = "OK"
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        dialog.setContentView(dialogView)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    // Lessons to highlight once the list is loaded (from a tapped notification).
+    private var pendingHighlight: List<String>? = null
+
+    /** From a tapped notification: scroll to the lesson(s) and make them glow for a moment. */
+    fun highlightLessons(lessonIds: List<String>) {
+        pendingHighlight = lessonIds
+        if (view == null) return // Applied after the first load.
+        if (allLessons.none { it.id in lessonIds }) {
+            // A brand-new lesson that isn't in the list yet: refresh first.
+            if (currentClassId != null) fetchLessons(isManualRefresh = false)
+        } else {
+            applyHighlight()
+        }
+    }
+
+    private fun applyHighlight() {
+        val ids = pendingHighlight ?: return
+        val position = allLessons.indexOfFirst { it.id in ids }
+        if (position < 0) return
+        pendingHighlight = null
+
+        // The lesson may be hidden by a search.
+        if (etSearch.text.isNotEmpty()) etSearch.setText("")
+        val offset = (24 * resources.displayMetrics.density).toInt()
+        (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+        adapter.highlight(ids)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-check open dates and deadlines that may have passed while away.
+        if (::adapter.isInitialized) adapter.notifyDataSetChanged()
     }
 
     private fun showJoinClassSheet() {

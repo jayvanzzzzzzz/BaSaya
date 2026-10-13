@@ -1,6 +1,11 @@
 package com.example.basaya.ui
 
+import android.animation.ObjectAnimator
 import android.content.Intent
+import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
+import androidx.core.view.updateLayoutParams
+import java.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -19,13 +24,44 @@ import androidx.fragment.app.Fragment
 import com.example.basaya.R
 import com.example.basaya.controller.BottomNavController
 import com.example.basaya.data.auth.AuthHelper
+import com.example.basaya.data.notifications.ClassNotifications
+import com.example.basaya.data.notifications.LessonInbox
+import com.example.basaya.data.notifications.NotificationReadState
 import com.example.basaya.ui.fragment.HomeFragment
+import com.example.basaya.ui.notifications.NotificationsActivity
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
+import android.animation.PropertyValuesHolder
+import android.content.Context
+import android.view.animation.OvershootInterpolator
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
 import com.example.basaya.ui.fragment.ProfileFragment
 import com.example.basaya.ui.fragment.ProgressFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val EXTRA_HIGHLIGHT_LESSONS = "highlightLessonIds"
+
+        /** Opens Home (reusing the running screen) and highlights these lessons. */
+        fun highlightIntent(context: Context, lessonIds: List<String>): Intent =
+            Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_HIGHLIGHT_LESSONS, lessonIds.toTypedArray())
+                .addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
+    }
+
     private lateinit var auth: FirebaseAuth
     private lateinit var tvName: TextView
     private var isUserReady = false
@@ -41,7 +77,26 @@ class MainActivity : AppCompatActivity() {
     private val homeFragment by lazy { HomeFragment() }
     private val progressFragment by lazy { ProgressFragment() }
     private val profileFragment by lazy { ProfileFragment() }
+
+    private lateinit var btnNotification: ImageButton
+    private lateinit var tvNotifBadge: TextView
+    private var bellAnimator: AnimatorSet? = null
+    private var bottomNavController: BottomNavController? = null
+    // Lessons to highlight once Home is ready (from a tapped notification).
+    private var pendingHighlight: List<String>? = null
     private var activeFragment: Fragment? = null
+
+    // Android 13+ asks before an app may show notifications ("new lesson" pushes).
+    private val notificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED
+        ) return
+        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,13 +112,33 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        val statusBarBg = findViewById<View>(R.id.statusBarBg)
+        ClassNotifications.createChannels(this)
+        if (savedInstanceState == null) askNotificationPermission()
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        val appBar = findViewById<View>(R.id.appBarLayout)
+        val bottomNav = findViewById<View>(R.id.bottomNavCard)
+        val navBaseMargin = (bottomNav.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+
+        // The top bar's gradient extends behind the status bar; the bottom nav floats above
+        // the system navigation bar.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            statusBarBg.layoutParams.height = statusBarHeight
-            statusBarBg.requestLayout()
+            appBar.setPadding(appBar.paddingLeft, statusBarHeight, appBar.paddingRight, appBar.paddingBottom)
+            val navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            bottomNav.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = navBaseMargin + navBarHeight }
             insets
+        }
+
+        findViewById<TextView>(R.id.tvGreeting).setText(greetingForNow())
+        btnNotification = findViewById(R.id.btnNotification)
+        tvNotifBadge = findViewById(R.id.tvNotifBadge)
+        pendingHighlight = highlightIds(intent)
+
+        // Unread count follows new pushes, lesson syncs and "mark all read".
+        lifecycleScope.launch {
+            LessonInbox.changes.collect {
+                if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) refreshBell()
+            }
         }
 
         ivProfileChevron = findViewById(R.id.ivProfileChevron)
@@ -74,15 +149,16 @@ class MainActivity : AppCompatActivity() {
             showToolbarMenu(view)
         }
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.toolbar_bar_color)
-
+        // White status bar icons on the gradient top bar
         WindowInsetsControllerCompat(window, window.decorView)
-            .isAppearanceLightStatusBars = true
+            .isAppearanceLightStatusBars = false
 
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
 
             if (user == null) {
+                // Logged out: stop this phone getting the class's lesson notifications.
+                ClassNotifications.syncTopic(this@MainActivity, null)
                 if (!isDestroyed && !isFinishing) {
                     startActivity(Intent(this@MainActivity, LogInActivity::class.java))
                     finish()
@@ -95,11 +171,110 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<ImageButton>(R.id.btnNotification).setOnClickListener {
-            showConfirmDialog()
+        // Opens the notification list and marks everything as read.
+        btnNotification.setOnClickListener {
+            val uid = auth.currentUser?.uid ?: return@setOnClickListener
+            val readBefore = NotificationReadState.readAt(this, uid)
+            startActivity(NotificationsActivity.intent(this, readBefore))
+            NotificationReadState.markAllRead(this, uid)
+            showUnread(0)
         }
 
         auth.addAuthStateListener(authStateListener)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        highlightIds(intent)?.let { ids ->
+            pendingHighlight = ids
+            if (isUserReady) deliverHighlight()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        refreshBell()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        bellAnimator?.cancel()
+        bellAnimator = null
+    }
+
+    private fun highlightIds(intent: Intent?): List<String>? =
+        intent?.getStringArrayExtra(EXTRA_HIGHLIGHT_LESSONS)?.toList()?.takeIf { it.isNotEmpty() }
+            ?.also { intent.removeExtra(EXTRA_HIGHLIGHT_LESSONS) }
+
+    /** A tapped notification: go to Home and make its lesson(s) glow. */
+    private fun deliverHighlight() {
+        val ids = pendingHighlight ?: return
+        pendingHighlight = null
+        bottomNavController?.selectTab(0, animate = true)
+        homeFragment.highlightLessons(ids)
+    }
+
+    private fun refreshBell() {
+        val uid = auth.currentUser?.uid ?: return
+        lifecycleScope.launch {
+            showUnread(LessonInbox.unreadCount(this@MainActivity, uid))
+        }
+    }
+
+    private fun showUnread(count: Int) {
+        if (count <= 0) {
+            tvNotifBadge.visibility = View.GONE
+            btnNotification.contentDescription = getString(R.string.notif_bell_cd_none)
+            bellAnimator?.cancel()
+            bellAnimator = null
+            return
+        }
+
+        btnNotification.contentDescription =
+            resources.getQuantityString(R.plurals.notif_bell_cd_unread, count, count)
+        tvNotifBadge.text = if (count > 99) "99+" else count.toString()
+        if (tvNotifBadge.visibility != View.VISIBLE) {
+            tvNotifBadge.visibility = View.VISIBLE
+            tvNotifBadge.scaleX = 0f
+            tvNotifBadge.scaleY = 0f
+            tvNotifBadge.animate().scaleX(1f).scaleY(1f).setDuration(320)
+                .setInterpolator(OvershootInterpolator(3f)).start()
+        }
+        startBellRinging()
+    }
+
+    /** While something is unread: the bell rings and the badge bounces every few seconds. */
+    private fun startBellRinging() {
+        if (bellAnimator != null) return
+        btnNotification.pivotX = btnNotification.width / 2f
+        btnNotification.pivotY = btnNotification.height * 0.2f
+
+        val ring = ObjectAnimator.ofFloat(
+            btnNotification, View.ROTATION, 0f, 18f, -16f, 12f, -8f, 4f, 0f
+        ).setDuration(900)
+        val bounce = ObjectAnimator.ofPropertyValuesHolder(
+            tvNotifBadge,
+            PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.3f, 0.9f, 1f),
+            PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.3f, 0.9f, 1f)
+        ).setDuration(600)
+
+        bellAnimator = AnimatorSet().apply {
+            playTogether(ring, bounce)
+            startDelay = 1_800
+            interpolator = DecelerateInterpolator()
+            addListener(object : AnimatorListenerAdapter() {
+                private var cancelled = false
+                override fun onAnimationCancel(animation: Animator) {
+                    cancelled = true
+                    btnNotification.rotation = 0f
+                }
+                override fun onAnimationEnd(animation: Animator) {
+                    if (!cancelled && !isFinishing) animation.start()
+                }
+            })
+            start()
+        }
     }
 
     override fun onDestroy() {
@@ -144,6 +319,7 @@ class MainActivity : AppCompatActivity() {
         activeFragment = homeFragment
 
         setupBottomNav()
+        deliverHighlight()
     }
 
     private fun setupBottomNav() {
@@ -161,7 +337,7 @@ class MainActivity : AppCompatActivity() {
         val iconProfile = findViewById<ImageView>(R.id.iconProfile)
         val labelProfile = findViewById<TextView>(R.id.labelProfile)
 
-        BottomNavController(
+        bottomNavController = BottomNavController(
             underline = navUnderline,
             items = listOf(
                 BottomNavController.NavItem(navHome, iconHome, labelHome),
@@ -230,14 +406,12 @@ class MainActivity : AppCompatActivity() {
         activeFragment = fragment
     }
 
-    private fun showConfirmDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Wala papo")
-            .setMessage("Mga 1 week pa.")
-            .setPositiveButton("Oki") { _, _ -> }
-            .setCancelable(false)
-            .show()
+    private fun greetingForNow(): Int = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+        in 4..11 -> R.string.tb_greeting_morning
+        in 12..17 -> R.string.tb_greeting_afternoon
+        else -> R.string.tb_greeting_evening
     }
+
 
     private fun animateChevron(active: Boolean) {
         val targetRotation = if (active) 90f else 0f

@@ -21,6 +21,9 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
+import com.example.basaya.data.database.AppDatabase
+import com.example.basaya.data.entity.LessonEntity
+import com.example.basaya.data.progress.LessonCompletion
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillLevel
 import com.example.basaya.data.progress.SkillProgressRepository
@@ -86,6 +89,9 @@ class ProgressFragment : Fragment() {
     private lateinit var wordsContainer: FlexboxLayout
 
     private var loadJob: Job? = null
+    private var allGamesSkipped = false
+    /** The student's class lessons (from Room); the only lessons that count. */
+    private var classLessons: List<LessonEntity> = emptyList()
     private val density get() = resources.displayMetrics.density
     private fun dp(value: Float) = (value * density).toInt()
     private fun color(@ColorRes res: Int) = ContextCompat.getColor(requireContext(), res)
@@ -120,7 +126,7 @@ class ProgressFragment : Fragment() {
         loadJob?.cancel()
         loadJob = viewLifecycleOwner.lifecycleScope.launch {
             val firestore = FirebaseFirestore.getInstance()
-            val docs = try {
+            val allDocs = try {
                 firestore.collection("users").document(uid)
                     .collection("assignedLessons").get().await().documents
             } catch (e: Exception) {
@@ -132,8 +138,20 @@ class ProgressFragment : Fragment() {
                 null
             } ?: FirebaseAuth.getInstance().currentUser?.displayName
 
+            // Only the lessons of the student's class count (synced into Room by the home screen).
+            // Stray assignedLessons documents — old test assignments, a previous class — are ignored.
+            classLessons = try {
+                AppDatabase.getDatabase(requireContext()).lessonDao().getLessonsForUser(uid)
+            } catch (e: Exception) {
+                emptyList()
+            }
+            val docs = LessonCompletion.classDocs(allDocs, classLessons)
+
             val summary = SkillScoring.summarize(SkillProgressRepository.resultsFrom(docs))
             if (view == null) return@launch
+
+            // Every class lesson has its game skipped by the teacher → there is nothing to measure.
+            allGamesSkipped = classLessons.isNotEmpty() && classLessons.all { it.gameSkipped }
 
             showHero(name, docs, summary)
             showSkills(docs, summary)
@@ -141,7 +159,7 @@ class ProgressFragment : Fragment() {
 
             // Keep the saved summary (read by the teacher dashboard) in step with what the student sees.
             try {
-                SkillProgressRepository().saveSummary(uid, summary, lessonsAssigned = docs.size)
+                SkillProgressRepository().saveSummary(uid, summary, lessonsAssigned = classLessons.size)
             } catch (e: Exception) {
                 Log.w("ProgressFragment", "Could not save skill summary", e)
             }
@@ -175,9 +193,10 @@ class ProgressFragment : Fragment() {
             }
         }
 
-        // Lesson completion: how many lessons are fully done (quiz is the last step).
-        val total = docs.size
-        val finished = docs.count { it.getBoolean("quizFinished") == true }
+        // Lessons finished: class lessons whose every part is done (Lecture, Laro or skipped,
+        // Gawain, Bigkas, Pagsusulit).
+        val total = classLessons.size
+        val finished = LessonCompletion.finishedCount(docs, classLessons)
         tvLessonsDone.text = getString(R.string.pg_lessons_done, finished, total)
         lessonRing.contentDescription = getString(R.string.pg_lessons_cd, finished, total)
         progressLessons.setProgressCompat(0, false)
@@ -194,6 +213,8 @@ class ProgressFragment : Fragment() {
             val skillSummary = summary.skills.getValue(skill)
             val state = if (skill == Skill.PAG_UNAWA && skillSummary.lessons == 0) {
                 lectureCompletionState(docs)
+            } else if (skill == Skill.TALASALITAAN && skillSummary.lessons == 0 && allGamesSkipped) {
+                noGameState()
             } else {
                 scoredState(skillSummary)
             }
@@ -221,9 +242,23 @@ class ProgressFragment : Fragment() {
         return CardState(score, getString(R.string.pg_percent, score), level, text, bg, stars, summary.trend, summary.lessonScores, message)
     }
 
+    /** Talasalitaan when the teacher skipped the game in every assigned lesson. */
+    private fun noGameState() = CardState(
+        percent = null,
+        percentText = "--",
+        level = R.string.pg_level_no_game,
+        levelText = R.color.pg_ink_soft,
+        levelBg = R.color.pg_track,
+        stars = null,
+        trend = null,
+        lessonScores = emptyList(),
+        message = R.string.pg_msg_no_game
+    )
+
     /** Pag-unawa has no score until lectures have comprehension questions: show completion. */
     private fun lectureCompletionState(docs: List<DocumentSnapshot>): CardState {
-        val total = docs.size
+        // Out of the class's lessons, not the number of progress documents
+        val total = classLessons.size
         val finished = docs.count { it.getBoolean("lectureFinished") == true }
         if (total == 0 || finished == 0) {
             return CardState(

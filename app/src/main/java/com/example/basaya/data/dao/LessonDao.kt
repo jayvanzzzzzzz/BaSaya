@@ -23,6 +23,9 @@ interface LessonDao {
     @Query("UPDATE lessons SET isDownloaded = :isDownloaded WHERE id = :lessonId")
     suspend fun updateDownloaded(lessonId: String, isDownloaded: Boolean)
 
+    @Query("SELECT * FROM lessons WHERE id = :lessonId LIMIT 1")
+    suspend fun getLesson(lessonId: String): LessonEntity?
+
     @Query(""" SELECT isDownloaded FROM lessons WHERE id = :lessonId LIMIT 1 """)
     suspend fun isLessonDownloaded(lessonId: String): Boolean?
 

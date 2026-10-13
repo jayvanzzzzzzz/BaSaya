@@ -71,10 +71,23 @@ class SkillProgressRepository(
 
     /** Recomputes the summary from every assigned lesson and saves it on the user document. */
     suspend fun refreshSummary(uid: String): StudentSummary {
-        val docs = firestore.collection("users").document(uid)
+        val allDocs = firestore.collection("users").document(uid)
             .collection("assignedLessons").get().await().documents
+
+        // Only the lessons of the student's class count (see LessonCompletion).
+        val classId = firestore.collection("users").document(uid).get().await().getString("classId")
+        val classLessonIds = if (classId.isNullOrBlank()) {
+            emptySet()
+        } else {
+            firestore.collection("classes").document(classId).collection("classLessons")
+                .get().await().documents
+                .map { link -> link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id }
+                .toSet()
+        }
+        val docs = allDocs.filter { it.id in classLessonIds }
+
         val summary = SkillScoring.summarize(resultsFrom(docs))
-        saveSummary(uid, summary, lessonsAssigned = docs.size)
+        saveSummary(uid, summary, lessonsAssigned = classLessonIds.size)
         return summary
     }
 

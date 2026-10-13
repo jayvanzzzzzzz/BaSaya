@@ -5,8 +5,18 @@ import android.util.Log
 import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.audio.PronunciationAudioStore
 import com.example.basaya.data.database.AppDatabase
+import com.example.basaya.data.entity.ClassNotificationEntity
 import com.example.basaya.data.entity.LessonEntity
+import com.example.basaya.data.notifications.LessonInbox
+import com.example.basaya.data.notifications.NotificationReadState
+import com.example.basaya.data.notifications.NotificationScheduler
+import com.example.basaya.data.schedule.TrustedClock
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class LessonRepository(private val context: Context) {
@@ -15,16 +25,35 @@ class LessonRepository(private val context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
 
     suspend fun syncLessons(userId: String) {
+        try {
+            coroutineScope {
+                // Refreshes the server time used to lock scheduled lessons (no-op offline).
+                launch { TrustedClock.sync(context, userId) }
+                syncLessonList(userId)
+            }
+        } finally {
+            // Notifications and deadline reminders follow the freshly synced lessons.
+            NotificationScheduler.run(context)
+            LessonInbox.notifyChanged()
+        }
+    }
+
+    private suspend fun syncLessonList(userId: String) {
 
         // 1. Find the student's class — no class, no lessons.
         val userDoc = firestore.collection("users").document(userId).get().await()
         val classId = userDoc.getString("classId")
         Log.d(TAG, "syncLessons uid=$userId classId=$classId")
+        NotificationReadState.mergeRemote(
+            context, userId, userDoc.getTimestamp("notifReadAt")?.toDate()?.time
+        )
 
         if (classId.isNullOrBlank()) {
             db.lessonDao().deleteLessonsForUser(userId)
             return
         }
+
+        syncNotifications(classId)
 
         // 2. Progress flags per lesson (unchanged — still per-user)
         data class ProgressInfo(
@@ -65,6 +94,16 @@ class LessonRepository(private val context: Context) {
             (link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id) to
                 link.getLong("order")?.toInt()
         }
+        // The teacher's optional open date and deadline, and when the lesson was added.
+        data class LinkSchedule(val openAt: Long?, val dueAt: Long?, val assignedAt: Long?)
+        val linkSchedules = classLessonsSnapshot.documents.associate { link ->
+            (link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id) to
+                LinkSchedule(
+                    openAt = link.getTimestamp("openAt")?.toDate()?.time,
+                    dueAt = link.getTimestamp("dueAt")?.toDate()?.time,
+                    assignedAt = link.getTimestamp("createdAt")?.toDate()?.time
+                )
+        }
         val lessonIds = linkOrders.keys.toList()
         Log.d(TAG, "classes/$classId/classLessons -> ${lessonIds.size} ids: $lessonIds")
 
@@ -84,10 +123,17 @@ class LessonRepository(private val context: Context) {
         Log.d(TAG, "lessons whereIn -> ${lessonsSnapshot.size()} docs")
 
         // preserve isDownloaded flags already stored locally
-        val existingDownloadedIds = db.lessonDao().getLessonsForUser(userId)
+        val existingLessons = db.lessonDao().getLessonsForUser(userId)
+        val existingDownloadedIds = existingLessons
             .filter { it.isDownloaded }
             .map { it.id }
             .toSet()
+
+        // Which lessons the teacher set to "Skip game" (read in parallel; offline keeps the last known value)
+        val skippedGames = coroutineScope {
+            lessonsSnapshot.documents.map { doc -> async { doc.id to GameStatus.isSkipped(doc.id, firestore) } }.awaitAll()
+        }.toMap()
+        val previousSkipped = existingLessons.associate { it.id to it.gameSkipped }
 
         val lessons = lessonsSnapshot.documents.map { doc ->
             val progress = progressMap[doc.id]
@@ -105,12 +151,45 @@ class LessonRepository(private val context: Context) {
                 gameFinished = progress?.gameFinished ?: false,
                 activityFinished = progress?.activityFinished ?: false,
                 quizFinished = progress?.quizFinished ?: false,
-                isDownloaded = existingDownloadedIds.contains(doc.id)
+                isDownloaded = existingDownloadedIds.contains(doc.id),
+                gameSkipped = skippedGames[doc.id] ?: previousSkipped[doc.id] ?: false,
+                openAt = linkSchedules[doc.id]?.openAt,
+                dueAt = linkSchedules[doc.id]?.dueAt,
+                assignedAt = linkSchedules[doc.id]?.assignedAt
             )
         }
 
         db.lessonDao().deleteLessonsForUser(userId)
         db.lessonDao().insertAll(lessons)
+    }
+
+    /** The class's "new lesson" notifications (classes/{classId}/notifications) into Room. */
+    private suspend fun syncNotifications(classId: String) {
+        try {
+            val snapshot = firestore
+                .collection("classes")
+                .document(classId)
+                .collection("notifications")
+                .orderBy("visibleAt", Query.Direction.DESCENDING)
+                .limit(50)
+                .get()
+                .await()
+            val items = snapshot.documents.mapNotNull { doc ->
+                ClassNotificationEntity(
+                    id = doc.id,
+                    classId = classId,
+                    title = doc.getString("title") ?: return@mapNotNull null,
+                    body = doc.getString("body").orEmpty(),
+                    lessonIds = (doc.get("lessonIds") as? List<*>)
+                        ?.filterIsInstance<String>()?.joinToString(",").orEmpty(),
+                    visibleAt = doc.getTimestamp("visibleAt")?.toDate()?.time
+                        ?: return@mapNotNull null
+                )
+            }
+            db.classNotificationDao().upsertAll(items)
+        } catch (e: Exception) {
+            Log.w(TAG, "Notification sync failed", e)
+        }
     }
 
     suspend fun getLessons(userId: String): List<LessonEntity> {

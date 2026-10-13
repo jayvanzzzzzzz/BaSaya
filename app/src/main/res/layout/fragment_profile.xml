@@ -1,285 +1,284 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Account: violet header, editable student info, password change, logout. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F7F8"
+    android:background="@color/tb_page_bg"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:scrollbars="none"
     tools:context=".ui.fragment.ProfileFragment">
 
-    <View
-        android:id="@+id/statusBarBg"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusBarBg">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="32dp">
+
+        <!-- ═══ Header ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/pf_header"
+            android:elevation="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="26dp">
+
+            <TextView
+                android:id="@+id/pfAvatar"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:background="@drawable/tb_avatar"
+                android:contentDescription="@string/profile_picture"
+                android:fontFamily="@font/lexend"
+                android:gravity="center"
+                android:textColor="@color/tb_avatar_ink"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                tools:text="J" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/pfName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:textColor="@color/tb_on"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="Juan Dela Cruz" />
+
+                <!-- Email (read-only) -->
+                <TextView
+                    android:id="@+id/pfEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/quicksand_medium"
+                    android:maxLines="1"
+                    android:textColor="@color/tb_on_soft"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="juan@gmail.com" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ═══ My info ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:accessibilityHeading="true"
+                android:fontFamily="@font/lexend"
+                android:text="@string/pf_section_info"
+                android:textColor="@color/pg_ink"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnEditProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/pg_round"
+                android:backgroundTint="@color/pg_unawa_tint"
+                android:clickable="true"
+                android:contentDescription="@string/pf_edit_cd"
+                android:drawablePadding="6dp"
+                android:focusable="true"
+                android:fontFamily="@font/be_vietnam_bold"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="16dp"
+                android:text="@string/pf_edit"
+                android:textColor="@color/pg_unawa"
+                android:textSize="14sp"
+                app:drawableStartCompat="@drawable/ac_ic_pencil"
+                app:drawableTint="@color/pg_unawa" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/pg_card"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingTop="24dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="120dp">
+            android:paddingStart="16dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="11dp">
 
-            <!-- USER INFO CARD -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="22dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#EAECF0"
-                app:strokeWidth="1dp">
+            <!-- Name -->
+            <LinearLayout style="@style/Pf.Row">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="20dp">
+                <ImageView
+                    style="@style/Pf.RowIcon"
+                    android:backgroundTint="@color/pg_unawa_tint"
+                    android:src="@drawable/pf_ic_person"
+                    app:tint="@color/pg_unawa" />
 
-                    <LinearLayout
-                        android:layout_width="58dp"
-                        android:layout_height="58dp"
-                        android:background="@drawable/bg_avatar_placeholder"
-                        android:gravity="center">
+                <LinearLayout style="@style/Pf.RowTexts">
 
-                        <TextView
-                            android:id="@+id/tvAvatarInitial"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/lexend"
-                            android:text="J"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                    <TextView style="@style/Pf.RowLabel" android:text="@string/pf_name" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvProfileName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/lexend"
-                            android:text="Pangalan"
-                            android:textColor="#182230"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvProfileEmail"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:text="email@example.com"
-                            android:textColor="#667085"
-                            android:textSize="13sp" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/pfInfoName"
+                        style="@style/Pf.RowValue"
+                        tools:text="Juan Santos Dela Cruz" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
-            <!-- PROGRESS SUMMARY CARD -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="#E9EEFF"
-                app:cardCornerRadius="22dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#D8E2FF"
-                app:strokeWidth="1dp">
+            <View style="@style/Pf.Divider" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="18dp">
+            <!-- Gender -->
+            <LinearLayout style="@style/Pf.Row">
 
-                    <LinearLayout
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="@drawable/bg_icon_purple"
-                        android:gravity="center">
+                <ImageView
+                    style="@style/Pf.RowIcon"
+                    android:backgroundTint="@color/pg_pagkilala_tint"
+                    android:src="@drawable/pf_ic_gender"
+                    app:tint="@color/pg_pagkilala" />
 
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:contentDescription="Progreso"
-                            android:src="@drawable/ic_progress"
-                            app:tint="#3C3489" />
-                    </LinearLayout>
+                <LinearLayout style="@style/Pf.RowTexts">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                    <TextView style="@style/Pf.RowLabel" android:text="@string/pf_gender" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Kabuuang Progreso"
-                            android:textColor="#24285D"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvProgressSummary"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="0 sa 0 aralin ang natapos"
-                            android:textColor="#565D94"
-                            android:textSize="12sp" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/pfInfoGender"
+                        style="@style/Pf.RowValue"
+                        tools:text="Lalaki" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
-            <!-- SETTINGS SECTION -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="26dp"
-                android:layout_marginBottom="10dp"
-                android:letterSpacing="0.08"
-                android:text="MGA SETTINGS"
-                android:textColor="#667085"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+            <View style="@style/Pf.Divider" />
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#EAECF0"
-                app:strokeWidth="1dp">
+            <!-- Birthday -->
+            <LinearLayout style="@style/Pf.Row">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                <ImageView
+                    style="@style/Pf.RowIcon"
+                    android:backgroundTint="@color/pg_pagbigkas_tint"
+                    android:src="@drawable/pf_ic_calendar"
+                    app:tint="@color/pg_pagbigkas" />
 
-                    <!-- Sound toggle -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="16dp">
+                <LinearLayout style="@style/Pf.RowTexts">
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Tunog ng Aralin"
-                            android:textColor="#344054"
-                            android:textSize="14sp" />
+                    <TextView style="@style/Pf.RowLabel" android:text="@string/pf_birthday" />
 
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/switchSound"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#F0F1F3" />
-
-                    <!-- Language row -->
-                    <LinearLayout
-                        android:id="@+id/rowLanguage"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Wika"
-                            android:textColor="#344054"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvLanguageValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Filipino"
-                            android:textColor="#667085"
-                            android:textSize="13sp" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/pfInfoBirthday"
+                        style="@style/Pf.RowValue"
+                        tools:text="Oktubre 12, 2016" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- LOGOUT -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogout"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="24dp"
-                android:backgroundTint="#FCEDE7"
-                android:fontFamily="@font/quicksand_medium"
-                android:text="Mag-logout"
-                android:textAllCaps="false"
-                android:textColor="#B3261E"
-                android:textStyle="bold"
-                app:cornerRadius="16dp"
-                app:icon="@drawable/ic_logout"
-                app:iconGravity="textStart"
-                app:iconTint="#B3261E" />
-
-            <!-- APP VERSION -->
-            <TextView
-                android:id="@+id/tvAppVersion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:gravity="center"
-                android:text="BaSaya v1.0.0"
-                android:textColor="#98A2B3"
-                android:textSize="12sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:text="Matuto ng Filipino, masaya at madali."
-                android:textColor="#B0B7C3"
-                android:textSize="11sp" />
-
+            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- ═══ Security ═══ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:layout_marginBottom="10dp"
+            android:accessibilityHeading="true"
+            android:fontFamily="@font/lexend"
+            android:text="@string/pf_section_security"
+            android:textColor="@color/pg_ink"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/rowChangePassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/pg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="19dp">
+
+            <ImageView
+                style="@style/Pf.RowIcon"
+                android:backgroundTint="@color/pg_talasalitaan_tint"
+                android:src="@drawable/pf_ic_key"
+                app:tint="@color/pg_talasalitaan" />
+
+            <LinearLayout style="@style/Pf.RowTexts">
+
+                <TextView
+                    style="@style/Pf.RowValue"
+                    android:layout_marginTop="0dp"
+                    android:text="@string/pf_change_password" />
+
+                <TextView
+                    style="@style/Pf.RowLabel"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/pf_change_password_sub" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="@color/pg_ink_soft" />
+        </LinearLayout>
+
+        <!-- ═══ Logout ═══ -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="28dp"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:text="@string/pf_logout"
+            android:textAllCaps="false"
+            android:textColor="#D64545"
+            android:textSize="16sp"
+            app:cornerRadius="18dp"
+            app:icon="@drawable/pf_ic_logout"
+            app:iconGravity="textStart"
+            app:iconTint="#D64545"
+            app:strokeColor="#F2B8B8"
+            app:strokeWidth="2dp" />
+
+        <TextView
+            android:id="@+id/pfVersion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:gravity="center"
+            android:textColor="@color/pg_ink_soft"
+            android:textSize="12sp"
+            tools:text="BaSaya v1.0" />
+    </LinearLayout>
+</ScrollView>

@@ -1,6 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.ActivityEntity
 import com.example.basaya.data.model.ActivityPage
@@ -13,6 +14,10 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.tasks.await
 
 class ActivityRepository(private val context: Context) {
+
+    private companion object {
+        const val TAG = "ActivityRepository"
+    }
 
     private val db by lazy { AppDatabase.getDatabase(context) }
     private val firestore = FirebaseFirestore.getInstance()
@@ -27,6 +32,13 @@ class ActivityRepository(private val context: Context) {
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
+            // When online, refresh the downloaded copy so answer fixes made by the teacher in
+            // basaya-web reach the student. Offline, the saved copy is used as before.
+            val fresh = fetchFromFirestore(lessonId)
+            if (fresh != null) {
+                db.activityDao().insert(fresh.toEntity(lessonId))
+                return fresh
+            }
             return db.activityDao().getActivity(lessonId)?.toPracticeActivityData()
         }
 
@@ -51,24 +63,32 @@ class ActivityRepository(private val context: Context) {
 
             if (snapshot.isEmpty) return null
 
-            val doc = snapshot.documents.first()
+            // basaya-web saves the activity as lessons/{id}/activity/content; older lessons may
+            // have another document, so prefer "content" and fall back to the first one.
+            val doc = snapshot.documents.firstOrNull { it.id == "content" } ?: snapshot.documents.first()
             val title = doc.getString("title") ?: ""
             val instruction = doc.getString("instruction") ?: ""
             val explanation = doc.getString("explanation") ?: ""
 
-            @Suppress("UNCHECKED_CAST")
-            val pagesRaw = doc.get("pages") as? List<Map<String, Any>> ?: emptyList()
+            val pagesRaw = (doc.get("pages") as? List<*>).orEmpty().filterIsInstance<Map<*, *>>()
 
-            val pages = pagesRaw.map { p ->
-                @Suppress("UNCHECKED_CAST")
-                val words = p["words"] as? List<String> ?: emptyList()
+            val pages = pagesRaw.mapIndexed { index, p ->
+                val words = (p["words"] as? List<*>).orEmpty().filterIsInstance<String>()
 
-                @Suppress("UNCHECKED_CAST")
-                val correctIndices = (p["correctIndices"] as? List<Long>)?.map { it.toInt() } ?: emptyList()
+                // Numbers may arrive as Long or Double depending on how they were written.
+                val correctIndices = (p["correctIndices"] as? List<*>).orEmpty()
+                    .mapNotNull { (it as? Number)?.toInt() }
+                    .filter { it in words.indices }
+                    .distinct()
+
+                if (correctIndices.isEmpty()) {
+                    Log.w(TAG, "Lesson $lessonId activity page ${index + 1} has no correct answers set in basaya-web")
+                }
 
                 ActivityPage(
                     words = words,
-                    correctIndices = correctIndices
+                    correctIndices = correctIndices,
+                    explanation = (p["explanation"] as? String)?.takeIf { it.isNotBlank() }
                 )
             }
 

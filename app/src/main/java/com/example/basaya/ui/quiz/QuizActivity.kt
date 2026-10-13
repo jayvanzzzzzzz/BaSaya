@@ -46,11 +46,13 @@ class QuizActivity : AppCompatActivity() {
     private lateinit var quiz: Quiz
 
     private var currentQuestionIndex = 0
-    private var selectedChoiceIndex: Int? = null
-    private val userAnswers = mutableListOf<Int?>()
+    /** Choices picked on the current question (several when the question has multiple answers). */
+    private val selectedChoices = mutableSetOf<Int>()
+    private val userAnswers = mutableListOf<Set<Int>>()
 
     private lateinit var tvQuizTitle: TextView
     private lateinit var tvQuestionProgress: TextView
+    private lateinit var tvPickHint: TextView
     private lateinit var tvQuestion: TextView
     private lateinit var choicesContainer: LinearLayout
     private lateinit var btnNextQuestion: TextView
@@ -95,6 +97,7 @@ class QuizActivity : AppCompatActivity() {
 
         tvQuizTitle = findViewById(R.id.tvQuizTitle)
         tvQuestionProgress = findViewById(R.id.tvQuestionProgress)
+        tvPickHint = findViewById(R.id.tvPickHint)
         tvQuestion = findViewById(R.id.tvQuestion)
         choicesContainer = findViewById(R.id.choicesContainer)
         btnNextQuestion = findViewById(R.id.btnNextQuestion)
@@ -119,13 +122,13 @@ class QuizActivity : AppCompatActivity() {
 
             quiz = fetchedQuiz
             tvQuizTitle.text = quiz.title
-            userAnswers.addAll(List(quiz.questions.size) { null })
+            userAnswers.addAll(List(quiz.questions.size) { emptySet<Int>() })
 
             showQuestion(currentQuestionIndex, animateIn = false)
 
             btnNextQuestion.setOnClickListener {
                 pressBounce(btnNextQuestion)
-                userAnswers[currentQuestionIndex] = selectedChoiceIndex
+                userAnswers[currentQuestionIndex] = selectedChoices.toSet()
 
                 if (currentQuestionIndex < quiz.questions.lastIndex) {
                     currentQuestionIndex++
@@ -155,12 +158,20 @@ class QuizActivity : AppCompatActivity() {
         }
 
         choicesContainer.removeAllViews()
-        selectedChoiceIndex = userAnswers.getOrNull(index)
+        selectedChoices.clear()
+        selectedChoices.addAll(userAnswers.getOrNull(index).orEmpty())
+
+        // Multiple-answer questions tell the child how many to pick
+        tvPickHint.text = if (question.isMultiple) {
+            getString(R.string.qz_pick_many)
+        } else {
+            getString(R.string.qz_pick)
+        }
 
         question.choices.forEachIndexed { choiceIndex, choiceText ->
             val tile = buildChoiceTile(choiceIndex, choiceText)
             choicesContainer.addView(tile)
-            renderChoice(tile, choiceIndex, choiceText, choiceIndex == selectedChoiceIndex)
+            renderChoice(tile, choiceIndex, choiceText, choiceIndex in selectedChoices)
 
             // Answers bounce up one after another
             tile.alpha = 0f
@@ -173,7 +184,7 @@ class QuizActivity : AppCompatActivity() {
                 .start()
         }
 
-        btnNextQuestion.isEnabled = selectedChoiceIndex != null
+        btnNextQuestion.isEnabled = selectedChoices.isNotEmpty()
         btnNextQuestion.setText(if (index == quiz.questions.lastIndex) R.string.qz_finish else R.string.qz_next)
     }
 
@@ -227,14 +238,20 @@ class QuizActivity : AppCompatActivity() {
             addView(check)
 
             setOnClickListener {
-                selectedChoiceIndex = choiceIndex
-                val choices = quiz.questions[currentQuestionIndex].choices
+                val question = quiz.questions[currentQuestionIndex]
+                if (question.isMultiple) {
+                    // Tap to pick, tap again to unpick
+                    if (!selectedChoices.remove(choiceIndex)) selectedChoices.add(choiceIndex)
+                } else {
+                    selectedChoices.clear()
+                    selectedChoices.add(choiceIndex)
+                }
                 for (i in 0 until choicesContainer.childCount) {
-                    renderChoice(choicesContainer.getChildAt(i) as LinearLayout, i, choices[i], i == choiceIndex)
+                    renderChoice(choicesContainer.getChildAt(i) as LinearLayout, i, question.choices[i], i in selectedChoices)
                 }
                 performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 pop(this)
-                btnNextQuestion.isEnabled = true
+                btnNextQuestion.isEnabled = selectedChoices.isNotEmpty()
             }
         }
     }
@@ -323,7 +340,8 @@ class QuizActivity : AppCompatActivity() {
     private fun finishQuiz() {
         var score = 0
         quiz.questions.forEachIndexed { i, question ->
-            if (userAnswers[i] == question.answer) score++
+            // Right only when exactly the correct choice(s) were picked
+            if (userAnswers[i] == question.correctAnswers) score++
         }
         val total = quiz.questions.size
 

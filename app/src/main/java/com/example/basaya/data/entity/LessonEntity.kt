@@ -1,5 +1,6 @@
 package com.example.basaya.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -18,5 +19,13 @@ data class LessonEntity(
     val gameFinished: Boolean = false,
     val activityFinished: Boolean = false,
     val quizFinished: Boolean = false,
-    val isDownloaded: Boolean
+    val isDownloaded: Boolean,
+    // Teacher chose "Skip game for this lesson" in basaya-web (lessons/{id}/game/status).
+    @ColumnInfo(defaultValue = "0")
+    val gameSkipped: Boolean = false,
+    // Teacher's optional schedule (classes/{classId}/classLessons/{lessonId}), epoch millis.
+    val openAt: Long? = null,
+    val dueAt: Long? = null,
+    // When the teacher added the lesson to the class (link createdAt), epoch millis.
+    val assignedAt: Long? = null
 )

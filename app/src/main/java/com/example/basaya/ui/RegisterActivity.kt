@@ -18,15 +18,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.model.User
-import com.example.basaya.data.repository.UserRepository
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -193,30 +190,21 @@ class RegisterActivity : AppCompatActivity() {
                 .document(uid)
                 .set(userData)
                 .addOnSuccessListener {
+                    // Lessons come from the class the student joins (classes/{classId}/classLessons);
+                    // nothing is assigned at registration.
+                    setLoading(false)
 
-                    // assign default lessons to this new user
-                    val userRepository = UserRepository()
-                    lifecycleScope.launch {
-                        try {
-                            userRepository.assignRandomLesson(uid)
-                        } catch (e: Exception) {
-                            Log.e("REGISTER_DEBUG", "Failed to assign random lesson", e)
-                        }
+                    Toast.makeText(
+                        this@RegisterActivity,
+                        R.string.register_success,
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                        setLoading(false)
-
-                        Toast.makeText(
-                            this@RegisterActivity,
-                            R.string.register_success,
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        startActivity(
-                            Intent(this@RegisterActivity, LogInActivity::class.java)
-                                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        )
-                        finish()
-                    }
+                    startActivity(
+                        Intent(this@RegisterActivity, LogInActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    )
+                    finish()
                 }
                 .addOnFailureListener { e ->
                     Log.e("REGISTER_DEBUG", "Failed to save user document", e)

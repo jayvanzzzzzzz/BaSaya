@@ -9,6 +9,9 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Deadline reminders are alarms, which a restart clears: set them again after boot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -19,6 +22,35 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BaSaya">
+
+        <!-- "New lesson" push notifications from the teacher -->
+        <service
+            android:name=".data.notifications.LessonMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="new_lessons" />
+        <!-- Shows due notifications and sets the next alarm; also runs after a restart -->
+        <receiver
+            android:name=".data.notifications.NotificationAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".ui.notifications.NotificationsActivity"
+            android:exported="false" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_book" />
+
         <activity
             android:name=".ui.JoinClassActivity"
             android:exported="false" />

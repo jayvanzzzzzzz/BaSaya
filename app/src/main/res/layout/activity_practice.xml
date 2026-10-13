@@ -111,6 +111,26 @@
                 tools:text="Piliin ang mga salitang pangngalan sa pangungusap." />
         </LinearLayout>
 
+        <!-- How many words to pick on this page -->
+        <TextView
+            android:id="@+id/tvPickCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/pg_round"
+            android:backgroundTint="@color/ac_check"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:paddingStart="14dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="6dp"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:text="Pumili ng 2 salita"
+            tools:visibility="visible" />
+
         <!-- ═══ Worksheet ═══ -->
         <ScrollView
             android:id="@+id/worksheetScroll"

@@ -1,18 +1,24 @@
 package com.example.basaya.ui
 
+import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.inputmethod.EditorInfo
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import android.widget.TextView
-import android.widget.Toast
+import androidx.core.view.updateLayoutParams
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
-import com.google.android.material.button.MaterialButton
+import com.example.basaya.ui.game.ConfettiView
+import com.example.basaya.ui.pronunciation.PronunciationBookView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FieldValue
@@ -23,6 +29,10 @@ class JoinClassActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var authHelper: AuthHelper
 
+    private lateinit var buddy: PronunciationBookView
+    private lateinit var btnJoin: TextView
+    private lateinit var tilClassCode: TextInputLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -31,45 +41,65 @@ class JoinClassActivity : AppCompatActivity() {
         db = FirebaseFirestore.getInstance()
         authHelper = AuthHelper()
 
-        val statusBarBg = findViewById<View>(R.id.statusBarBg)
+        val header = findViewById<View>(R.id.header)
+        btnJoin = findViewById(R.id.btnJoin)
+        val joinBaseMargin = (btnJoin.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            statusBarBg.layoutParams.height = statusBarHeight
-            statusBarBg.requestLayout()
+        // Violet header extends behind the status bar; the button stays above the nav bar.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            header.setPadding(header.paddingLeft, bars.top, header.paddingRight, header.paddingBottom)
+            val bottom = maxOf(bars.bottom, insets.getInsets(WindowInsetsCompat.Type.ime()).bottom)
+            btnJoin.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = joinBaseMargin + bottom }
             insets
         }
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.white)
+        // White status bar icons on the violet header
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
 
-        WindowInsetsControllerCompat(window, window.decorView)
-            .isAppearanceLightStatusBars = true
-
-        val btnClose = findViewById<View>(R.id.btnClose)
-        val btnJoin = findViewById<MaterialButton>(R.id.btnJoin)
-        val tilClassCode = findViewById<TextInputLayout>(R.id.tilClassCode)
+        buddy = findViewById(R.id.buddy)
+        tilClassCode = findViewById(R.id.tilClassCode)
         val etClassCode = findViewById<TextInputEditText>(R.id.etClassCode)
         val tvFullName = findViewById<TextView>(R.id.tvFullName)
         val tvEmail = findViewById<TextView>(R.id.tvEmail)
+        val tvAvatar = findViewById<TextView>(R.id.tvAvatar)
 
-        btnClose.setOnClickListener { finish() }
+        findViewById<View>(R.id.btnClose).setOnClickListener { finish() }
+        announceAsButton(btnJoin)
 
-        loadSignedInAccount(tvFullName, tvEmail)
+        // A friendly hello when the screen opens
+        buddy.postDelayed({ buddy.setMood(PronunciationBookView.Mood.HAPPY) }, 400)
 
-        btnJoin.setOnClickListener {
+        loadSignedInAccount(tvFullName, tvEmail, tvAvatar)
+
+        val submit = {
             val code = etClassCode.text?.toString()?.trim()?.uppercase().orEmpty()
 
             if (code.isEmpty()) {
-                tilClassCode.error = "Ilagay ang class code"
-                return@setOnClickListener
+                showCodeError(getString(R.string.jc_error_empty))
+            } else {
+                tilClassCode.error = null
+                joinClass(code)
             }
-            tilClassCode.error = null
+        }
 
-            joinClass(code, btnJoin, tilClassCode)
+        btnJoin.setOnClickListener { pressBounce(btnJoin); submit() }
+        etClassCode.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                submit()
+                true
+            } else {
+                false
+            }
+        }
+        // Clear the error as soon as the child starts fixing the code
+        etClassCode.setOnKeyListener { _, _, _ ->
+            tilClassCode.error = null
+            false
         }
     }
 
-    private fun loadSignedInAccount(tvFullName: TextView, tvEmail: TextView) {
+    private fun loadSignedInAccount(tvFullName: TextView, tvEmail: TextView, tvAvatar: TextView) {
         val user = authHelper.getCurrentUser() ?: return
         tvEmail.text = user.email ?: ""
 
@@ -79,17 +109,18 @@ class JoinClassActivity : AppCompatActivity() {
                 val lastName = doc.getString("lastName") ?: ""
                 val fullName = "$firstName $lastName".trim()
                 if (fullName.isNotEmpty()) tvFullName.text = fullName
+                firstName.firstOrNull()?.let { tvAvatar.text = it.uppercase() }
             }
     }
 
-    private fun joinClass(code: String, btnJoin: MaterialButton, tilClassCode: TextInputLayout) {
+    private fun joinClass(code: String) {
         val uid = authHelper.getCurrentUser()?.uid
         if (uid == null) {
-            Toast.makeText(this, "Kailangan mong mag-log in muli.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.jc_need_login), Toast.LENGTH_SHORT).show()
             return
         }
 
-        setJoining(true, btnJoin)
+        setJoining(true)
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { userDoc ->
@@ -104,8 +135,8 @@ class JoinClassActivity : AppCompatActivity() {
                     .get()
                     .addOnSuccessListener { snapshot ->
                         if (snapshot.isEmpty) {
-                            setJoining(false, btnJoin)
-                            tilClassCode.error = "Walang klaseng natagpuan sa code na ito"
+                            setJoining(false)
+                            showCodeError(getString(R.string.jc_error_not_found))
                             return@addOnSuccessListener
                         }
 
@@ -129,29 +160,71 @@ class JoinClassActivity : AppCompatActivity() {
 
                         batch.commit()
                             .addOnSuccessListener {
-                                setJoining(false, btnJoin)
-                                Toast.makeText(this, "Matagumpay kang sumali sa $className", Toast.LENGTH_SHORT).show()
-                                setResult(RESULT_OK)
-                                finish()
+                                celebrateAndClose(className)
                             }
                             .addOnFailureListener {
-                                setJoining(false, btnJoin)
-                                Toast.makeText(this, "Hindi na-save. Subukan muli.", Toast.LENGTH_SHORT).show()
+                                setJoining(false)
+                                buddy.setMood(PronunciationBookView.Mood.CHEER)
+                                Toast.makeText(this, getString(R.string.jc_save_failed), Toast.LENGTH_SHORT).show()
                             }
                     }
                     .addOnFailureListener {
-                        setJoining(false, btnJoin)
-                        Toast.makeText(this, "May problema sa koneksyon. Subukan muli.", Toast.LENGTH_SHORT).show()
+                        setJoining(false)
+                        buddy.setMood(PronunciationBookView.Mood.CHEER)
+                        Toast.makeText(this, getString(R.string.jc_connection), Toast.LENGTH_SHORT).show()
                     }
             }
             .addOnFailureListener {
-                setJoining(false, btnJoin)
-                Toast.makeText(this, "May problema sa koneksyon. Subukan muli.", Toast.LENGTH_SHORT).show()
+                setJoining(false)
+                buddy.setMood(PronunciationBookView.Mood.CHEER)
+                Toast.makeText(this, getString(R.string.jc_connection), Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun setJoining(isJoining: Boolean, btnJoin: MaterialButton) {
+    /** Wrong or empty code: the box shakes and the buddy cheers the child on. */
+    private fun showCodeError(message: String) {
+        tilClassCode.error = message
+        buddy.setMood(PronunciationBookView.Mood.CHEER)
+        val d = resources.displayMetrics.density
+        ObjectAnimator.ofFloat(tilClassCode, View.TRANSLATION_X, 0f, -12f * d, 12f * d, -8f * d, 8f * d, 0f).apply {
+            duration = 400
+            start()
+        }
+    }
+
+    /** Joined: buddy jumps, confetti falls, then the screen closes. */
+    private fun celebrateAndClose(className: String) {
+        btnJoin.isEnabled = true
+        btnJoin.isClickable = false
+        btnJoin.text = getString(R.string.jc_success, className)
+        buddy.setMood(PronunciationBookView.Mood.HAPPY)
+        findViewById<ConfettiView>(R.id.confettiView).rain(120)
+        Toast.makeText(this, getString(R.string.jc_success, className), Toast.LENGTH_SHORT).show()
+        setResult(RESULT_OK)
+        btnJoin.postDelayed({ if (!isFinishing) finish() }, 1600)
+    }
+
+    private fun setJoining(isJoining: Boolean) {
         btnJoin.isEnabled = !isJoining
-        btnJoin.text = if (isJoining) "Sumasali..." else getString(R.string.join)
+        btnJoin.text = if (isJoining) getString(R.string.jc_joining) else getString(R.string.join)
+        if (isJoining) buddy.setMood(PronunciationBookView.Mood.THINKING)
+    }
+
+    private fun pressBounce(view: View) {
+        view.animate().scaleX(0.96f).scaleY(0.96f).setDuration(70)
+            .withEndAction {
+                view.animate().scaleX(1f).scaleY(1f).setDuration(220)
+                    .setInterpolator(android.view.animation.OvershootInterpolator(3f)).start()
+            }
+            .start()
+    }
+
+    private fun announceAsButton(view: View) {
+        view.accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = Button::class.java.name
+            }
+        }
     }
 }

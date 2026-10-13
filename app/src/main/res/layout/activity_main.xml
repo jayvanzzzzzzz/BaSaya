@@ -3,72 +3,76 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
+    android:background="@color/tb_page_bg"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
+    <!-- Status bar area: the top bar's own background extends behind it (see MainActivity insets). -->
     <View
         android:id="@+id/statusBarBg"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/toolbar_bar_color"
+        android:background="@android:color/transparent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- ═══════════════════════════════════════════
-      TOP APP BAR — modern floating card style
+      TOP APP BAR — sky-to-violet gradient, rounded bottom, greeting
  ════════════════════════════════════════════ -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
+        android:background="@drawable/tb_background"
         android:clipChildren="false"
         android:clipToPadding="false"
-        app:elevation="12dp"
+        android:paddingBottom="9dp"
+        app:elevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusBarBg">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:background="@color/toolbar_bar_color"
-            android:elevation="12dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="8dp"
+            android:layout_height="64dp"
+            android:background="@android:color/transparent"
             android:clipChildren="false"
             android:clipToPadding="false"
-            app:contentInsetStart="0dp"
-            app:layout_scrollFlags="scroll|enterAlways|snap">
+            android:paddingStart="18dp"
+            android:paddingEnd="14dp"
+            app:contentInsetStart="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:baselineAligned="false"
                 android:clipChildren="false"
-                android:clipToPadding="false">
+                android:clipToPadding="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <!-- Avatar + chevron badge -->
+                <!-- Avatar (opens the profile menu) + chevron badge -->
                 <FrameLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="42dp"
+                    android:layout_height="48dp"
                     android:clipChildren="false"
                     android:clipToPadding="false">
 
                     <TextView
                         android:id="@+id/tvAvatarInitial"
-                        android:layout_width="35dp"
-                        android:layout_height="35dp"
-                        android:background="@drawable/bg_avatar_placeholder"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/tb_avatar"
                         android:contentDescription="@string/profile_picture"
-                        android:fontFamily="@font/quicksand_medium"
+                        android:fontFamily="@font/lexend"
                         android:gravity="center"
                         android:text="B"
-                        android:textSize="14sp"
+                        android:textColor="@color/tb_avatar_ink"
+                        android:textSize="19sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -76,95 +80,87 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:layout_gravity="bottom|end"
-                        android:layout_marginEnd="-8dp"
-                        android:layout_marginBottom="3dp"
+                        android:layout_marginEnd="-6dp"
+                        android:layout_marginBottom="1dp"
                         android:background="@drawable/bg_chevron_badge"
+                        android:importantForAccessibility="no"
                         android:padding="2dp"
                         android:src="@drawable/ic_chevron_right"
-                        app:tint="@color/main_blue" />
-
+                        app:tint="@color/tb_avatar_ink" />
                 </FrameLayout>
 
-                <!-- First name, beside avatar -->
-                <TextView
-                    android:id="@+id/tvFirstName"
+                <!-- Greeting + first name -->
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:fontFamily="@font/public_sans"
-                    android:text="@string/name"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical">
 
-                <!-- Right Actions -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
+                    <TextView
+                        android:id="@+id/tvGreeting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/quicksand_medium"
+                        android:text="@string/tb_greeting_morning"
+                        android:textColor="@color/tb_on_soft"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvFirstName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/lexend"
+                        android:maxLines="1"
+                        android:text="@string/name"
+                        android:textColor="@color/tb_on"
+                        android:textSize="19sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Notifications: glass button with a badge -->
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:clipChildren="false"
                     android:clipToPadding="false">
 
-                    <!-- Notification Button with Badge -->
-                    <FrameLayout
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:layout_marginEnd="20dp"
-                        android:clipChildren="false"
-                        android:clipToPadding="false">
-
-                        <!-- Soft circular backdrop — larger than the icon for a visible glow -->
-                        <View
-                            android:layout_width="46dp"
-                            android:layout_height="46dp"
-                            android:layout_gravity="center"
-                            android:alpha="0.3"
-                            android:background="@drawable/notif_circle_placeholder" />
-
-                        <ImageButton
-                            android:id="@+id/btnNotification"
-                            android:layout_width="23dp"
-                            android:layout_height="23dp"
-                            android:layout_gravity="center"
-                            android:background="@android:color/transparent"
-                            android:contentDescription="@string/notifications"
-                            android:padding="11dp"
-                            android:src="@drawable/ic_notifications"
-                            app:tint="@color/muted" />
-
-                        <TextView
-                            android:id="@+id/tvNotifBadge"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_gravity="top|end"
-                            android:layout_marginTop="2dp"
-                            android:layout_marginEnd="2dp"
-                            android:background="@drawable/bg_badge"
-                            android:gravity="center"
-                            android:text="3"
-                            android:textColor="#FFFFFF"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:visibility="visible" />
-
-                    </FrameLayout>
-
-                    <!-- 3-Dot More Options
                     <ImageButton
-                        android:id="@+id/btnMoreOptions"
+                        android:id="@+id/btnNotification"
                         android:layout_width="44dp"
                         android:layout_height="44dp"
-                        android:background="@drawable/bg_toolbar_icon_btn"
-                        android:contentDescription="@string/more_options"
+                        android:layout_gravity="center"
+                        android:background="@drawable/tb_glass"
+                        android:contentDescription="@string/notifications"
                         android:padding="11dp"
-                        android:src="@drawable/ic_more_vert"
-                        app:tint="@color/muted" />
-                -->
-                </LinearLayout>
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_notifications"
+                        app:tint="@color/tb_on" />
 
+                    <TextView
+                        android:id="@+id/tvNotifBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="19dp"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/tb_badge_pill"
+                        android:fontFamily="@font/be_vietnam_bold"
+                        android:gravity="center"
+                        android:importantForAccessibility="no"
+                        android:includeFontPadding="false"
+                        android:minWidth="19dp"
+                        android:paddingStart="5dp"
+                        android:paddingEnd="5dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:visibility="gone"
+                        tools:ignore="SmallSp"
+                        tools:text="3"
+                        tools:visibility="visible" />
+                </FrameLayout>
             </LinearLayout>
-
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -178,18 +174,18 @@
         app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
 
     <!-- ═══════════════════════════════════════════
-  FLOATING BOTTOM NAV — icon / underline / label
+  FLOATING BOTTOM NAV — colorful bubble slides behind the active tab
 ════════════════════════════════════════════ -->
     <androidx.cardview.widget.CardView
         android:id="@+id/bottomNavCard"
         android:layout_width="0dp"
-        android:layout_height="72dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="10dp"
-        app:cardBackgroundColor="@color/nav_card_bg"
+        android:layout_height="76dp"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -198,119 +194,104 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <!-- Shared bubble behind the active icon — position and color animated in BottomNavController -->
+            <View
+                android:id="@+id/navUnderline"
+                android:layout_width="58dp"
+                android:layout_height="38dp"
+                android:layout_gravity="top|start"
+                android:background="@drawable/nav_bubble"
+                android:importantForAccessibility="no" />
+
             <LinearLayout
                 android:id="@+id/navItemsRow"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:baselineAligned="false"
                 android:orientation="horizontal"
                 android:weightSum="3">
 
                 <!-- HOME -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <LinearLayout
                     android:id="@+id/navHome"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless">
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="13dp">
 
                     <ImageView
                         android:id="@+id/iconHome"
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_marginTop="11dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
                         android:src="@drawable/ic_home"
-                        app:tint="@color/nav_item_color"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
+                        app:tint="@color/nav_inactive" />
 
                     <TextView
                         android:id="@+id/labelHome"
                         style="@style/NavLabelStyle"
-                        android:layout_marginTop="8dp"
-                        android:text="Mga Aralin"
-                        app:layout_constraintTop_toBottomOf="@id/iconHome"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        android:layout_marginTop="12dp"
+                        android:text="@string/nav_home" />
+                </LinearLayout>
 
                 <!-- PROGRESS -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <LinearLayout
                     android:id="@+id/navProgress"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless">
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="13dp">
 
                     <ImageView
                         android:id="@+id/iconPractice"
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_marginTop="11dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
                         android:src="@drawable/ic_progress"
-                        app:tint="@color/nav_item_color"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
+                        app:tint="@color/nav_inactive" />
 
                     <TextView
                         android:id="@+id/labelPractice"
                         style="@style/NavLabelStyle"
-                        android:layout_marginTop="8dp"
-                        android:text="Progreso"
-                        app:layout_constraintTop_toBottomOf="@id/iconPractice"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        android:layout_marginTop="12dp"
+                        android:text="@string/nav_progress" />
+                </LinearLayout>
 
                 <!-- PROFILE -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <LinearLayout
                     android:id="@+id/navProfile"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless">
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="13dp">
 
                     <ImageView
                         android:id="@+id/iconProfile"
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_marginTop="11dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
                         android:src="@drawable/ic_account_info"
-                        app:tint="@color/nav_item_color"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
+                        app:tint="@color/nav_inactive" />
 
                     <TextView
                         android:id="@+id/labelProfile"
                         style="@style/NavLabelStyle"
-                        android:layout_marginTop="8dp"
-                        android:text="Account"
-                        app:layout_constraintTop_toBottomOf="@id/iconProfile"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
+                        android:layout_marginTop="12dp"
+                        android:text="@string/nav_profile" />
+                </LinearLayout>
             </LinearLayout>
-
-            <!-- Single shared underline — position/width animated in Kotlin -->
-            <View
-                android:id="@+id/navUnderline"
-                android:layout_width="0dp"
-                android:layout_height="2dp"
-                android:layout_gravity="top|start"
-                android:background="@color/nav_item_color_active" />
-
         </FrameLayout>
     </androidx.cardview.widget.CardView>
 

@@ -123,6 +123,7 @@
                 tools:text="Tanong 1 ng 5" />
 
             <TextView
+                android:id="@+id/tvPickHint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"

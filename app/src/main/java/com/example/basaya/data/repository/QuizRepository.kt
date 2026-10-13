@@ -27,6 +27,13 @@ class QuizRepository(private val context: Context) {
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
+            // When online, refresh the downloaded copy so answer fixes made in basaya-web
+            // reach the student. Offline, the saved copy is used as before.
+            val fresh = fetchFromFirestore(lessonId)
+            if (fresh != null) {
+                db.quizDao().insert(fresh.toEntity(lessonId))
+                return fresh
+            }
             return db.quizDao().getQuiz(lessonId)?.toQuiz()
         }
 
@@ -61,10 +68,18 @@ class QuizRepository(private val context: Context) {
                 @Suppress("UNCHECKED_CAST")
                 val choices = q["choices"] as? List<String> ?: emptyList()
 
+                // Numbers may arrive as Long or Double depending on how they were written.
+                val answers = (q["answers"] as? List<*>).orEmpty()
+                    .mapNotNull { (it as? Number)?.toInt() }
+                    .filter { it in choices.indices }
+                    .distinct()
+
                 QuizQuestion(
                     question = q["question"] as? String ?: "",
                     choices = choices,
-                    answer = (q["answer"] as? Long)?.toInt() ?: 0
+                    answer = (q["answer"] as? Number)?.toInt() ?: 0,
+                    answers = answers.takeIf { it.isNotEmpty() },
+                    multiple = q["multiple"] as? Boolean
                 )
             }
 

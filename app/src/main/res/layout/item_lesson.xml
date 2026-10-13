@@ -97,6 +97,28 @@
             android:textSize="14sp"
             tools:text="Kilalanin ang mga pangngalan ng tao, bagay, hayop, at lugar." />
 
+        <!-- C2. Teacher's schedule: opens on / deadline. Hidden when there is none. -->
+        <TextView
+            android:id="@+id/tvSchedule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_lesson_status_progress"
+            android:drawablePadding="5dp"
+            android:fontFamily="@font/public_sans"
+            android:gravity="center_vertical"
+            android:maxLines="2"
+            android:paddingStart="8dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp"
+            android:textColor="@color/lesson_status_progress_fg"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="Deadline: Okt 20, 11:59 PM"
+            tools:visibility="visible" />
+
         <!-- D. Difficulty + open action -->
         <LinearLayout
             android:layout_width="match_parent"

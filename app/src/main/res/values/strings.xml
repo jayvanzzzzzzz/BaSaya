@@ -50,7 +50,7 @@
     <string name="name">Name</string>
     <string name="maghanap_dito_ng_paksa">Maghanap dito ng paksa...</string>
     <string name="dashboard_greeting">KUMUSTA, KAIBIGAN!</string>
-    <string name="dashboard_title">Handa ka na bang\nmagbasa?</string>
+    <string name="dashboard_title">Handa ka na bang magbasa?</string>
     <string name="dashboard_lessons_title">Mga aralin para sa’yo</string>
     <string name="dashboard_loading_lessons">Inihahanda ang iyong mga aralin</string>
     <string name="refresh_lessons">I-refresh ang mga aralin</string>
@@ -80,7 +80,7 @@
     <string name="offline_lesson_message">Hindi pa na-download ang “%1$s”. Kumonekta sa internet at pindutin ang Download.</string>
     <string name="empty_not_in_class">Wala ka pang nasalihang klase.\nPindutin ang button sa ibaba para sumali gamit ang class code.</string>
     <string name="empty_no_lessons">Wala pang nakatalagang aralin.\nBumalik muli para tingnan ang mga bagong gawain.</string>
-    <string name="empty_no_search_results">Walang resulta para sa \u201c%1$s\u201d.</string>
+    <string name="empty_no_search_results">Walang lesson na nahanap\npara sa \u201c%1$s\u201d.</string>
     <string name="error_checking_class_membership">May problema sa koneksyon. Subukan muli.</string>
 
     <string name="profile_picture">Profile picture</string>
@@ -200,6 +200,7 @@
     <string name="qz_label">Pagsusulit</string>
     <string name="qz_question_progress">Tanong %1$d ng %2$d</string>
     <string name="qz_pick">Piliin ang tamang sagot</string>
+    <string name="qz_pick_many">Piliin lahat ng tamang sagot</string>
     <string name="qz_next">Susunod</string>
     <string name="qz_finish">Tapusin</string>
     <string name="qz_missing_lesson">Walang lesson na natagpuan.</string>
@@ -216,4 +217,7 @@
     <string name="qz_remark_good">Maganda ang iyong pagsisikap. Subukan muli upang mas mapabuti.</string>
     <string name="qz_remark_keep_going">Huwag panghinaan ng loob. Mag-aral pa at subukan muli.</string>
     <string name="qz_done">Tapos na</string>
+    <string name="ac_pick_count">Pumili ng %1$d salita</string>
+    <string name="ac_incomplete">Tama ang napili mo, pero may kulang pa! Pumili ng %1$d salita.</string>
+    <string name="ac_no_answer_set">Walang nakatakdang sagot ang pahinang ito. Tuloy tayo!</string>
 </resources>

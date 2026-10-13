@@ -22,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.basaya.R
 import com.example.basaya.data.cache.CompletionStateCache
+import com.example.basaya.data.repository.GameStatus
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.ui.activity.PracticeActivity
 import com.example.basaya.ui.pronunciation.PronunciationActivity
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.basaya.data.cache.ContentCountsCache
 import com.example.basaya.data.database.AppDatabase
+import com.example.basaya.data.schedule.LessonSchedule
 import android.app.Activity
 import android.app.Dialog
 import android.graphics.Color
@@ -102,8 +104,12 @@ class DashboardActivity : AppCompatActivity() {
             insets
         }
 
-        val isNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNight
+        // White status bar icons on the violet header
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        val buddy = findViewById<com.example.basaya.ui.pronunciation.PronunciationBookView>(R.id.buddy)
+        buddy.postDelayed({ buddy.setMood(com.example.basaya.ui.pronunciation.PronunciationBookView.Mood.HAPPY) }, 450)
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
@@ -135,6 +141,8 @@ class DashboardActivity : AppCompatActivity() {
 
         tvLessonTitle = findViewById(R.id.tvLessonTitle)
         tvLessonDescription = findViewById(R.id.tvLessonDesc)
+
+        hideGameIfSkipped()
 
         lifecycleScope.launch {
             try {
@@ -173,7 +181,7 @@ class DashboardActivity : AppCompatActivity() {
                     message = "Natapos mo na ang leksyon na ito. Maaari mo pa rin itong basahin muli anumang oras.",
                     primaryText = "Basahin muli",
                     onPrimary = {
-                        openContentIfAvailable(LectureActivity::class.java)
+                        openContentIfAvailable(LectureActivity::class.java, reviewing = true)
                     },
                     secondaryText = "Isara"
                 )
@@ -524,8 +532,10 @@ class DashboardActivity : AppCompatActivity() {
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    private fun openContentIfAvailable(destination: Class<out Activity>) {
+    private fun openContentIfAvailable(destination: Class<out Activity>, reviewing: Boolean = false) {
         lifecycleScope.launch {
+            if (scheduleBlocks(reviewing)) return@launch
+
             val isDownloaded = db.lessonDao()
                 .isLessonDownloaded(lessonId) ?: false
 
@@ -543,6 +553,52 @@ class DashboardActivity : AppCompatActivity() {
                     primaryText = "OK"
                 )
             }
+        }
+    }
+
+    /**
+     * The teacher's schedule: nothing opens before the open date, and after the deadline only
+     * finished parts can be reviewed. Shows why and returns true when blocked.
+     */
+    private suspend fun scheduleBlocks(reviewing: Boolean): Boolean {
+        val lesson = db.lessonDao().getLesson(lessonId) ?: return false
+        val opens = LessonSchedule.format(lesson.openAt)
+        val (title, message) = when (LessonSchedule.availability(this, lesson)) {
+            LessonSchedule.Availability.OPEN -> return false
+            LessonSchedule.Availability.CLOSED ->
+                if (reviewing) return false
+                else getString(R.string.schedule_closed_title) to getString(R.string.schedule_closed_part_msg)
+            LessonSchedule.Availability.NOT_YET_OPEN ->
+                getString(R.string.schedule_not_open_title) to
+                    getString(R.string.schedule_not_open_msg, lesson.title, opens)
+            LessonSchedule.Availability.NEEDS_INTERNET ->
+                getString(R.string.schedule_not_open_title) to
+                    getString(R.string.schedule_needs_internet_msg, lesson.title, opens)
+        }
+        showLessonDialog(iconRes = R.drawable.ic_lock_small, title = title, message = message)
+        return true
+    }
+
+    /**
+     * When the teacher chose "Skip game for this lesson" in basaya-web, the Laro stop is removed
+     * from the path and the remaining stops are renumbered 1–4.
+     */
+    private fun hideGameIfSkipped() {
+        if (lessonId.isBlank()) return
+        lifecycleScope.launch {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val skipped = GameStatus.isSkipped(lessonId)
+                ?: uid?.let { id ->
+                    AppDatabase.getDatabase(this@DashboardActivity).lessonDao()
+                        .getLessonsForUser(id).firstOrNull { it.id == lessonId }?.gameSkipped
+                }
+                ?: false
+            if (!skipped) return@launch
+
+            (gameCard.parent as? View)?.visibility = View.GONE
+            findViewById<TextView>(R.id.stepActivity).text = "2"
+            findViewById<TextView>(R.id.stepPronunciation).text = "3"
+            findViewById<TextView>(R.id.stepQuiz).text = "4"
         }
     }
 

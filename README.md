@@ -225,6 +225,17 @@ Computed by the teacher dashboard from the students' `skillSummary`:
 - **Per lesson:** average lesson score per skill, read from `assignedLessons/{lessonId}.skills`. A lesson far below the others usually means the lesson is too hard or unclear.
 - **Alert list:** students whose `skillSummary.needsHelp` is not empty, or with a ↓ trend.
 
+### Skipped games
+
+A teacher can tick **"Skip game for this lesson"** in the admin panel, which saves `lessons/{lessonId}/game/status = { completion: "skipped" }` and no game levels. A skipped game is treated as **not part of the lesson**:
+
+- **Lesson screen:** the Laro stop is removed from the path and the remaining stops are numbered 1–4.
+- **Lesson completion:** the game counts as done, so the lesson can still show *Tapos na*. Lesson progress is out of 3 parts instead of 4, and the skipped game never makes a lesson look "started".
+- **Talasalitaan monitoring:** the lesson simply has no Talasalitaan result. It is never 0%, and it doesn't affect the score, trend or needs-help alert, which only look at lessons that had a game. If every assigned lesson skips the game, the Progreso card shows *Walang laro*.
+- **Teacher dashboard:** show "—" for that student/lesson instead of a score, and leave the lesson out of the class's Talasalitaan averages.
+
+The app stores the flag per lesson in Room (`lessons.gameSkipped`, database v11) so it also works offline.
+
 ### Settings
 
 All thresholds are constants in `SkillScoring.kt`:
