@@ -126,7 +126,7 @@
             android:gravity="end"
             android:textSize="18sp"
             android:textStyle="bold"
-            tools:text="71%" />
+            tools:text="71" />
     </LinearLayout>
 
     <!-- Level · trend · mini chart of each lesson -->

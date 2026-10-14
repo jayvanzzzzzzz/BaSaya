@@ -102,6 +102,41 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="tvSectionLabel,btnRefresh" />
 
+    <!-- Lahat / Bukas / Sarado. Shown once the class has lessons. -->
+    <LinearLayout
+        android:id="@+id/lessonTabs"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="18dp"
+        android:background="@drawable/bg_lesson_tabs"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/sectionHeaderBottom"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/tabAll"
+            style="@style/LessonTab"
+            tools:text="Lahat (5)" />
+
+        <TextView
+            android:id="@+id/tabOpen"
+            style="@style/LessonTab"
+            android:layout_marginStart="4dp"
+            tools:text="Bukas (3)" />
+
+        <TextView
+            android:id="@+id/tabClosed"
+            style="@style/LessonTab"
+            android:layout_marginStart="4dp"
+            tools:text="Sarado (2)" />
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerLessons"
         android:layout_width="0dp"
@@ -114,7 +149,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/sectionHeaderBottom"
+        app:layout_constraintTop_toBottomOf="@id/lessonTabs"
         tools:listitem="@layout/item_lesson" />
 
     <ImageButton
@@ -150,7 +185,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/sectionHeaderBottom">
+        app:layout_constraintTop_toBottomOf="@id/lessonTabs">
 
         <FrameLayout
             android:layout_width="match_parent"

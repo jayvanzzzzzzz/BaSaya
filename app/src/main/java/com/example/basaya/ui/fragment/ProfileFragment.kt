@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
+import com.example.basaya.data.auth.PasswordRule
 import com.example.basaya.ui.LogInActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
@@ -494,6 +495,7 @@ class ProfileFragment : Fragment() {
         val etNew = content.findViewById<TextInputEditText>(R.id.etNewPassword)
         val etConfirm = content.findViewById<TextInputEditText>(R.id.etConfirmPassword)
         val btnSave = content.findViewById<MaterialButton>(R.id.btnSave)
+        PasswordRule.watch(etNew, content.findViewById(R.id.passwordRules))
 
         content.findViewById<View>(R.id.btnCancel).setOnClickListener { sheet.dismiss() }
         btnSave.setOnClickListener {
@@ -502,8 +504,9 @@ class ProfileFragment : Fragment() {
             val confirm = etConfirm.text?.toString().orEmpty()
 
             tilCurrent.error = if (current.isEmpty()) getString(R.string.pf_password_error_current) else null
+            val ruleProblem = PasswordRule.problem(new)
             tilNew.error = when {
-                new.length < 8 -> getString(R.string.pf_password_error_short)
+                ruleProblem != null -> getString(ruleProblem)
                 new == current -> getString(R.string.pf_password_error_same)
                 else -> null
             }

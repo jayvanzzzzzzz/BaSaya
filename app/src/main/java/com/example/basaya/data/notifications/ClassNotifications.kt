@@ -24,6 +24,7 @@ object ClassNotifications {
 
     const val CHANNEL_NEW_LESSONS = "new_lessons"
     const val CHANNEL_DEADLINES = "lesson_deadlines"
+    const val CHANNEL_CHAT = "class_chat"
     private const val PREFS = "class_notifications"
     private const val KEY_CLASS = "subscribedClassId"
 
@@ -45,6 +46,13 @@ object ClassNotifications {
                 context.getString(R.string.notif_channel_deadline_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply { description = context.getString(R.string.notif_channel_deadline_desc) }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_CHAT,
+                context.getString(R.string.ch_channel_name),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply { description = context.getString(R.string.ch_channel_desc) }
         )
     }
 
@@ -103,6 +111,39 @@ object ClassNotifications {
             .setShowWhen(true)
             .setAutoCancel(true)
             .setContentIntent(openLesson)
+            .build()
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
+    }
+
+    /**
+     * A teacher's chat message; tapping it opens the Chat tab. One notification per class,
+     * so a new message replaces the previous one instead of piling up.
+     */
+    fun showChat(context: Context, classId: String, title: String, body: String, time: Long) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) return
+
+        val notificationId = "chat:$classId".hashCode()
+        val openChat = PendingIntent.getActivity(
+            context,
+            notificationId,
+            MainActivity.chatIntent(context),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val notification = NotificationCompat.Builder(context, CHANNEL_CHAT)
+            .setSmallIcon(R.drawable.ic_chat)
+            .setColor(ContextCompat.getColor(context, R.color.nav_tab_chat))
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setWhen(time)
+            .setShowWhen(true)
+            .setAutoCancel(true)
+            .setContentIntent(openChat)
             .build()
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }

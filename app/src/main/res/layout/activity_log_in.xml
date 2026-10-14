@@ -194,12 +194,27 @@
                                 android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
                         </com.google.android.material.textfield.TextInputLayout>
 
+                        <!-- Opens the "forgot password" dialog (LogInActivity.showForgotPasswordDialog). -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnForgotPassword"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="4dp"
+                            android:minHeight="48dp"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:text="@string/login_forgot_password"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
+                            android:textSize="14sp" />
+
                         <!-- Primary action. imgLoginArrow / progressLogin overlay the button and are
                              swapped by LogInActivity.setLoading(). -->
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="28dp">
+                            android:layout_marginTop="12dp">
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnLogin"

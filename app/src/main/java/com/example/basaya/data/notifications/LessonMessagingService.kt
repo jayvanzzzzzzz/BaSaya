@@ -1,5 +1,6 @@
 package com.example.basaya.data.notifications
 
+import com.example.basaya.data.chat.ClassChat
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.ClassNotificationEntity
 import com.example.basaya.data.repository.LessonRepository
@@ -16,13 +17,15 @@ class LessonMessagingService : FirebaseMessagingService() {
     }
 
     /**
-     * "New lesson" data message from notify-api. Saved to the notification list, then the
-     * scheduler shows it now, or at the lesson's open date (visibleAt) if that's later.
-     * Runs on a background thread, in the foreground and background alike.
+     * "New lesson" or "deadline extended" data message from notify-api. Saved to the
+     * notification list, then the scheduler shows it now, or at the lesson's open date
+     * (visibleAt) if that's later. Runs on a background thread, in the foreground and
+     * background alike.
      */
     override fun onMessageReceived(message: RemoteMessage) {
         val data = message.data
-        if (data["type"] != "new_lesson") return
+        if (data["type"] == "chat_message") return showChat(data)
+        if (data["type"] != "new_lesson" && data["type"] != "deadline_extended") return
         val id = data["notificationId"] ?: return
         val classId = data["classId"] ?: return
         val visibleAt = data["visibleAt"]?.toLongOrNull() ?: return
@@ -41,7 +44,8 @@ class LessonMessagingService : FirebaseMessagingService() {
         runBlocking {
             withTimeoutOrNull(15_000L) {
                 AppDatabase.getDatabase(context).classNotificationDao().upsertAll(listOf(item))
-                // The new lesson isn't on the phone yet; fetch it (and the real time) first.
+                // Fetch the new lesson or the new deadline (and the real time) first, so the
+                // lesson and its deadline reminders are up to date.
                 FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
                     runCatching { LessonRepository(context).syncLessons(uid) }
                 }
@@ -49,5 +53,19 @@ class LessonMessagingService : FirebaseMessagingService() {
             }
         }
         LessonInbox.notifyChanged()
+    }
+
+    /** The teacher wrote in the class chat (notify-chat). Skipped while the chat is on screen. */
+    private fun showChat(data: Map<String, String>) {
+        val classId = data["classId"] ?: return
+        if (classId != ClassNotifications.subscribedClass(this)) return
+        if (ClassChat.visibleClassId == classId) return
+        ClassNotifications.showChat(
+            this,
+            classId,
+            title = data["title"].orEmpty(),
+            body = data["body"].orEmpty(),
+            time = data["sentAt"]?.toLongOrNull() ?: System.currentTimeMillis()
+        )
     }
 }

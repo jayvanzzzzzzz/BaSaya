@@ -42,7 +42,10 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.basaya.data.chat.ClassChat
+import com.example.basaya.ui.fragment.ChatFragment
 import com.example.basaya.ui.fragment.ProfileFragment
+import com.google.firebase.firestore.ListenerRegistration
 import com.example.basaya.ui.fragment.ProgressFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -51,6 +54,17 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val EXTRA_HIGHLIGHT_LESSONS = "highlightLessonIds"
+        private const val EXTRA_OPEN_CHAT = "openChat"
+        private const val TAB_CHAT = 2
+
+        /** Opens the Chat tab (reusing the running screen); from a class chat notification. */
+        fun chatIntent(context: Context): Intent =
+            Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_OPEN_CHAT, true)
+                .addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
 
         /** Opens Home (reusing the running screen) and highlights these lessons. */
         fun highlightIntent(context: Context, lessonIds: List<String>): Intent =
@@ -76,7 +90,17 @@ class MainActivity : AppCompatActivity() {
 
     private val homeFragment by lazy { HomeFragment() }
     private val progressFragment by lazy { ProgressFragment() }
+    private val chatFragment by lazy { ChatFragment() }
     private val profileFragment by lazy { ProfileFragment() }
+
+    // Chat tab's unread dot: follows the class's chat/state while this screen is visible.
+    private lateinit var chatUnreadDot: View
+    private var userListener: ListenerRegistration? = null
+    private var chatStateListener: ListenerRegistration? = null
+    private var chatClassId: String? = null
+    private var chatMyName = ""
+    private var chatState: ClassChat.State? = null
+    private var pendingOpenChat = false
 
     private lateinit var btnNotification: ImageButton
     private lateinit var tvNotifBadge: TextView
@@ -133,6 +157,8 @@ class MainActivity : AppCompatActivity() {
         btnNotification = findViewById(R.id.btnNotification)
         tvNotifBadge = findViewById(R.id.tvNotifBadge)
         pendingHighlight = highlightIds(intent)
+        pendingOpenChat = openChat(intent)
+        chatUnreadDot = findViewById(R.id.chatUnreadDot)
 
         // Unread count follows new pushes, lesson syncs and "mark all read".
         lifecycleScope.launch {
@@ -190,22 +216,90 @@ class MainActivity : AppCompatActivity() {
             pendingHighlight = ids
             if (isUserReady) deliverHighlight()
         }
+        if (openChat(intent)) {
+            pendingOpenChat = true
+            if (isUserReady) deliverOpenChat()
+        }
     }
 
     override fun onStart() {
         super.onStart()
         refreshBell()
+        watchChatDot()
     }
 
     override fun onStop() {
         super.onStop()
         bellAnimator?.cancel()
         bellAnimator = null
+        stopChatDot()
     }
 
     private fun highlightIds(intent: Intent?): List<String>? =
         intent?.getStringArrayExtra(EXTRA_HIGHLIGHT_LESSONS)?.toList()?.takeIf { it.isNotEmpty() }
             ?.also { intent.removeExtra(EXTRA_HIGHLIGHT_LESSONS) }
+
+    private fun openChat(intent: Intent?): Boolean =
+        (intent?.getBooleanExtra(EXTRA_OPEN_CHAT, false) == true)
+            .also { if (it) intent?.removeExtra(EXTRA_OPEN_CHAT) }
+
+    /** A tapped chat notification: go to the Chat tab (after the nav's own first layout). */
+    private fun deliverOpenChat() {
+        if (!pendingOpenChat) return
+        pendingOpenChat = false
+        findViewById<View>(R.id.navUnderline).post {
+            bottomNavController?.selectTab(TAB_CHAT, animate = true)
+        }
+    }
+
+    // ---------- Chat tab unread dot ----------
+
+    /** Follows the student's class (it can change: joined, left) and that class's chat/state. */
+    private fun watchChatDot() {
+        val uid = auth.currentUser?.uid ?: return
+        if (userListener != null) return
+        userListener = FirebaseFirestore.getInstance().collection("users").document(uid)
+            .addSnapshotListener { doc, _ ->
+                val classId = doc?.getString("classId")?.takeIf { it.isNotBlank() }
+                if (doc == null || classId == chatClassId) return@addSnapshotListener
+                chatClassId = classId
+                chatStateListener?.remove()
+                chatStateListener = null
+                chatState = null
+                chatMyName = ""
+                showChatDot()
+                if (classId == null) return@addSnapshotListener
+                lifecycleScope.launch {
+                    val name = runCatching { ClassChat.rosterName(classId, uid) }.getOrDefault("")
+                    if (chatClassId == classId) chatMyName = name.ifEmpty { doc.getString("fullName").orEmpty() }
+                    showChatDot()
+                }
+                chatStateListener = ClassChat.watchState(classId) { state ->
+                    if (chatClassId != classId) return@watchState
+                    chatState = state
+                    showChatDot()
+                }
+            }
+    }
+
+    private fun stopChatDot() {
+        userListener?.remove()
+        chatStateListener?.remove()
+        userListener = null
+        chatStateListener = null
+        chatClassId = null
+    }
+
+    private fun showChatDot() {
+        if (!::chatUnreadDot.isInitialized) return
+        val classId = chatClassId
+        val state = chatState
+        val unread = classId != null && state != null && activeFragment !== chatFragment &&
+            ClassChat.isUnread(this, classId, state, chatMyName)
+        chatUnreadDot.visibility = if (unread) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.navChat).contentDescription =
+            if (unread) getString(R.string.ch_unread_cd) else getString(R.string.nav_chat)
+    }
 
     /** A tapped notification: go to Home and make its lesson(s) glow. */
     private fun deliverHighlight() {
@@ -312,6 +406,7 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager.beginTransaction().apply {
             add(R.id.frameLayout, profileFragment, "profile").hide(profileFragment)
+            add(R.id.frameLayout, chatFragment, "chat").hide(chatFragment)
             add(R.id.frameLayout, progressFragment, "progress").hide(progressFragment)
             add(R.id.frameLayout, homeFragment, "home")
         }.commitAllowingStateLoss()
@@ -320,6 +415,7 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNav()
         deliverHighlight()
+        deliverOpenChat()
     }
 
     private fun setupBottomNav() {
@@ -333,6 +429,10 @@ class MainActivity : AppCompatActivity() {
         val iconProgress = findViewById<ImageView>(R.id.iconPractice)
         val labelProgress = findViewById<TextView>(R.id.labelPractice)
 
+        val navChat = findViewById<View>(R.id.navChat)
+        val iconChat = findViewById<ImageView>(R.id.iconChat)
+        val labelChat = findViewById<TextView>(R.id.labelChat)
+
         val navProfile = findViewById<View>(R.id.navProfile)
         val iconProfile = findViewById<ImageView>(R.id.iconProfile)
         val labelProfile = findViewById<TextView>(R.id.labelProfile)
@@ -342,16 +442,19 @@ class MainActivity : AppCompatActivity() {
             items = listOf(
                 BottomNavController.NavItem(navHome, iconHome, labelHome),
                 BottomNavController.NavItem(navProgress, iconProgress, labelProgress),
+                BottomNavController.NavItem(navChat, iconChat, labelChat),
                 BottomNavController.NavItem(navProfile, iconProfile, labelProfile)
             )
         ) { index ->
             val target = when (index) {
                 0 -> homeFragment
                 1 -> progressFragment
-                2 -> profileFragment
+                TAB_CHAT -> chatFragment
+                3 -> profileFragment
                 else -> homeFragment
             }
             switchTo(target)
+            showChatDot()
         }
     }
 

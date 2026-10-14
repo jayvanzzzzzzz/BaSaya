@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom sheet: the class's members, from the (i) button in the chat header (ChatFragment).
+     Teacher on top (or "no assigned teacher yet"), then the students A–Z; the signed-in
+     student is tagged "IKAW". Same as the members dialog on the website. -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="28dp">
+
+        <!-- Header: class tile, eyebrow, class name, member count -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvMembersTile"
+                android:layout_width="50dp"
+                android:layout_height="53dp"
+                android:background="@drawable/ch_class_tile"
+                android:fontFamily="@font/lexend"
+                android:gravity="center"
+                android:importantForAccessibility="no"
+                android:paddingBottom="3dp"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                tools:text="G4" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/be_vietnam_bold"
+                    android:letterSpacing="0.09"
+                    android:text="@string/ch_members_eyebrow"
+                    android:textColor="@color/ch_teacher"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvMembersClass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:accessibilityHeading="true"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/lexend"
+                    android:maxLines="1"
+                    android:textColor="@color/ch_ink"
+                    android:textSize="19sp"
+                    android:textStyle="bold"
+                    tools:text="Grade 4 - Sampaguita" />
+
+                <TextView
+                    android:id="@+id/tvMembersCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/be_vietnam_semi_bold"
+                    android:textColor="@color/ch_ink_soft"
+                    android:textSize="13sp"
+                    tools:text="25 miyembro" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="16dp"
+            android:background="@color/ch_line" />
+
+        <!-- ═══ Teacher ═══ -->
+        <TextView
+            style="@style/Ch.MembersLabel"
+            android:text="@string/ch_members_teacher" />
+
+        <LinearLayout
+            android:id="@+id/teacherCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ch_member_teacher_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <FrameLayout
+                android:layout_width="52dp"
+                android:layout_height="50dp">
+
+                <TextView
+                    android:id="@+id/tvTeacherAvatar"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/ch_avatar"
+                    android:backgroundTint="@color/ch_teacher"
+                    android:fontFamily="@font/lexend"
+                    android:gravity="center"
+                    android:importantForAccessibility="no"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="MS" />
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="bottom|end"
+                    android:background="@drawable/ch_cap_seal"
+                    android:importantForAccessibility="no"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_teacher_cap" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvTeacherName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/lexend"
+                    android:maxLines="1"
+                    android:textColor="@color/ch_ink"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="Santos, Maria" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/be_vietnam_semi_bold"
+                    android:text="@string/ch_members_teacher_role"
+                    android:textColor="@color/ch_ink_soft"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/noTeacherCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ch_member_empty_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:background="@drawable/ch_no_teacher_icon"
+                android:importantForAccessibility="no"
+                android:padding="11dp"
+                android:src="@drawable/ic_no_teacher" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="@string/ch_members_no_teacher"
+                    android:textColor="@color/ch_ink"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/be_vietnam_regular"
+                    android:text="@string/ch_members_no_teacher_body"
+                    android:textColor="@color/ch_ink_soft"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ═══ Students ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/Ch.MembersLabel"
+                android:layout_marginBottom="0dp"
+                android:text="@string/ch_members_students" />
+
+            <TextView
+                android:id="@+id/tvStudentCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/ch_count_badge"
+                android:fontFamily="@font/be_vietnam_bold"
+                android:paddingStart="8dp"
+                android:paddingTop="1dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="1dp"
+                android:textColor="@color/ch_ink_soft"
+                android:textSize="11sp"
+                android:visibility="gone"
+                tools:text="24"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/membersLoading"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp"
+            android:indeterminateTint="@color/ch_teacher" />
+
+        <TextView
+            android:id="@+id/tvMembersEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/ch_member_empty_card"
+            android:fontFamily="@font/be_vietnam_semi_bold"
+            android:gravity="center"
+            android:padding="20dp"
+            android:textColor="@color/ch_ink_soft"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:text="@string/ch_members_no_students" />
+
+        <LinearLayout
+            android:id="@+id/studentList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="vertical" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

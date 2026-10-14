@@ -42,7 +42,7 @@
     <string name="pf_password_current">Kasalukuyang password</string>
     <string name="pf_password_new">Bagong password</string>
     <string name="pf_password_confirm">Ulitin ang bagong password</string>
-    <string name="pf_password_hint">Hindi bababa sa 8 karakter</string>
+    <string name="pf_password_hint">8+ karakter, may maliit at malaking titik, at numero</string>
     <string name="pf_password_save">Palitan</string>
     <string name="pf_password_changed">Napalitan na ang iyong password.</string>
     <string name="pf_password_error_current">Ilagay ang kasalukuyang password</string>

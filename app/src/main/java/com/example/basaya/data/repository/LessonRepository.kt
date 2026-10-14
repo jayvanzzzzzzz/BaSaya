@@ -10,6 +10,7 @@ import com.example.basaya.data.entity.LessonEntity
 import com.example.basaya.data.notifications.LessonInbox
 import com.example.basaya.data.notifications.NotificationReadState
 import com.example.basaya.data.notifications.NotificationScheduler
+import com.example.basaya.data.progress.LessonCompletion
 import com.example.basaya.data.schedule.TrustedClock
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -135,7 +136,25 @@ class LessonRepository(private val context: Context) {
         }.toMap()
         val previousSkipped = existingLessons.associate { it.id to it.gameSkipped }
 
-        val lessons = lessonsSnapshot.documents.map { doc ->
+        // When the student joined the class. A lesson whose deadline passed before then (and
+        // that they never finished) is left out: they could never have done it.
+        val joinedAt = try {
+            firestore.collection("classes").document(classId)
+                .collection("students").document(userId).get().await()
+                .getTimestamp("joinedAt")?.toDate()?.time
+        } catch (e: Exception) {
+            null
+        }
+        val progressDocs = assignedSnapshot.documents.associateBy { it.id }
+        val closedBeforeJoining = lessonsSnapshot.documents.map { it.id }.filter { id ->
+            val due = linkSchedules[id]?.dueAt
+            val finished = progressDocs[id]?.let {
+                LessonCompletion.isFinished(it, skippedGames[id] ?: previousSkipped[id] ?: false)
+            } == true
+            joinedAt != null && due != null && due < joinedAt && !finished
+        }.toSet()
+
+        val lessons = lessonsSnapshot.documents.filter { it.id !in closedBeforeJoining }.map { doc ->
             val progress = progressMap[doc.id]
 
             LessonEntity(
@@ -161,6 +180,16 @@ class LessonRepository(private val context: Context) {
 
         db.lessonDao().deleteLessonsForUser(userId)
         db.lessonDao().insertAll(lessons)
+
+        // Finishing a crossword level always saves gameScore, so a phone past level 1 with no
+        // gameScore in Firestore is stale: the teacher removed the lesson (which deletes the
+        // class's progress) and added it back. Start the game over, like the rest of the lesson.
+        val gameScored = assignedSnapshot.documents
+            .filter { it.getLong("gameScore") != null }
+            .map { it.id }
+            .toSet()
+        val resetGames = lessons.map { it.id }.filter { it !in gameScored }
+        if (resetGames.isNotEmpty()) db.crosswordProgressDao().deleteAdvancedProgress(resetGames)
     }
 
     /** The class's "new lesson" notifications (classes/{classId}/notifications) into Room. */

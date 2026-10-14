@@ -329,7 +329,6 @@
                             android:hint="@string/password"
                             app:endIconMode="password_toggle"
                             app:errorIconDrawable="@null"
-                            app:helperText="@string/register_password_helper"
                             app:placeholderText="@string/ilagay_ang_iyong_password"
                             app:startIconDrawable="@drawable/ic_lock">
 
@@ -343,6 +342,8 @@
                                 android:maxLines="1"
                                 android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
                         </com.google.android.material.textfield.TextInputLayout>
+
+                        <include layout="@layout/view_password_rules" />
 
                         <!-- Primary action. imgRegisterArrow / progressRegister overlay the button
                              and are swapped by RegisterActivity.setLoading(). -->

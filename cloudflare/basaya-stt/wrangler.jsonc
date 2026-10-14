@@ -3,5 +3,10 @@
   "name": "basaya-stt",
   "main": "src/index.js",
   "compatibility_date": "2025-01-01",
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI" },
+  // The student website (BaSaya-web/student) calls from these sites with a Firebase token.
+  "vars": {
+    "ALLOWED_ORIGIN": "http://localhost,https://basaya.onrender.com",
+    "FIREBASE_PROJECT_ID": "basaya"
+  }
 }

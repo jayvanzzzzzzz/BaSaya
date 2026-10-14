@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A classmate's or the teacher's message: avatar, name (+ "Guro" tag), bubble, time. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="bottom"
+    android:orientation="horizontal"
+    android:paddingTop="10dp"
+    android:paddingEnd="48dp">
+
+    <TextView
+        android:id="@+id/tvAvatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginBottom="18dp"
+        android:background="@drawable/ch_avatar"
+        android:fontFamily="@font/lexend"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:backgroundTint="#4F8BFF"
+        tools:text="J" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/nameRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="3dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/be_vietnam_semi_bold"
+                android:maxLines="1"
+                android:textColor="@color/ch_ink_soft"
+                android:textSize="12sp"
+                tools:text="Juan Dela Cruz" />
+
+            <TextView
+                android:id="@+id/tvTeacherTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:fontFamily="@font/be_vietnam_bold"
+                android:letterSpacing="0.04"
+                android:text="@string/ch_teacher_suffix"
+                android:textColor="@color/ch_teacher"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvBubble"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ch_bubble_in"
+            android:fontFamily="@font/be_vietnam_regular"
+            android:paddingStart="14dp"
+            android:paddingTop="9dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="11dp"
+            android:textColor="@color/ch_ink"
+            android:textSize="15sp"
+            tools:text="Magandang umaga po!" />
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="18dp"
+            android:layout_marginStart="6dp"
+            android:fontFamily="@font/be_vietnam_medium"
+            android:gravity="center_vertical"
+            android:textColor="@color/ch_ink_soft"
+            android:textSize="11sp"
+            tools:text="8:15 AM" />
+    </LinearLayout>
+</LinearLayout>

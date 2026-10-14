@@ -33,6 +33,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.model.Quiz
+import com.example.basaya.data.model.QuizQuestion
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.QuizRepository
@@ -120,7 +121,8 @@ class QuizActivity : AppCompatActivity() {
                 return@launch
             }
 
-            quiz = fetchedQuiz
+            // A new random order of questions and choices every time; closing starts over.
+            quiz = fetchedQuiz.copy(questions = fetchedQuiz.questions.shuffled().map { it.withShuffledChoices() })
             tvQuizTitle.text = quiz.title
             userAnswers.addAll(List(quiz.questions.size) { emptySet<Int>() })
 
@@ -287,6 +289,18 @@ class QuizActivity : AppCompatActivity() {
     }
 
     private fun letterFor(index: Int): String = ('A' + index).toString()
+
+    /** The same question with its choices shuffled; the correct answers move with their choices. */
+    private fun QuizQuestion.withShuffledChoices(): QuizQuestion {
+        val order = choices.indices.shuffled() // order[new position] = old index
+        val correct = correctAnswers.map { order.indexOf(it) }
+        return copy(
+            choices = order.map { choices[it] },
+            answer = correct.first(),
+            answers = correct,
+            multiple = correct.size > 1
+        )
+    }
 
     private fun candy(fill: Int, lip: Int, radius: Float): Drawable {
         val lipHeight = dp(5f)

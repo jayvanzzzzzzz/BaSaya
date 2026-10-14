@@ -40,6 +40,7 @@ import com.example.basaya.R
 import com.example.basaya.data.audio.PronunciationAudioStore
 import com.example.basaya.data.model.PronunciationActivityData
 import com.example.basaya.data.model.PronunciationWord
+import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.PronunciationRepository
@@ -59,7 +60,7 @@ class PronunciationActivity : AppCompatActivity() {
         const val EXTRA_LESSON_ID = "LESSON_ID"
         const val EXTRA_SCORE = "PRONUNCIATION_SCORE"
         const val EXTRA_TOTAL = "PRONUNCIATION_TOTAL"
-        private const val MAX_LIVES = 5
+        private const val MAX_LIVES = 3
         private const val ADVANCE_DELAY_MS = 2400L
         private const val UTTERANCE_ID = "pronunciation_word"
     }
@@ -113,6 +114,10 @@ class PronunciationActivity : AppCompatActivity() {
     private var missesOnWord = 0
     private val hardWords = linkedSetOf<String>()
     private var isProcessing = false
+
+    /** Lives and misses of the word the child closed on, used once by showCurrentWord(). */
+    private var restoredLives: Int? = null
+    private var restoredMisses: Int? = null
 
     /** Set once Whisper is unavailable (e.g. free daily limit reached) so we stop retrying it. */
     private var useAndroidRecognizer = false
@@ -255,14 +260,59 @@ class PronunciationActivity : AppCompatActivity() {
                 )
             }
 
+            // Continue where the child closed Bigkas (here or on the website): the word, the
+            // lives left on it and the score so far.
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
+            if (progress?.getBoolean("pronunciationFinished") == true) {
+                finish()
+                return@launch
+            }
+            LessonResume.of(progress, LessonResume.PRONUNCIATION, wordList.size)?.let { resume ->
+                currentWordIndex = resume["done"] as Int
+                correctCount = (resume["correct"] as? Number)?.toInt() ?: 0
+                firstTryCorrect = (resume["firstTryCorrect"] as? Number)?.toInt() ?: 0
+                (resume["hardWords"] as? List<*>)?.filterIsInstance<String>()?.let { hardWords.addAll(it) }
+                restoredLives = ((resume["lives"] as? Number)?.toInt() ?: MAX_LIVES).coerceIn(1, MAX_LIVES)
+                restoredMisses = (resume["misses"] as? Number)?.toInt() ?: 0
+            }
+
+            // Every word was done before closing: only the result is left to save.
+            if (currentWordIndex >= wordList.size) {
+                finishActivityWithScore()
+                return@launch
+            }
             showCurrentWord(animate = false)
         }
     }
 
+    /**
+     * Saves the place: `done` words finished, with the lives and misses of word `done` when
+     * it is the current one (a fresh word starts with MAX_LIVES).
+     */
+    private fun savePlace(done: Int) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val current = done == currentWordIndex
+        LessonResume.save(
+            uid, lessonId, LessonResume.PRONUNCIATION,
+            mapOf(
+                "done" to done,
+                "total" to wordList.size,
+                "lives" to if (current) livesRemaining else MAX_LIVES,
+                "misses" to if (current) missesOnWord else 0,
+                "correct" to correctCount,
+                "firstTryCorrect" to firstTryCorrect,
+                "hardWords" to hardWords.toList()
+            )
+        )
+    }
+
     private fun showCurrentWord(animate: Boolean) {
         val currentWord = wordList[currentWordIndex]
-        livesRemaining = MAX_LIVES
-        missesOnWord = 0
+        livesRemaining = restoredLives ?: MAX_LIVES
+        missesOnWord = restoredMisses ?: 0
+        restoredLives = null
+        restoredMisses = null
         updateLivesDisplay(animate = false)
         updateProgressBar()
         hideResult()
@@ -462,6 +512,7 @@ class PronunciationActivity : AppCompatActivity() {
             PronunciationScorer.ScoreBand.GREAT, PronunciationScorer.ScoreBand.OKAY -> {
                 correctCount++
                 if (missesOnWord == 0) firstTryCorrect++
+                savePlace(currentWordIndex + 1)
                 setButtonsEnabled(false)
                 bookView.setMood(PronunciationBookView.Mood.HAPPY)
                 celebrate()
@@ -479,13 +530,17 @@ class PronunciationActivity : AppCompatActivity() {
         }
     }
 
-    /** Wrong answers only encourage; the misheard text is not shown. */
+    /**
+     * Wrong answers only encourage; the misheard text is not shown. When the word's lives run
+     * out it scores 0 and the next word is up.
+     */
     private fun handleFailedAttempt() {
         livesRemaining--
         missesOnWord++
         hardWords.add(wordList[currentWordIndex].word)
         updateLivesDisplay(animate = true)
         bookView.setMood(PronunciationBookView.Mood.CHEER)
+        savePlace(if (livesRemaining <= 0) currentWordIndex + 1 else currentWordIndex)
 
         if (livesRemaining <= 0) {
             setButtonsEnabled(false)
@@ -590,6 +645,7 @@ class PronunciationActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     Log.e("PronunciationActivity", "Failed to save pronunciation result", e)
                 }
+                LessonResume.clear(uid, lessonId, LessonResume.PRONUNCIATION)
 
                 // Pagbigkas skill: first-try correct words, plus the words that needed help
                 try {

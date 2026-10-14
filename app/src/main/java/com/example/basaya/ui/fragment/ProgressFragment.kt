@@ -92,6 +92,8 @@ class ProgressFragment : Fragment() {
     private var allGamesSkipped = false
     /** The student's class lessons (from Room); the only lessons that count. */
     private var classLessons: List<LessonEntity> = emptyList()
+    /** [classLessons] minus the ones that closed before the student joined. */
+    private var countedLessons: List<LessonEntity> = emptyList()
     private val density get() = resources.displayMetrics.density
     private fun dp(value: Float) = (value * density).toInt()
     private fun color(@ColorRes res: Int) = ContextCompat.getColor(requireContext(), res)
@@ -147,6 +149,19 @@ class ProgressFragment : Fragment() {
             }
             val docs = LessonCompletion.classDocs(allDocs, classLessons)
 
+            // When the student joined this class (classes/{classId}/students/{uid}.joinedAt):
+            // lessons that closed before then don't count toward their totals.
+            val joinedAt = classLessons.firstOrNull()?.classId?.takeIf { it.isNotBlank() }?.let { classId ->
+                try {
+                    firestore.collection("classes").document(classId)
+                        .collection("students").document(uid).get().await()
+                        .getTimestamp("joinedAt")?.toDate()?.time
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            countedLessons = LessonCompletion.countedLessons(docs, classLessons, joinedAt)
+
             val summary = SkillScoring.summarize(SkillProgressRepository.resultsFrom(docs))
             if (view == null) return@launch
 
@@ -194,9 +209,9 @@ class ProgressFragment : Fragment() {
         }
 
         // Lessons finished: class lessons whose every part is done (Lecture, Laro or skipped,
-        // Gawain, Bigkas, Pagsusulit).
-        val total = classLessons.size
-        val finished = LessonCompletion.finishedCount(docs, classLessons)
+        // Gawain, Bigkas, Pagsusulit). Lessons that closed before the student joined don't count.
+        val total = countedLessons.size
+        val finished = LessonCompletion.finishedCount(docs, countedLessons)
         tvLessonsDone.text = getString(R.string.pg_lessons_done, finished, total)
         lessonRing.contentDescription = getString(R.string.pg_lessons_cd, finished, total)
         progressLessons.setProgressCompat(0, false)
@@ -257,9 +272,11 @@ class ProgressFragment : Fragment() {
 
     /** Pag-unawa has no score until lectures have comprehension questions: show completion. */
     private fun lectureCompletionState(docs: List<DocumentSnapshot>): CardState {
-        // Out of the class's lessons, not the number of progress documents
-        val total = classLessons.size
-        val finished = docs.count { it.getBoolean("lectureFinished") == true }
+        // Out of the class's lessons (minus those closed before joining), not the number of
+        // progress documents
+        val ids = countedLessons.map { it.id }.toSet()
+        val total = countedLessons.size
+        val finished = docs.count { it.id in ids && it.getBoolean("lectureFinished") == true }
         if (total == 0 || finished == 0) {
             return CardState(
                 null, "--", R.string.pg_level_not_started, R.color.pg_ink_soft, R.color.pg_track,

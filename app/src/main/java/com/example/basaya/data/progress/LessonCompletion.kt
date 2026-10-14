@@ -27,6 +27,24 @@ object LessonCompletion {
             doc.getBoolean("pronunciationFinished") == true &&
             doc.getBoolean("quizFinished") == true
 
+    /**
+     * The class lessons the student is held to: not the ones whose deadline passed before they
+     * joined the class (they never could do them). Same rule as the web's teacher progress page.
+     */
+    fun countedLessons(
+        docs: List<DocumentSnapshot>,
+        classLessons: List<LessonEntity>,
+        joinedAt: Long?
+    ): List<LessonEntity> {
+        if (joinedAt == null) return classLessons
+        val byId = docs.associateBy { it.id }
+        return classLessons.filter { lesson ->
+            val due = lesson.dueAt ?: return@filter true
+            if (due >= joinedAt) return@filter true
+            byId[lesson.id]?.let { isFinished(it, lesson.gameSkipped) } == true
+        }
+    }
+
     /** Number of class lessons whose every part is done. */
     fun finishedCount(docs: List<DocumentSnapshot>, classLessons: List<LessonEntity>): Int {
         val skipped = classLessons.filter { it.gameSkipped }.map { it.id }.toSet()

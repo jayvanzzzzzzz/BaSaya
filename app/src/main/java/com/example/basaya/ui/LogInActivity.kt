@@ -25,6 +25,11 @@ import androidx.core.widget.doAfterTextChanged
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import android.util.Patterns
+import androidx.appcompat.app.AlertDialog
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuthException
 
 class LogInActivity : AppCompatActivity() {
 
@@ -169,6 +174,87 @@ class LogInActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        findViewById<View>(R.id.btnForgotPassword).setOnClickListener {
+            showForgotPasswordDialog(authHelper)
+        }
+
+    }
+
+    /**
+     * Asks for the email and has Firebase send the reset link. The answer is the same
+     * whether or not the email has an account, so nobody can use it to check who is registered.
+     */
+    private fun showForgotPasswordDialog(authHelper: AuthHelper) {
+        if (isFinishing || isDestroyed) return
+        val content = layoutInflater.inflate(R.layout.dialog_forgot_password, null)
+        val tilForgotEmail = content.findViewById<TextInputLayout>(R.id.tilForgotEmail)
+        val etForgotEmail = content.findViewById<EditText>(R.id.etForgotEmail)
+        etForgotEmail.setText(etEmail.text.toString().trim())
+        etForgotEmail.doAfterTextChanged { tilForgotEmail.error = null }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.forgot_title)
+            .setView(content)
+            .setNegativeButton(R.string.forgot_cancel, null)
+            // Wired below so a bad email keeps the dialog open.
+            .setPositiveButton(R.string.forgot_send, null)
+            .create()
+
+        dialog.setOnShowListener {
+            val send = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            val submit: () -> Unit = submit@{
+                val email = etForgotEmail.text.toString().trim()
+                tilForgotEmail.error = when {
+                    email.isEmpty() -> getString(R.string.forgot_error_email_required)
+                    !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> getString(R.string.forgot_error_email_invalid)
+                    else -> null
+                }
+                if (tilForgotEmail.error != null) return@submit
+
+                send.isEnabled = false
+                send.setText(R.string.forgot_sending)
+                authHelper.sendPasswordReset(email) { error ->
+                    if (isFinishing || isDestroyed) return@sendPasswordReset
+                    send.isEnabled = true
+                    send.setText(R.string.forgot_send)
+                    // No account for this email: answer the same as a sent link.
+                    if (error == null || (error as? FirebaseAuthException)?.errorCode == "ERROR_USER_NOT_FOUND") {
+                        dialog.dismiss()
+                        showResetSentDialog(email)
+                        return@sendPasswordReset
+                    }
+                    Log.d("LOGIN_DEBUG", "Password reset failed: ${error.message}")
+                    tilForgotEmail.error = getString(
+                        when {
+                            error is FirebaseNetworkException -> R.string.forgot_error_network
+                            error is FirebaseTooManyRequestsException -> R.string.forgot_error_too_many
+                            (error as? FirebaseAuthException)?.errorCode == "ERROR_INVALID_EMAIL" ->
+                                R.string.forgot_error_email_invalid
+                            else -> R.string.forgot_error_generic
+                        }
+                    )
+                }
+            }
+            send.setOnClickListener { submit() }
+            etForgotEmail.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEND && send.isEnabled) {
+                    submit()
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun showResetSentDialog(email: String) {
+        if (isFinishing || isDestroyed) return
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.forgot_sent_title)
+            .setMessage(getString(R.string.forgot_sent_message, email))
+            .setPositiveButton(R.string.forgot_sent_ok, null)
+            .show()
     }
 
     private fun showStudentsOnlyDialog() {

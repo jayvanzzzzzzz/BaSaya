@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "IKAW" tag next to the signed-in account. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="0" android:startColor="@color/ch_mine_start" android:endColor="@color/ch_mine_end" />
+    <corners android:radius="100dp" />
+</shape>

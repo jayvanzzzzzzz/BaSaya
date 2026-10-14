@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Send button: gradient circle with a lip; grey while disabled or cooling down. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <shape android:shape="oval">
+            <solid android:color="@color/ch_send_off" />
+        </shape>
+    </item>
+    <item>
+        <layer-list>
+            <item android:top="3dp">
+                <shape android:shape="oval">
+                    <solid android:color="@color/ch_mine_lip" />
+                </shape>
+            </item>
+            <item android:bottom="3dp">
+                <shape android:shape="oval">
+                    <gradient android:angle="0" android:startColor="@color/ch_mine_start"
+                        android:endColor="@color/ch_mine_end" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

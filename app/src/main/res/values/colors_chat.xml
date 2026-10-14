@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Class chat tab (ChatFragment). -->
+<resources>
+    <color name="ch_bg">#F4F6FC</color>
+    <color name="ch_ink">#1F2547</color>
+    <color name="ch_ink_soft">#6A7290</color>
+    <color name="ch_line">#E3E8F4</color>
+    <color name="ch_lip">#DCE3F3</color>
+    <color name="ch_bubble_in">#FFFFFF</color>
+    <color name="ch_teacher">#7A55D8</color>
+    <color name="ch_teacher_tint">#F1ECFF</color>
+    <color name="ch_teacher_line">#DCCFFF</color>
+    <color name="ch_mine_start">#4F8BFF</color>
+    <color name="ch_mine_end">#8A6CF0</color>
+    <color name="ch_mine_lip">#5A4BC4</color>
+    <color name="ch_closed">#B9650A</color>
+    <color name="ch_closed_tint">#FFF1DC</color>
+    <color name="ch_dot">#F25C54</color>
+    <color name="ch_send_off">#C9CFE0</color>
+</resources>

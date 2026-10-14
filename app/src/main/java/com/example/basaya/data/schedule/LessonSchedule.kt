@@ -53,6 +53,32 @@ object LessonSchedule {
             else -> false
         }
 
+    /**
+     * Home list order: open lessons by nearest deadline, then open ones with no deadline,
+     * then not-yet-open (soonest to open first), then closed (most recently closed first).
+     * Same order as the web (student/views/home.js, teacher/views/classPage.js).
+     */
+    fun sortForList(context: Context, lessons: List<LessonEntity>): List<LessonEntity> {
+        val ranks = lessons.associate {
+            it.id to when (availability(context, it)) {
+                Availability.OPEN -> 0
+                Availability.CLOSED -> 2
+                else -> 1
+            }
+        }
+        return lessons.sortedWith(
+            compareBy<LessonEntity> { ranks.getValue(it.id) }
+                .thenBy {
+                    when (ranks.getValue(it.id)) {
+                        0 -> it.dueAt ?: Long.MAX_VALUE
+                        1 -> it.openAt ?: Long.MAX_VALUE
+                        else -> -(it.dueAt ?: 0L)
+                    }
+                }
+                .thenBy { it.order }
+        )
+    }
+
     fun format(millis: Long?): String =
         if (millis == null) "" else formatter().format(Date(millis))
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Class members sheet (sheet_class_members, item_class_member). -->
+<resources>
+    <style name="Ch.MembersLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textColor">@color/ch_ink_soft</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Ch.YouPill" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:background">@drawable/ch_you_pill</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:paddingStart">9dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingEnd">9dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:text">@string/ch_members_you</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+</resources>

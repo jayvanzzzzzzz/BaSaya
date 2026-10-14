@@ -28,16 +28,23 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
+import com.example.basaya.data.audio.LectureAudioCache
 import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.data.model.Lecture
 import com.example.basaya.data.model.LecturePage
+import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.ui.lecture.TalkingBookView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback
 
 class LectureActivity : AppCompatActivity() {
+
+    companion object {
+        /** Open with the speaker off. */
+        const val EXTRA_MUTED = "MUTED"
+    }
 
     private lateinit var lessonId: String
     private lateinit var sentenceContainer: LinearLayout
@@ -58,6 +65,8 @@ class LectureActivity : AppCompatActivity() {
     private lateinit var lecture: Lecture
     private var currentPageIndex = 0
     private var currentSentenceIndex = 0
+    /** False while rereading a finished lecture: then the place isn't saved. */
+    private var tracking = false
 
     private lateinit var lectureRepository: LectureRepository
     private lateinit var gestureDetector: GestureDetector
@@ -94,7 +103,9 @@ class LectureActivity : AppCompatActivity() {
         }
 
         ibSpeaker = findViewById(R.id.ibSpeaker)
-        ibSpeaker.setImageResource(R.drawable.ic_speaker_on)
+        // The child chose "Buksan nang walang tunog" when the audio wouldn't load.
+        speakerOn = !intent.getBooleanExtra(EXTRA_MUTED, false)
+        ibSpeaker.setImageResource(if (speakerOn) R.drawable.ic_speaker_on else R.drawable.ic_speaker_mute)
         ibSpeaker.setOnClickListener { toggleSpeaker() }
 
         sentenceContainer = findViewById(R.id.allSentenceContainer)
@@ -130,6 +141,13 @@ class LectureActivity : AppCompatActivity() {
 
             lecture = fetchedLecture
             tvLectureTitle.text = lecture.title.ifBlank { getString(R.string.lecture_default_title) }
+
+            // Continue on the next unread page (here or from the website). Rereading a finished
+            // lecture always starts at page 1 and saves nothing.
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
+            tracking = uid != null && progress?.getBoolean("lectureFinished") != true
+            currentPageIndex = LessonResume.lectureStartPage(progress, lecture.pages.size)
 
             setupProgressBars()
             showPage(currentPageIndex)
@@ -204,6 +222,8 @@ class LectureActivity : AppCompatActivity() {
         tvPageLabel.text = getString(R.string.lecture_page_label, pageIndex + 1, lecture.pages.size)
         btnNextPage.visibility = View.GONE
         tvContinueHint.visibility = View.VISIBLE
+        // Download the next page's audio while this one is read.
+        lecture.pages.getOrNull(pageIndex + 1)?.let { LectureAudioCache.preparePage(this, lessonId, it) }
         revealNextSentence()
     }
 
@@ -296,6 +316,12 @@ class LectureActivity : AppCompatActivity() {
     private fun goToNextPage() {
         if (currentPageIndex < lecture.pages.lastIndex) {
             currentPageIndex++
+            FirebaseAuth.getInstance().currentUser?.uid?.takeIf { tracking }?.let { uid ->
+                LessonResume.save(
+                    uid, lessonId, LessonResume.LECTURE,
+                    mapOf("done" to currentPageIndex, "total" to lecture.pages.size)
+                )
+            }
             showPage(currentPageIndex)
         } else {
             stopAudio()
@@ -308,6 +334,7 @@ class LectureActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         Log.e("LectureActivity", "Failed to mark lecture finished", e)
                     }
+                    if (tracking) LessonResume.clear(uid, lessonId, LessonResume.LECTURE)
                     finish()
                 }
             } else {
@@ -317,7 +344,8 @@ class LectureActivity : AppCompatActivity() {
     }
 
     /**
-     * Audio source priority: downloaded file (offline) -> Cloudflare R2 stream -> bundled res/raw.
+     * Audio source priority: downloaded lesson file (offline) -> cached copy fetched before the
+     * lecture opened (LectureAudioCache) -> Cloudflare R2 stream -> bundled res/raw.
      */
     private fun playSentenceAudio(page: LecturePage, sentenceIndex: Int) {
         stopAudio()
@@ -325,9 +353,11 @@ class LectureActivity : AppCompatActivity() {
 
         val localFile = LectureAudioStore.localFile(this, lessonId, page.pageNumber, sentenceIndex)
         val cloudUrl = page.audioUrls?.getOrNull(sentenceIndex).orEmpty()
+        val cachedFile = cloudUrl.takeIf { it.isNotBlank() }?.let { LectureAudioCache.file(this, it) }
 
         when {
             localFile.exists() -> playFromSource(localFile.absolutePath)
+            cachedFile != null -> playFromSource(cachedFile.absolutePath)
             cloudUrl.isNotBlank() -> playFromSource(cloudUrl)
             else -> playRawResource(page.audioResNames.getOrNull(sentenceIndex).orEmpty())
         }
@@ -389,7 +419,10 @@ class LectureActivity : AppCompatActivity() {
     private fun showConfirmDialog() {
         AlertDialog.Builder(this)
             .setTitle("Lumabas sa Aralin")
-            .setMessage("Sigurado ka bang gusto mong lumabas? Mawawala ang iyong kasalukuyang progreso sa pahinang ito.")
+            .setMessage(
+                if (tracking) "Sigurado ka bang gusto mong lumabas? Itutuloy mo ang aralin sa pahinang ito sa susunod."
+                else "Sigurado ka bang gusto mong lumabas?"
+            )
             .setPositiveButton("Oo") { dialog, _ ->
                 stopAudio()
                 finish()

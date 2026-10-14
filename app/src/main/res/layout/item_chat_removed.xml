@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A removed message keeps its place as a dashed pill (left for others, right for yours). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="10dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/tvRemoved"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginStart="40dp"
+        android:background="@drawable/ch_removed"
+        android:fontFamily="@font/be_vietnam_medium"
+        android:paddingStart="14dp"
+        android:paddingTop="7dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="7dp"
+        android:textColor="@color/ch_ink_soft"
+        android:textSize="13sp"
+        android:textStyle="italic"
+        tools:text="@string/ch_removed_teacher" />
+</FrameLayout>

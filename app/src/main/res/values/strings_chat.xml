@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_chat">Chat</string>
+    <string name="ch_title">Chat ng klase</string>
+    <string name="ch_subtitle_open">Ikaw, ang guro, at ang mga kaklase mo</string>
+    <string name="ch_subtitle_closed">Sarado muna ang chat · puwede ka pang magbasa</string>
+    <string name="ch_hint">Sumulat ng mensahe…</string>
+    <string name="ch_send">Ipadala</string>
+    <string name="ch_older">Tingnan ang mas luma</string>
+    <string name="ch_loading_older">Naglo-load…</string>
+    <string name="ch_today">Ngayon</string>
+    <string name="ch_yesterday">Kahapon</string>
+    <string name="ch_teacher_tag">Guro</string>
+    <string name="ch_teacher_suffix">· GURO</string>
+    <string name="ch_wait">Maghintay lamang ng %1$d segundo…</string>
+    <string name="ch_closed_hint">Sarado ang chat</string>
+    <string name="ch_you">Ikaw</string>
+    <string name="ch_sending">Ipinapadala…</string>
+    <string name="ch_removed_teacher">Tinanggal ng guro ang mensaheng ito</string>
+    <string name="ch_removed_self">Binura ang mensaheng ito</string>
+    <string name="ch_empty_title">Wala pang mensahe</string>
+    <string name="ch_empty_body">Bumati sa iyong guro at mga kaklase! 👋</string>
+    <string name="ch_no_class_title">Wala ka pang klase</string>
+    <string name="ch_no_class_body">Sumali muna sa isang klase sa Mga Aralin para makita ang chat.</string>
+    <string name="ch_closed_banner">Isinara ng guro ang chat. Puwede ka pang magbasa, pero hindi muna magpadala.</string>
+    <string name="ch_too_fast">Sandali lang! Puwede ulit magpadala sa loob ng ilang segundo.</string>
+    <string name="ch_send_failed">Hindi naipadala. Tingnan ang internet at subukan ulit.</string>
+    <string name="ch_load_failed">Hindi ma-load ang chat. Tingnan ang internet.</string>
+    <string name="ch_delete_title">Burahin ang mensahe?</string>
+    <string name="ch_delete_body">Mawawala ito para sa lahat. Puwede lang burahin sa loob ng 5 minuto.</string>
+    <string name="ch_delete_yes">Burahin</string>
+    <string name="ch_delete_no">Huwag</string>
+    <string name="ch_delete_failed">Hindi nabura. Baka lampas na sa 5 minuto.</string>
+    <string name="ch_counter">%1$d/%2$d</string>
+    <string name="ch_unread_cd">May bagong mensahe sa chat</string>
+    <string name="ch_channel_name">Chat ng klase</string>
+    <string name="ch_channel_desc">Mga mensahe ng guro sa chat ng klase</string>
+    <string name="ch_jump">Pumunta sa pinakabagong mensahe</string>
+    <string name="ch_jump_new">Pumunta sa pinakabagong mensahe (%1$d bago)</string>
+    <!-- Class members sheet (the (i) button in the chat header) -->
+    <string name="ch_members">Mga miyembro ng klase</string>
+    <string name="ch_members_eyebrow">MGA MIYEMBRO</string>
+    <string name="ch_members_count">%1$d miyembro</string>
+    <string name="ch_members_teacher">GURO</string>
+    <string name="ch_members_teacher_role">Guro ng klase</string>
+    <string name="ch_members_students">MGA MAG-AARAL</string>
+    <string name="ch_members_you">IKAW</string>
+    <string name="ch_members_no_teacher">Wala pang nakatalagang guro</string>
+    <string name="ch_members_no_teacher_body">Ang admin ng paaralan ang magtatalaga ng guro sa klaseng ito.</string>
+    <string name="ch_members_no_students">Wala pang sumasali sa klase.</string>
+    <string name="ch_members_failed">Hindi ma-load ang mga miyembro. Tingnan ang internet.</string>
+</resources>

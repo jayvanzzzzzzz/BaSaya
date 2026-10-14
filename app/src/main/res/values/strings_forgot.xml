@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Nakalimutan ang password?" on the login screen (LogInActivity). -->
+<resources>
+    <string name="login_forgot_password">Nakalimutan ang password?</string>
+    <string name="forgot_title">Nakalimutan ang password?</string>
+    <string name="forgot_message">Ilagay ang email na ginagamit mo sa pag-login. Padadalhan ka namin ng link para makagawa ng bagong password.</string>
+    <string name="forgot_send">Ipadala</string>
+    <string name="forgot_cancel">Kanselahin</string>
+    <string name="forgot_sending">Ipinapadala…</string>
+    <string name="forgot_error_email_required">Kailangan ang email.</string>
+    <string name="forgot_error_email_invalid">Mukhang mali ang email.</string>
+    <string name="forgot_error_too_many">Masyadong maraming subok. Maghintay ng ilang minuto at subukan muli.</string>
+    <string name="forgot_error_network">Walang koneksyon sa internet. Subukan muli.</string>
+    <string name="forgot_error_generic">May nangyaring mali. Subukan muli.</string>
+    <string name="forgot_sent_title">Tingnan ang iyong email</string>
+    <string name="forgot_sent_message">Kung may BaSaya account ang %1$s, may darating na link doon para makagawa ka ng bagong password. Gumagana ito nang 1 oras. Tingnan din ang Spam folder.\n\nWalang dumating? Ang admin ng paaralan ay maaaring mag-reset ng iyong password.</string>
+    <string name="forgot_sent_ok">Sige</string>
+</resources>

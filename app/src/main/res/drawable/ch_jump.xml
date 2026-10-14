@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chat "go to newest" button: white circle with a lip, like the other chat pills. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="2dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/ch_lip" />
+        </shape>
+    </item>
+    <item android:bottom="2dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+            <stroke android:width="1dp" android:color="@color/ch_line" />
+        </shape>
+    </item>
+</layer-list>

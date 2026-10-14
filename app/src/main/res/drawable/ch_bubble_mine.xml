@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Your own bubble: the app's sky-to-violet gradient with a lip. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ch_mine_lip" />
+            <corners android:topLeftRadius="18dp" android:topRightRadius="18dp"
+                android:bottomRightRadius="6dp" android:bottomLeftRadius="18dp" />
+        </shape>
+    </item>
+    <item android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <gradient android:angle="0" android:startColor="@color/ch_mine_start"
+                android:endColor="@color/ch_mine_end" />
+            <corners android:topLeftRadius="18dp" android:topRightRadius="18dp"
+                android:bottomRightRadius="6dp" android:bottomLeftRadius="18dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The student's own message: gradient bubble on the right, time or "sending…" under it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="end"
+    android:orientation="vertical"
+    android:paddingStart="64dp"
+    android:paddingTop="10dp">
+
+    <TextView
+        android:id="@+id/tvBubble"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ch_bubble_mine"
+        android:fontFamily="@font/be_vietnam_regular"
+        android:paddingStart="14dp"
+        android:paddingTop="9dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        tools:text="Opo, tapos ko na po!" />
+
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="wrap_content"
+        android:layout_height="18dp"
+        android:layout_marginEnd="6dp"
+        android:fontFamily="@font/be_vietnam_medium"
+        android:gravity="center_vertical"
+        android:textColor="@color/ch_ink_soft"
+        android:textSize="11sp"
+        tools:text="8:16 AM" />
+</LinearLayout>

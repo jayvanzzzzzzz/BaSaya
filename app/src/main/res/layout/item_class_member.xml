@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One student in the members sheet (sheet_class_members). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="2dp"
+    android:gravity="center_vertical"
+    android:minHeight="52dp"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="6dp">
+
+    <TextView
+        android:id="@+id/tvMemberAvatar"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/ch_avatar"
+        android:fontFamily="@font/lexend"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:backgroundTint="#4F8BFF"
+        tools:text="JS" />
+
+    <TextView
+        android:id="@+id/tvMemberName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:fontFamily="@font/be_vietnam_semi_bold"
+        android:maxLines="1"
+        android:textColor="@color/ch_ink"
+        android:textSize="15sp"
+        tools:text="Singca, Jay Vanz" />
+
+    <TextView
+        android:id="@+id/tvMemberYou"
+        style="@style/Ch.YouPill"
+        android:visibility="gone"
+        tools:visibility="visible" />
+</LinearLayout>

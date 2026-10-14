@@ -23,6 +23,15 @@ stt.appKey=<the APP_KEY value, or leave empty>
 
 Rebuild the app. With no `stt.workerUrl` the app uses Android speech recognition only.
 
+## Connect the student website
+
+The student website (BaSaya-web `student/`) can't keep `APP_KEY` secret, so it sends the
+student's Firebase sign-in token instead (`Authorization: Bearer …`). The Worker accepts it
+only from the sites in `ALLOWED_ORIGIN` (in `wrangler.jsonc`, comma-separated) and only when
+Firestore accepts the token for the student's own `users/{uid}` profile. Add any other site
+you host the website on to `ALLOWED_ORIGIN`, then deploy again. The app's `X-App-Key` keeps
+working as before.
+
 ## Cost
 
 Workers AI includes 10,000 Neurons per day free. Whisper large-v3-turbo uses about

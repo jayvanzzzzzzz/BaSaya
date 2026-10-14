@@ -18,10 +18,13 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import android.widget.TextView
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.basaya.R
 import com.example.basaya.data.cache.CompletionStateCache
+import com.example.basaya.data.progress.LessonResume
+import com.example.basaya.data.audio.LectureAudioCache
 import com.example.basaya.data.repository.GameStatus
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.ui.activity.PracticeActivity
@@ -30,6 +33,7 @@ import com.example.basaya.ui.game.CrosswordActivity
 import com.example.basaya.ui.quiz.QuizActivity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.basaya.data.cache.ContentCountsCache
 import com.example.basaya.data.database.AppDatabase
@@ -43,6 +47,11 @@ import android.widget.ImageView
 import com.google.android.material.button.MaterialButton
 
 class DashboardActivity : AppCompatActivity() {
+
+    companion object {
+        /** How long the lecture card waits for the audio before asking the child. */
+        private const val LECTURE_AUDIO_WAIT_MS = 10_000L
+    }
 
     private lateinit var gameCard: CardView
     private lateinit var lectureCard: CardView
@@ -61,6 +70,8 @@ class DashboardActivity : AppCompatActivity() {
     private var hasActivityScore = false
     private var hasQuizScore = false
     private var hasPronunciationScore = false
+    private var hasLectureProgress = false
+    private var lectureTotalPages = 0
 
     private lateinit var lectureRepository: LectureRepository
     private lateinit var lessonId: String
@@ -180,13 +191,11 @@ class DashboardActivity : AppCompatActivity() {
                     title = "Tapos na",
                     message = "Natapos mo na ang leksyon na ito. Maaari mo pa rin itong basahin muli anumang oras.",
                     primaryText = "Basahin muli",
-                    onPrimary = {
-                        openContentIfAvailable(LectureActivity::class.java, reviewing = true)
-                    },
+                    onPrimary = { openLecture(reviewing = true) },
                     secondaryText = "Isara"
                 )
             } else {
-                openContentIfAvailable(LectureActivity::class.java)
+                openLecture()
             }
         }
 
@@ -391,6 +400,8 @@ class DashboardActivity : AppCompatActivity() {
                     pronunciationCompletedBadge.visibility = View.GONE
                 }
 
+                showStartedParts(doc)
+
                 completionCache.save(
                     lessonId,
                     CompletionStateCache.State(
@@ -416,11 +427,45 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * A part left halfway (see LessonResume) shows how far the child got, e.g. "2/5 pages",
+     * until it has a score. The has* flags keep loadContentCounts() from writing "0/5" over it.
+     */
+    private fun showStartedParts(doc: DocumentSnapshot) {
+        fun started(part: String): Pair<Int, Int>? {
+            val total = LessonResume.total(doc, part) ?: return null
+            return LessonResume.done(doc, part).coerceAtMost(total) to total
+        }
+        if (lectureFinished) {
+            // Just finished: back to the plain page count.
+            if (hasLectureProgress) tvLectureCount.text = "$lectureTotalPages pages"
+            hasLectureProgress = false
+        } else {
+            started(LessonResume.LECTURE)?.let { (done, total) ->
+                tvLectureCount.text = "$done/$total pages"
+                hasLectureProgress = true
+                lectureTotalPages = total
+            }
+        }
+        if (!hasActivityScore) {
+            started(LessonResume.ACTIVITY)?.let { (done, total) ->
+                tvActivityCount.text = "$done/$total pages"
+                hasActivityScore = true
+            }
+        }
+        if (!hasPronunciationScore) {
+            started(LessonResume.PRONUNCIATION)?.let { (done, total) ->
+                tvPronunciationCount.text = "$done/$total salita"
+                hasPronunciationScore = true
+            }
+        }
+    }
+
     private fun loadContentCounts() {
         if (lessonId.isBlank()) return
 
         countsCache.get(lessonId)?.let { cached ->
-            tvLectureCount.text = "${cached.lecturePages} pages"
+            if (!hasLectureProgress) tvLectureCount.text = "${cached.lecturePages} pages"
             if (!hasGameScore) tvGameCount.text = "0/${cached.gameLevels} levels"
             if (!hasActivityScore) tvActivityCount.text = "0/${cached.activityPages} pages"
             if (!hasQuizScore) tvQuizCount.text = "0/${cached.quizQuestions} questions"
@@ -482,7 +527,7 @@ class DashboardActivity : AppCompatActivity() {
                 val quizQuestions = (quizDoc.get("questions") as? List<*>)?.size ?: 0
                 val pronunciationWordCount = (pronunciationDoc.get("words") as? List<*>)?.size ?: 0
 
-                tvLectureCount.text = "$lecturePages pages"
+                if (!hasLectureProgress) tvLectureCount.text = "$lecturePages pages"
 
                 if (!hasGameScore) {
                     tvGameCount.text = "0/$gameLevels levels"
@@ -534,27 +579,117 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun openContentIfAvailable(destination: Class<out Activity>, reviewing: Boolean = false) {
         lifecycleScope.launch {
-            if (scheduleBlocks(reviewing)) return@launch
+            if (!canOpenContent(reviewing)) return@launch
+            startActivity(
+                Intent(this@DashboardActivity, destination).apply {
+                    putExtra("LESSON_ID", lessonId)
+                }
+            )
+        }
+    }
 
-            val isDownloaded = db.lessonDao()
-                .isLessonDownloaded(lessonId) ?: false
+    /** The schedule allows it and the content is downloaded or online; otherwise says why. */
+    private suspend fun canOpenContent(reviewing: Boolean): Boolean {
+        if (scheduleBlocks(reviewing)) return false
 
-            if (isDownloaded || hasInternetConnection()) {
-                startActivity(
-                    Intent(this@DashboardActivity, destination).apply {
-                        putExtra("LESSON_ID", lessonId)
-                    }
-                )
-            } else {
-                showLessonDialog(
-                    iconRes = R.drawable.ic_download_modern,
-                    title = "Hindi available offline",
-                    message = "Walang internet at hindi pa na-download ang aralin na ito.",
-                    primaryText = "OK"
+        val isDownloaded = db.lessonDao()
+            .isLessonDownloaded(lessonId) ?: false
+
+        if (isDownloaded || hasInternetConnection()) return true
+        showLessonDialog(
+            iconRes = R.drawable.ic_download_modern,
+            title = "Hindi available offline",
+            message = "Walang internet at hindi pa na-download ang aralin na ito.",
+            primaryText = "OK"
+        )
+        return false
+    }
+
+    // ───────────── Lecture: opens only once its first page's audio is ready ─────────────
+
+    private enum class AudioWait { READY, SLOW, FAILED }
+
+    private var preparingLecture = false
+
+    private fun openLecture(reviewing: Boolean = false) {
+        if (preparingLecture) return
+        lifecycleScope.launch {
+            if (!canOpenContent(reviewing)) return@launch
+            setLecturePreparing(true)
+            val wait = try {
+                waitForLectureAudio()
+            } catch (e: Exception) {
+                Log.e("DashboardActivity", "Failed to prepare the lecture audio", e)
+                AudioWait.FAILED
+            } finally {
+                setLecturePreparing(false)
+            }
+
+            when (wait) {
+                AudioWait.READY -> startLecture(muted = false)
+                AudioWait.SLOW, AudioWait.FAILED -> showLessonDialog(
+                    iconRes = R.drawable.ic_speaker_mute,
+                    title = if (wait == AudioWait.SLOW) "Matagal ma-load ang tunog" else "Hindi ma-load ang tunog",
+                    message = if (wait == AudioWait.SLOW) {
+                        "Mabagal ang internet kaya hindi pa handa ang tunog ng aralin."
+                    } else {
+                        "Hindi ma-download ang tunog ng aralin. Suriin ang iyong internet."
+                    },
+                    primaryText = "Subukan muli",
+                    onPrimary = { openLecture(reviewing) },
+                    secondaryText = "Buksan nang walang tunog",
+                    onSecondary = { startLecture(muted = true) }
                 )
             }
         }
     }
+
+    /**
+     * Downloads the audio of the page the lecture opens on (downloaded lessons already have
+     * it). Gives up waiting after 10 s; the download keeps going for "Subukan muli".
+     */
+    private suspend fun waitForLectureAudio(): AudioWait {
+        // No lecture to wait for: LectureActivity says so.
+        val lecture = lectureRepository.getLecture(lessonId)
+            ?.takeIf { it.pages.isNotEmpty() } ?: return AudioWait.READY
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
+        val page = lecture.pages[LessonResume.lectureStartPage(progress, lecture.pages.size)]
+
+        val download = LectureAudioCache.preparePage(this, lessonId, page)
+        val ready = withTimeoutOrNull(LECTURE_AUDIO_WAIT_MS) { download.await() }
+        return when (ready) {
+            null -> AudioWait.SLOW
+            true -> AudioWait.READY
+            false -> AudioWait.FAILED
+        }
+    }
+
+    private fun startLecture(muted: Boolean) {
+        startActivity(
+            Intent(this, LectureActivity::class.java).apply {
+                putExtra("LESSON_ID", lessonId)
+                putExtra(LectureActivity.EXTRA_MUTED, muted)
+            }
+        )
+    }
+
+    /** The lecture card's arrow becomes a spinner, and "Inihahanda…" replaces its page count. */
+    private fun setLecturePreparing(preparing: Boolean) {
+        preparingLecture = preparing
+        findViewById<View>(R.id.lecturePlayIcon).visibility = if (preparing) View.INVISIBLE else View.VISIBLE
+        findViewById<View>(R.id.lecturePreparing).visibility = if (preparing) View.VISIBLE else View.GONE
+        if (preparing) {
+            lectureCountBeforePreparing = tvLectureCount.text
+            tvLectureCount.text = getString(R.string.lesson_dash_preparing)
+        } else {
+            lectureCountBeforePreparing?.let { tvLectureCount.text = it }
+            lectureCountBeforePreparing = null
+        }
+        lectureCard.isEnabled = !preparing
+    }
+
+    private var lectureCountBeforePreparing: CharSequence? = null
 
     /**
      * The teacher's schedule: nothing opens before the open date, and after the deadline only

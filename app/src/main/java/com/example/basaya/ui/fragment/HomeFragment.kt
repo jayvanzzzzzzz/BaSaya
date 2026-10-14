@@ -53,6 +53,14 @@ class HomeFragment : Fragment() {
     private var isRefreshing = false
 
     private var allLessons: List<LessonEntity> = emptyList()
+    // What the list shows now: allLessons filtered by tab and search, in schedule order.
+    private var shownLessons: List<LessonEntity> = emptyList()
+
+    // Lahat / Bukas / Sarado. "Hindi pa bukas" lessons count as Bukas.
+    private enum class LessonTab { ALL, OPEN, CLOSED }
+    private var currentTab = LessonTab.ALL
+    private lateinit var lessonTabs: View
+    private lateinit var tabViews: Map<LessonTab, TextView>
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmptyLessons: TextView
@@ -112,6 +120,20 @@ class HomeFragment : Fragment() {
         etSearch = view.findViewById(R.id.etSearch)
         btnRefresh = view.findViewById(R.id.btnRefresh)
         tvClassName = view.findViewById(R.id.tvClassName)
+        lessonTabs = view.findViewById(R.id.lessonTabs)
+        tabViews = mapOf(
+            LessonTab.ALL to view.findViewById(R.id.tabAll),
+            LessonTab.OPEN to view.findViewById(R.id.tabOpen),
+            LessonTab.CLOSED to view.findViewById(R.id.tabClosed)
+        )
+        tabViews.forEach { (tab, tabView) ->
+            tabView.setOnClickListener {
+                if (tab != currentTab) {
+                    currentTab = tab
+                    showLessons()
+                }
+            }
+        }
 
         var adapter = LessonAdapter(
             emptyList(),
@@ -136,35 +158,8 @@ class HomeFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: android.text.Editable?) {
-                val query = s?.toString()?.trim().orEmpty()
-
-                val filtered = if (query.isEmpty()) {
-                    allLessons
-                } else {
-                    allLessons.filter { it.title.contains(query, ignoreCase = true) }
-                }
-
-                if (filtered.isEmpty()) {
-                    recyclerView.visibility = View.GONE
-
-                    // Only shows "no results" if there WERE lessons to search through —
-                    // otherwise the class-empty state from fetchLessons() already
-                    // covers it and shouldn't be overwritten.
-                    if (allLessons.isNotEmpty()) {
-                        tvEmptyLessons.text = getString(R.string.empty_no_search_results, query)
-
-                        val icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_empty_search)
-                        icon?.setBounds(0, 0, icon.intrinsicWidth, icon.intrinsicHeight)
-                        tvEmptyLessons.setCompoundDrawables(null, icon, null, null)
-
-                        setEmptyVisible(true)
-                    }
-                } else {
-                    recyclerView.visibility = View.VISIBLE
-                    setEmptyVisible(false)
-                }
-
-                this@HomeFragment.adapter.updateList(filtered, query)
+                // With no lessons, the class-empty state from fetchLessons() stays.
+                if (allLessons.isNotEmpty() && currentClassId != null) showLessons()
             }
         })
 
@@ -182,7 +177,55 @@ class HomeFragment : Fragment() {
         emptyStateScroll.visibility = visibility
     }
 
+    /** Fills the list from allLessons: the picked tab, then the search, in schedule order. */
+    private fun showLessons() {
+        val context = requireContext()
+        val closedIds = allLessons
+            .filter { LessonSchedule.availability(context, it) == Availability.CLOSED }
+            .map { it.id }
+            .toSet()
+        val closedCount = closedIds.size
+        tabViews.getValue(LessonTab.ALL).text = getString(R.string.lesson_tab_all, allLessons.size)
+        tabViews.getValue(LessonTab.OPEN).text = getString(R.string.lesson_tab_open, allLessons.size - closedCount)
+        tabViews.getValue(LessonTab.CLOSED).text = getString(R.string.lesson_tab_closed, closedCount)
+        tabViews.forEach { (tab, tabView) -> tabView.isSelected = tab == currentTab }
+        lessonTabs.visibility = View.VISIBLE
+
+        val query = etSearch.text?.toString()?.trim().orEmpty()
+        val inTab = when (currentTab) {
+            LessonTab.ALL -> allLessons
+            LessonTab.OPEN -> allLessons.filter { it.id !in closedIds }
+            LessonTab.CLOSED -> allLessons.filter { it.id in closedIds }
+        }
+        shownLessons = LessonSchedule.sortForList(
+            context,
+            if (query.isEmpty()) inTab else inTab.filter { it.title.contains(query, ignoreCase = true) }
+        )
+
+        if (shownLessons.isEmpty()) {
+            recyclerView.visibility = View.GONE
+            val (iconRes, message) = when {
+                query.isNotEmpty() ->
+                    R.drawable.ic_empty_search to getString(R.string.empty_no_search_results, query)
+                currentTab == LessonTab.CLOSED ->
+                    R.drawable.ic_empty_lessons to getString(R.string.empty_no_closed_lessons)
+                else ->
+                    R.drawable.ic_empty_lessons to getString(R.string.empty_no_open_lessons)
+            }
+            tvEmptyLessons.text = message
+            val icon = ContextCompat.getDrawable(context, iconRes)
+            icon?.setBounds(0, 0, icon.intrinsicWidth, icon.intrinsicHeight)
+            tvEmptyLessons.setCompoundDrawables(null, icon, null, null)
+            setEmptyVisible(true)
+        } else {
+            recyclerView.visibility = View.VISIBLE
+            setEmptyVisible(false)
+        }
+        adapter.updateList(shownLessons, query)
+    }
+
     private fun showEmptyState(state: EmptyLessonsState) {
+        lessonTabs.visibility = View.GONE
         recyclerView.visibility = View.GONE
         setEmptyVisible(true)
 
@@ -212,6 +255,7 @@ class HomeFragment : Fragment() {
         }
 
         loadingContainer.visibility = View.VISIBLE
+        lessonTabs.visibility = View.GONE
         recyclerView.visibility = View.GONE
         setEmptyVisible(false)
 
@@ -322,9 +366,7 @@ class HomeFragment : Fragment() {
             if (lessons.isEmpty()) {
                 showEmptyState(EmptyLessonsState.NO_LESSONS_IN_CLASS)
             } else {
-                recyclerView.visibility = View.VISIBLE
-                setEmptyVisible(false)
-                adapter.updateList(lessons, "")
+                showLessons()
                 applyHighlight()
             }
 
@@ -502,12 +544,17 @@ class HomeFragment : Fragment() {
 
     private fun applyHighlight() {
         val ids = pendingHighlight ?: return
-        val position = allLessons.indexOfFirst { it.id in ids }
-        if (position < 0) return
+        if (allLessons.none { it.id in ids }) return
         pendingHighlight = null
 
-        // The lesson may be hidden by a search.
-        if (etSearch.text.isNotEmpty()) etSearch.setText("")
+        // The lesson may be hidden by a search or another tab.
+        if (etSearch.text.isNotEmpty() || currentTab != LessonTab.ALL) {
+            currentTab = LessonTab.ALL
+            etSearch.setText("") // Its watcher redraws the list...
+            showLessons() // ...unless the search was already empty.
+        }
+        val position = shownLessons.indexOfFirst { it.id in ids }
+        if (position < 0) return
         val offset = (24 * resources.displayMetrics.density).toInt()
         (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
         adapter.highlight(ids)
@@ -529,8 +576,10 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Re-check open dates and deadlines that may have passed while away.
-        if (::adapter.isInitialized) adapter.notifyDataSetChanged()
+        // Re-check open dates and deadlines that may have passed while away
+        // (a lesson can move from Bukas to Sarado).
+        if (allLessons.isNotEmpty() && currentClassId != null && ::tabViews.isInitialized) showLessons()
+        else if (::adapter.isInitialized) adapter.notifyDataSetChanged()
     }
 
     private fun showJoinClassSheet() {

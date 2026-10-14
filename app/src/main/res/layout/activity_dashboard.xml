@@ -209,9 +209,28 @@
                             </com.google.android.flexbox.FlexboxLayout>
                         </LinearLayout>
 
-                        <ImageView
-                            style="@style/Dl.Play"
-                            android:backgroundTint="@color/pg_unawa" />
+                        <!-- The arrow turns into a spinner while the lecture audio downloads -->
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:id="@+id/lecturePlayIcon"
+                                style="@style/Dl.Play"
+                                android:backgroundTint="@color/pg_unawa" />
+
+                            <ProgressBar
+                                android:id="@+id/lecturePreparing"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/pg_circle"
+                                android:backgroundTint="@color/pg_unawa"
+                                android:importantForAccessibility="no"
+                                android:indeterminateTint="@android:color/white"
+                                android:padding="8dp"
+                                android:visibility="gone" />
+                        </FrameLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>

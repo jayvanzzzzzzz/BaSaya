@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Day separator: "Ngayon", "Kahapon" or a date. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="16dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/tvDay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:accessibilityHeading="true"
+        android:background="@drawable/ch_pill"
+        android:fontFamily="@font/be_vietnam_semi_bold"
+        android:paddingStart="14dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="5dp"
+        android:textColor="@color/ch_ink_soft"
+        android:textSize="12sp"
+        tools:text="@string/ch_today" />
+</FrameLayout>

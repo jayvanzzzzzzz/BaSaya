@@ -20,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
+import com.example.basaya.data.auth.PasswordRule
 import com.example.basaya.data.model.User
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
@@ -96,6 +97,7 @@ class RegisterActivity : AppCompatActivity() {
         etLastName.doAfterTextChanged { tilLastName.error = null }
         etEmail.doAfterTextChanged { tilEmail.error = null }
         etPassword.doAfterTextChanged { tilPassword.error = null }
+        PasswordRule.watch(etPassword, findViewById(R.id.passwordRules))
 
         // "Done" on the keyboard submits the form
         etPassword.setOnEditorActionListener { _, actionId, _ ->
@@ -133,8 +135,7 @@ class RegisterActivity : AppCompatActivity() {
         }
         tilPassword.error = when {
             password.isEmpty() -> getString(R.string.login_error_password_required)
-            password.length < 8 -> getString(R.string.register_error_password_short)
-            else -> null
+            else -> PasswordRule.problem(password)?.let { getString(it) }
         }
 
         val firstInvalid = listOf(

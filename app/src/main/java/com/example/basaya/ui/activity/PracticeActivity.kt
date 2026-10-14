@@ -32,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.model.ActivityPage
 import com.example.basaya.data.model.PracticeActivityData
+import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.ActivityRepository
@@ -54,6 +55,7 @@ class PracticeActivity : AppCompatActivity() {
     private var score = 0
     private val checkedPages = mutableSetOf<Int>()
     private var retries = 0
+    private var allAnswered = false
 
     private lateinit var tvPageTag: TextView
     private lateinit var tvActivityTitle: TextView
@@ -135,8 +137,30 @@ class PracticeActivity : AppCompatActivity() {
             tvActivityTitle.text = practiceData.title
             tvInstruction.text = practiceData.instruction
 
+            // Continue where the child closed the Gawain (here or on the website).
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
+            if (progress?.getBoolean("activityFinished") == true) {
+                finish()
+                return@launch
+            }
+            LessonResume.of(progress, LessonResume.ACTIVITY, practiceData.pages.size)?.let { resume ->
+                currentPageIndex = (resume["done"] as Int).coerceAtMost(practiceData.pages.lastIndex)
+                score = (resume["score"] as? Number)?.toInt() ?: 0
+                retries = (resume["retries"] as? Number)?.toInt() ?: 0
+                // A page already checked wrong before closing no longer counts as a first try.
+                if (resume["tried"] == true) checkedPages.add(currentPageIndex)
+                allAnswered = (resume["done"] as Int) >= practiceData.pages.size
+            }
+
             setupProgressTrack()
             showPage(currentPageIndex, animateIn = false)
+
+            // Every page was answered before closing: only the result is left to save.
+            if (allAnswered) {
+                finishActivity()
+                return@launch
+            }
 
             btnAction.setOnClickListener {
                 pressBounce(btnAction)
@@ -353,9 +377,10 @@ class PracticeActivity : AppCompatActivity() {
         // separately so they still show up in the student's progress.
         val firstCheck = checkedPages.add(currentPageIndex)
         if (!isCorrect) retries++
+        if (isCorrect && firstCheck) score++
+        savePlace(if (isCorrect) currentPageIndex + 1 else currentPageIndex)
 
         if (isCorrect) {
-            if (firstCheck) score++
             val text = if (correctSet.isEmpty()) {
                 getString(R.string.ac_no_answer_set)
             } else {
@@ -374,6 +399,21 @@ class PracticeActivity : AppCompatActivity() {
             showFeedback(good = false, text = "${getString(R.string.ac_try_again)} $explanation".trim())
             setButton(R.string.ac_retry, R.drawable.ac_btn_retry)
         }
+    }
+
+    /** Saves the place: `done` pages finished, and whether page `done` was already tried. */
+    private fun savePlace(done: Int) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        LessonResume.save(
+            uid, lessonId, LessonResume.ACTIVITY,
+            mapOf(
+                "done" to done,
+                "total" to practiceData.pages.size,
+                "score" to score,
+                "retries" to retries,
+                "tried" to (done == currentPageIndex)
+            )
+        )
     }
 
     private fun goToNext() {
@@ -405,6 +445,7 @@ class PracticeActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     Log.e("PracticeActivity", "Failed to save activity result", e)
                 }
+                LessonResume.clear(uid, lessonId, LessonResume.ACTIVITY)
 
                 // Pagkilala sa salita skill
                 try {

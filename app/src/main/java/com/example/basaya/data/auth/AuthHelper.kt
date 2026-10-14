@@ -28,6 +28,12 @@ class AuthHelper {
             }
     }
 
+    // Email a password reset link. The callback gets null on success, else the error.
+    fun sendPasswordReset(email: String, onResult: (Exception?) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task -> onResult(task.exception) }
+    }
+
     // Get current user
     fun getCurrentUser() = auth.currentUser
 

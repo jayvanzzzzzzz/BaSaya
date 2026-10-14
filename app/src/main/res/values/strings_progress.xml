@@ -48,7 +48,7 @@
 
     <string name="pg_trend_up">↑ Umaangat</string>
     <string name="pg_trend_down">↓ Bumaba</string>
-    <string name="pg_percent">%1$d%%</string>
+    <string name="pg_percent">%1$d</string>
     <string name="pg_fraction">%1$d/%2$d</string>
     <string name="pg_skill_cd">%1$s: %2$s, %3$s, %4$d sa 3 bituin</string>
 </resources>

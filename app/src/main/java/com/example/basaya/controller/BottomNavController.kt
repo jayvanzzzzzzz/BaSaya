@@ -23,7 +23,7 @@ class BottomNavController(
     private val underline: View,
     private val items: List<NavItem>,
     @param:ColorRes private val tabColors: List<Int> = listOf(
-        R.color.nav_tab_home, R.color.nav_tab_progress, R.color.nav_tab_profile
+        R.color.nav_tab_home, R.color.nav_tab_progress, R.color.nav_tab_chat, R.color.nav_tab_profile
     ),
     private val onSelected: (Int) -> Unit
 ) {
@@ -52,12 +52,20 @@ class BottomNavController(
     private fun colorFor(index: Int) = ContextCompat.getColor(context, tabColors[index % tabColors.size])
 
     fun selectTab(index: Int, animate: Boolean) {
-        val container = items[index].container
         val icon = items[index].icon
 
         // Center the bubble on the active icon, relative to the shared FrameLayout
-        val targetX = container.left + icon.left + icon.width / 2f - underline.width / 2f
-        val targetY = container.top + icon.top + icon.height / 2f - underline.height / 2f
+        // (the icon may sit inside a wrapper, e.g. Chat's icon + unread dot).
+        var iconX = 0f
+        var iconY = 0f
+        var view: View = icon
+        while (view !== underline.parent && view.parent is View) {
+            iconX += view.left
+            iconY += view.top
+            view = view.parent as View
+        }
+        val targetX = iconX + icon.width / 2f - underline.width / 2f
+        val targetY = iconY + icon.height / 2f - underline.height / 2f
         val targetColor = colorFor(index)
 
         if (animate) {

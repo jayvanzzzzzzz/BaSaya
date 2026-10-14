@@ -105,6 +105,7 @@
     <string name="lesson_dash_quiz_sub">Subukan ang iyong galing</string>
     <string name="lesson_dash_done">Tapos na</string>
     <string name="lesson_dash_locked_msg">Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
+    <string name="lesson_dash_preparing">Inihahanda…</string>
     <string name="lesson_dash_locked_cd">Naka-lock. Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
     <string name="lesson_dash_count_placeholder">…</string>
 
@@ -125,7 +126,7 @@
     <string name="register_section_name">Ang iyong pangalan</string>
     <string name="register_section_account">Ang iyong account</string>
     <string name="register_optional">Opsyonal</string>
-    <string name="register_password_helper">Hindi bababa sa 8 karakter</string>
+    <string name="register_password_helper">8+ karakter, may maliit at malaking titik, at numero</string>
     <string name="register_action">Gumawa ng account</string>
     <string name="register_in_progress">Ginagawa ang account…</string>
     <string name="register_have_account">May account na?</string>
