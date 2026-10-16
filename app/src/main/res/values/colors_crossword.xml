@@ -28,4 +28,13 @@
     <color name="cw_wheel_glow">#59FFFFFF</color>
     <color name="cw_tile_empty">#FFFFFF</color>
     <color name="cw_tile_empty_lip">#C5D3E6</color>
+    <!-- Level complete: "next level" (orange) and "all done" (green) candy buttons -->
+    <color name="cw_next_top">#FFB347</color>
+    <color name="cw_next_bottom">#FF7A2F</color>
+    <color name="cw_next_lip">#D4561A</color>
+    <color name="cw_done_top">#6EDB6A</color>
+    <color name="cw_done_bottom">#2FB457</color>
+    <color name="cw_done_lip">#1E8A3E</color>
+    <color name="cw_btn_shine">#4DFFFFFF</color>
+    <color name="cw_btn_text_shadow">#40000000</color>
 </resources>

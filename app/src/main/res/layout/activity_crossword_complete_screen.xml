@@ -107,16 +107,34 @@
         app:layout_constraintStart_toStartOf="@id/progressBar"
         app:layout_constraintEnd_toEndOf="@id/progressBar" />
 
-    <Button
+    <!-- Chunky candy button (orange "next level" / green "all done", set in code). Pops in, then breathes. -->
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnNext"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="44dp"
+        android:background="@drawable/cw_btn_next"
+        android:drawableEnd="@drawable/ic_lesson_chevron"
+        android:drawablePadding="10dp"
+        android:fontFamily="@font/lexend"
+        android:gravity="center"
+        android:minWidth="240dp"
+        android:paddingStart="34dp"
+        android:paddingTop="0dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="6dp"
+        android:shadowColor="@color/cw_btn_text_shadow"
+        android:shadowDy="3"
+        android:shadowRadius="1"
+        android:stateListAnimator="@null"
+        android:text="@string/cw_next_level"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textSize="21sp"
+        android:textStyle="bold"
+        app:drawableTint="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar"
-
-        android:text="Next"
-        android:layout_marginTop="40dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

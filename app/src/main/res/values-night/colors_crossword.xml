@@ -22,4 +22,14 @@
     <color name="cw_wheel_glow">#338EA2FF</color>
     <color name="cw_tile_empty">@color/ns_surface_raised</color>
     <color name="cw_tile_empty_lip">@color/ns_lip</color>
+
+    <!-- Candy buttons stay bright on the night sky; only the lips get deeper. -->
+    <color name="cw_next_top">#FFB347</color>
+    <color name="cw_next_bottom">#FF7A2F</color>
+    <color name="cw_next_lip">#A8400F</color>
+    <color name="cw_done_top">#6EDB6A</color>
+    <color name="cw_done_bottom">#2FB457</color>
+    <color name="cw_done_lip">#16692E</color>
+    <color name="cw_btn_shine">#40FFFFFF</color>
+    <color name="cw_btn_text_shadow">#59000000</color>
 </resources>

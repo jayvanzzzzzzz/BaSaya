@@ -152,6 +152,8 @@
     <string name="cw_level">Antas %1$d</string>
     <string name="cw_progress">%1$d/%2$d</string>
     <string name="cw_progress_cd">%1$d sa %2$d na salita ang nahanap</string>
+    <string name="cw_next_level">Susunod na antas</string>
+    <string name="cw_all_done">Tapos na!</string>
     <!-- Pronunciation -->
     <string name="pr_instruction_default">Bigkasin ang salitang ito.</string>
     <string name="pr_close">Isara</string>

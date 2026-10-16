@@ -1,12 +1,23 @@
 package com.example.basaya.ui.game
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.TextViewCompat
+import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -25,6 +36,7 @@ class CrosswordCompleteScreen : AppCompatActivity() {
     private lateinit var lessonId: String
     private lateinit var tvLessonTitle: TextView
     private lateinit var tvLevel: TextView
+    private var buttonPulse: ObjectAnimator? = null
 
     private val db by lazy {
         AppDatabase.getDatabase(this)
@@ -57,6 +69,9 @@ class CrosswordCompleteScreen : AppCompatActivity() {
         levelBox.scaleX = 0.85f
         levelBox.scaleY = 0.85f
 
+        // Hidden until the level loads; popInButton() brings it in.
+        btnNext.alpha = 0f
+
         lifecycleScope.launch {
 
             val lessonDocument = firestore
@@ -84,9 +99,10 @@ class CrosswordCompleteScreen : AppCompatActivity() {
 
             if (currentLevel < allLevels) {
 
-                btnNext.text = "NEXT"
+                styleButton(R.string.cw_next_level, R.drawable.cw_btn_next, R.drawable.ic_lesson_chevron)
 
                 btnNext.setOnClickListener {
+                    it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
 
                     startActivity(
                         Intent(
@@ -110,9 +126,10 @@ class CrosswordCompleteScreen : AppCompatActivity() {
                 progressBar.progress = allLevels
                 progressText.text = "$allLevels / $allLevels"
 
-                btnNext.text = "COMPLETE"
+                styleButton(R.string.cw_all_done, R.drawable.cw_btn_done, R.drawable.cw_ic_star)
 
                 btnNext.setOnClickListener {
+                    it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     finish()
                 }
             }
@@ -149,7 +166,47 @@ class CrosswordCompleteScreen : AppCompatActivity() {
                 .setDuration(400)
                 .start()
 
+            popInButton()
         }
 
+    }
+
+    override fun onDestroy() {
+        buttonPulse?.cancel()
+        super.onDestroy()
+    }
+
+    private fun styleButton(@StringRes text: Int, @DrawableRes background: Int, @DrawableRes icon: Int) {
+        btnNext.setText(text)
+        btnNext.setBackgroundResource(background)
+        btnNext.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, icon, 0)
+        TextViewCompat.setCompoundDrawableTintList(btnNext, ColorStateList.valueOf(Color.WHITE))
+    }
+
+    /** The button bounces in after the level card, then gently "breathes" to invite a tap. */
+    private fun popInButton() {
+        btnNext.scaleX = 0.6f
+        btnNext.scaleY = 0.6f
+        btnNext.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setStartDelay(750)
+            .setDuration(450)
+            .setInterpolator(OvershootInterpolator(2.2f))
+            .withEndAction {
+                buttonPulse = ObjectAnimator.ofPropertyValuesHolder(
+                    btnNext,
+                    PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.06f, 1f),
+                    PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.06f, 1f)
+                ).apply {
+                    duration = 1400
+                    startDelay = 400
+                    repeatCount = ValueAnimator.INFINITE
+                    interpolator = AccelerateDecelerateInterpolator()
+                    start()
+                }
+            }
+            .start()
     }
 }
