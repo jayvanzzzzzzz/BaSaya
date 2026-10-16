@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Practice (Gawain) screen: mint art desk, candy word tiles. -->
+<!-- Practice (Gawain) screen: mint art desk, candy word tiles. Dark variants live in values-night/colors_practice.xml. -->
 <resources>
     <color name="ac_bg_top">#BFEFDD</color>
     <color name="ac_bg_mid">#E2F8EF</color>
@@ -30,4 +30,12 @@
     <color name="ac_good_text">#1E7A3C</color>
     <color name="ac_retry_bg">#FFE6E0</color>
     <color name="ac_retry_text">#B23A2E</color>
+    <!-- Cards, chips, pills and scenery -->
+    <color name="ac_surface">#FFFFFF</color>
+    <color name="ac_pill">#B3FFFFFF</color>
+    <color name="ac_on_pick">#1F2D3D</color>
+    <color name="ac_star_off">#C9D8E6</color>
+    <color name="ac_track_done_start">#7ED67F</color>
+    <color name="ac_wave_back">#D4F3E6</color>
+    <color name="ac_wave_front">#BDEBD8</color>
 </resources>

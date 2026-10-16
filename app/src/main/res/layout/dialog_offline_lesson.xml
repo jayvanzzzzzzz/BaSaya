@@ -29,7 +29,7 @@
         android:fontFamily="@font/lexend"
         android:gravity="center"
         android:text="Hindi available offline"
-        android:textColor="#25231D"
+        android:textColor="@color/dlg_ink"
         android:textSize="19sp"
         android:textStyle="bold" />
 
@@ -41,7 +41,7 @@
         android:fontFamily="@font/quicksand_medium"
         android:gravity="center"
         android:lineSpacingExtra="3dp"
-        android:textColor="#686257"
+        android:textColor="@color/dlg_offline_body"
         android:textSize="14sp" />
 
     <com.google.android.material.button.MaterialButton
@@ -54,7 +54,7 @@
         android:textAllCaps="false"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:backgroundTint="#315EAE"
+        app:backgroundTint="@color/dlg_action"
         app:cornerRadius="16dp" />
 
 </LinearLayout>

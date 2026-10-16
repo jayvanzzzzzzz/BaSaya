@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night hills: moonlit blue-green layers, sleepy trees and glowing fireflies. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="190dp"
+    android:viewportWidth="360"
+    android:viewportHeight="190">
+    <!-- far hill -->
+    <path
+        android:fillColor="#1D3B4A"
+        android:pathData="M0,80 C60,30 130,40 185,78 C235,112 300,38 360,62 L360,190 L0,190 Z" />
+    <!-- trees on the far hill -->
+    <path
+        android:fillColor="#3A2E3A"
+        android:pathData="M72,52 h4 v20 h-4z M292,46 h4 v18 h-4z" />
+    <path
+        android:fillColor="#245447"
+        android:pathData="M60,46 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0z M282,42 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0z" />
+    <!-- middle hill -->
+    <path
+        android:fillColor="#1A4A43"
+        android:pathData="M0,122 C70,82 150,96 215,120 C270,140 318,104 360,108 L360,190 L0,190 Z" />
+    <!-- fireflies -->
+    <path
+        android:fillColor="#4DFFE066"
+        android:pathData="M44,118 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0z M244,126 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0z M118,96 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0z" />
+    <path
+        android:fillColor="#FFE066"
+        android:pathData="M49,118 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0z M249,126 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0z M122,96 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0z" />
+    <path
+        android:fillColor="#FF8DBF"
+        android:pathData="M120,112 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0z M330,116 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0z" />
+    <!-- front hill -->
+    <path
+        android:fillColor="#13362F"
+        android:pathData="M0,158 C90,132 200,168 270,150 C310,140 340,146 360,150 L360,190 L0,190 Z" />
+</vector>

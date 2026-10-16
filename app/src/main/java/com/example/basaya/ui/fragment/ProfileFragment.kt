@@ -22,8 +22,10 @@ import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.auth.PasswordRule
 import com.example.basaya.ui.LogInActivity
+import com.example.basaya.ui.theme.ThemeMode
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
@@ -113,6 +115,7 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.btnEditProfile).setOnClickListener { showEditSheet() }
         view.findViewById<View>(R.id.rowChangePassword).setOnClickListener { showPasswordSheet() }
         view.findViewById<MaterialButton>(R.id.btnLogout).setOnClickListener { confirmLogout() }
+        setupThemePicker(view.findViewById(R.id.pfThemeGroup))
         setupAppVersion(view.findViewById(R.id.pfVersion))
 
         loadProfile()
@@ -552,6 +555,23 @@ class ProfileFragment : Fragment() {
                 btnSave.isEnabled = true
                 btnSave.setText(R.string.pf_password_save)
             }
+        }
+    }
+
+    // ───────────────────────────── Theme ─────────────────────────────
+
+    /** System / Light / Dark. Picking one re-themes the app right away (screens are recreated). */
+    private fun setupThemePicker(group: MaterialButtonToggleGroup) {
+        val buttons = mapOf(
+            ThemeMode.SYSTEM to R.id.pfThemeSystem,
+            ThemeMode.LIGHT to R.id.pfThemeLight,
+            ThemeMode.DARK to R.id.pfThemeDark
+        )
+        group.check(buttons.getValue(ThemeMode.saved(requireContext())))
+        group.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val mode = buttons.entries.first { it.value == checkedId }.key
+            if (mode != ThemeMode.saved(requireContext())) ThemeMode.choose(requireContext(), mode)
         }
     }
 

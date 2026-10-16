@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lecture screen (storybook style). Light-only, like the rest of the lesson flow. -->
+<!-- Lecture screen (storybook style, light). Dark variants live in values-night/colors_lecture.xml. -->
 <resources>
     <color name="lecture_bg_top">#DCEBFF</color>
     <color name="lecture_bg_bottom">#FFF6E6</color>
@@ -14,4 +14,5 @@
     <color name="lecture_progress_track">#C9DAF8</color>
     <color name="lecture_button_surface">#FFFFFF</color>
     <color name="lecture_button_stroke">#D5E2FA</color>
+    <color name="lecture_ripple">#332D63D7</color>
 </resources>

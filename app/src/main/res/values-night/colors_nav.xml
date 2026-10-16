@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom nav (dark): indigo card, slightly brighter bubbles so the white icons pop. -->
+<resources>
+    <color name="nav_surface">@color/ns_surface</color>
+    <color name="nav_inactive">@color/ns_ink_faint</color>
+    <color name="nav_tab_home">#5B8CFF</color>
+    <color name="nav_tab_progress">#2BAA5A</color>
+    <color name="nav_tab_chat">#FF7F50</color>
+    <color name="nav_tab_profile">#9575F5</color>
+</resources>

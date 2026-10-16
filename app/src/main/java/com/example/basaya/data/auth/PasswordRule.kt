@@ -1,10 +1,10 @@
 package com.example.basaya.data.auth
 
-import android.graphics.Color
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import com.example.basaya.R
 
@@ -48,7 +48,7 @@ object PasswordRule {
             line.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 if (met) R.drawable.ic_rule_met else R.drawable.ic_rule_pending, 0, 0, 0
             )
-            line.setTextColor(Color.parseColor(if (met) "#26334D" else "#778199"))
+            line.setTextColor(ContextCompat.getColor(line.context, if (met) R.color.pw_rule_met else R.color.pw_rule_pending))
         }
         input.doAfterTextChanged { update(it?.toString().orEmpty()) }
         update(input.text?.toString().orEmpty())

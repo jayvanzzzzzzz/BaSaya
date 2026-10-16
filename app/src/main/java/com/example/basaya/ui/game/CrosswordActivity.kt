@@ -137,7 +137,7 @@ class CrosswordActivity : AppCompatActivity() {
 
         val leftOffset = (boardWidth - gridWidth) / 2 + boardPadding
         val topOffset = (boardHeight - gridHeight) / 2 + boardPadding
-        val emptyTile = CandyTile.create(CandyTile.EMPTY, cellSizePx)
+        val emptyTile = CandyTile.create(CandyTile.empty(this), cellSizePx)
 
         grid.placements.forEach { placement ->
             val word = words[placement.wordIndex]

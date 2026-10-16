@@ -4,6 +4,6 @@
     <gradient
         android:angle="0"
         android:endColor="@color/ac_track_done"
-        android:startColor="#7ED67F" />
+        android:startColor="@color/ac_track_done_start" />
     <corners android:radius="100dp" />
 </shape>

@@ -8,6 +8,6 @@
     <path
         android:pathData="M8,1.75a6.25,6.25 0,1 1,0 12.5a6.25,6.25 0,1 1,0 -12.5z"
         android:strokeWidth="1.5"
-        android:strokeColor="#B7C0D1"
+        android:strokeColor="@color/pw_rule_ring"
         android:fillColor="#00000000" />
 </vector>

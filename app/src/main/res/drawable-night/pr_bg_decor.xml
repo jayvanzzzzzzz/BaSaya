@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night version: soft glows, music notes that glow on the dark stage. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="300dp"
+    android:viewportWidth="360"
+    android:viewportHeight="300">
+    <!-- soft light blobs -->
+    <path
+        android:fillColor="#1AFF8DBF"
+        android:pathData="M-30,40 a80,80 0 1,0 160,0 a80,80 0 1,0 -160,0z" />
+    <path
+        android:fillColor="#146CC8FF"
+        android:pathData="M250,190 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0z" />
+    <!-- beamed music notes (left) -->
+    <path
+        android:fillColor="#99FF8D7A"
+        android:pathData="M31,150 a9,7 0 1,0 18,0 a9,7 0 1,0 -18,0z M57,144 a9,7 0 1,0 18,0 a9,7 0 1,0 -18,0z M46,150 V114 H49.5 V150z M72,144 V108 H75.5 V144z M46,114 L75.5,106 V113 L46,121z" />
+    <!-- single music note (right) -->
+    <path
+        android:fillColor="#8040D9C9"
+        android:pathData="M291,92 a9,7 0 1,0 18,0 a9,7 0 1,0 -18,0z M306,92 V52 H309.5 V92z M309.5,52 c10,6 14,12 10,24 c-2,-8 -6,-12 -10,-14z" />
+    <!-- stars -->
+    <path
+        android:fillColor="#99FFC93C"
+        android:pathData="M120,60 l4,9 10,1 -7.5,6.5 2.5,9.5 -9,-5 -9,5 2.5,-9.5 -7.5,-6.5 10,-1z" />
+    <path
+        android:fillColor="#B3FFFFFF"
+        android:pathData="M258,150 l3,6.5 7,0.8 -5.3,4.6 1.7,6.8 -6.4,-3.6 -6.4,3.6 1.7,-6.8 -5.3,-4.6 7,-0.8z" />
+    <path
+        android:fillColor="#80FFC93C"
+        android:pathData="M330,240 l2.5,5.5 6,0.6 -4.5,3.9 1.4,5.8 -5.4,-3 -5.4,3 1.4,-5.8 -4.5,-3.9 6,-0.6z" />
+    <!-- tiny dots -->
+    <path
+        android:fillColor="#B3FFFFFF"
+        android:pathData="M200,40 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0z M70,230 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0z M180,250 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0z" />
+</vector>

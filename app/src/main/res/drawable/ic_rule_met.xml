@@ -7,7 +7,7 @@
     android:viewportHeight="16">
     <path
         android:pathData="M8,1a7,7 0,1 1,0 14a7,7 0,1 1,0 -14z"
-        android:fillColor="#24994A" />
+        android:fillColor="@color/pw_rule_check_bg" />
     <path
         android:pathData="M4.8,8.2l2.1,2.1l4.3,-4.4"
         android:strokeWidth="1.6"

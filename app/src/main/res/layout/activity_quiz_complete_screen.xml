@@ -135,7 +135,7 @@
                             android:max="100"
                             app:indicatorColor="@color/qz_gold"
                             app:indicatorSize="150dp"
-                            app:trackColor="#EEE9FF"
+                            app:trackColor="@color/qz_track"
                             app:trackCornerRadius="8dp"
                             app:trackThickness="14dp" />
 
@@ -179,7 +179,7 @@
                         android:paddingTop="4dp"
                         android:paddingEnd="16dp"
                         android:paddingBottom="7dp"
-                        android:textColor="@color/qz_ink"
+                        android:textColor="@color/qz_on_gold"
                         android:textSize="16sp"
                         tools:text="80%" />
 

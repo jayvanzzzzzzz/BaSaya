@@ -23,7 +23,7 @@
         android:layout_marginTop="22dp"
         android:fontFamily="@font/lexend"
         android:text="@string/join_class_sheet_title"
-        android:textColor="#182230"
+        android:textColor="@color/sheet_title"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:text="@string/join_class_sheet_message"
-        android:textColor="#667085"
+        android:textColor="@color/sheet_body"
         android:textSize="14sp" />
 
     <com.google.android.material.button.MaterialButton
@@ -46,13 +46,13 @@
         android:paddingEnd="18dp"
         android:text="@string/enter_class"
         android:textAllCaps="false"
-        android:textColor="#2D63D7"
+        android:textColor="@color/sheet_action"
         android:textSize="15sp"
         android:textStyle="bold"
-        app:backgroundTint="#EAF1FF"
+        app:backgroundTint="@color/sheet_action_bg"
         app:cornerRadius="18dp"
         app:icon="@drawable/ic_join_class"
         app:iconGravity="textStart"
         app:iconPadding="12dp"
-        app:iconTint="#2D63D7" />
+        app:iconTint="@color/sheet_action" />
 </LinearLayout>

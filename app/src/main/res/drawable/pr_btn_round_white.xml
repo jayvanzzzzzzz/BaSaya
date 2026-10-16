@@ -7,7 +7,7 @@
     </item>
     <item android:bottom="3dp">
         <shape android:shape="oval">
-            <solid android:color="#FFFFFF" />
+            <solid android:color="@color/pr_surface" />
         </shape>
     </item>
 </layer-list>

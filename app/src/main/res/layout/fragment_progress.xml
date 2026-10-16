@@ -98,7 +98,8 @@
                 android:layout_width="78dp"
                 android:layout_height="78dp"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/pg_circle">
+                android:background="@drawable/pg_circle"
+                android:backgroundTint="@color/pg_surface">
 
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/progressLessons"

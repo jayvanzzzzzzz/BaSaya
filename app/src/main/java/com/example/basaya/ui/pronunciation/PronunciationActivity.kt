@@ -34,7 +34,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.audio.PronunciationAudioStore
@@ -49,6 +48,7 @@ import com.example.basaya.speech.PronunciationScorer
 import com.example.basaya.speech.VoiceRecorder
 import com.example.basaya.speech.WhisperSttClient
 import com.example.basaya.ui.game.ConfettiView
+import com.example.basaya.ui.theme.useDarkStatusBarIconsInLightTheme
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -149,7 +149,7 @@ class PronunciationActivity : AppCompatActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        useDarkStatusBarIconsInLightTheme()
 
         lessonId = intent.getStringExtra(EXTRA_LESSON_ID) ?: ""
 

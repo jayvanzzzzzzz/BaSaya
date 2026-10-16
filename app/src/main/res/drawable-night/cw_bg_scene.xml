@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night crossword sky: deep navy gradient, scattered stars, moonlit hills along the bottom. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/cw_sky_mid"
+                android:endColor="@color/cw_sky_bottom"
+                android:startColor="@color/cw_sky_top" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/ns_stars"
+        android:gravity="top|fill_horizontal"
+        android:height="300dp" />
+    <item
+        android:drawable="@drawable/cw_hills"
+        android:gravity="bottom|fill_horizontal"
+        android:height="190dp" />
+</layer-list>

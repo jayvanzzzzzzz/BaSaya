@@ -2,12 +2,12 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="oval">
-            <solid android:color="#59FFFFFF" />
+            <solid android:color="@color/cw_wheel_glow" />
         </shape>
     </item>
     <item android:bottom="8dp" android:left="8dp" android:right="8dp" android:top="8dp">
         <shape android:shape="oval">
-            <solid android:color="#FFFFFF" />
+            <solid android:color="@color/cw_surface" />
             <stroke android:width="5dp" android:color="@color/cw_wheel_ring" />
         </shape>
     </item>

@@ -81,4 +81,21 @@
         <item name="android:layout_marginStart">56dp</item>
         <item name="android:background">@drawable/pf_divider</item>
     </style>
+    <!-- One segment of the System / Light / Dark picker -->
+    <style name="Pf.ThemeOption" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/pf_theme_option_text</item>
+        <item name="android:textSize">13sp</item>
+        <item name="backgroundTint">@color/pf_theme_option_bg</item>
+        <item name="strokeColor">@color/pg_divider</item>
+        <item name="strokeWidth">1.5dp</item>
+    </style>
 </resources>

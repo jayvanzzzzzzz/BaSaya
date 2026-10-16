@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night art desk: teal-to-navy sky, stars, glowing doodles and a dark wave. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/ac_bg_mid"
+                android:endColor="@color/ac_bg_bottom"
+                android:startColor="@color/ac_bg_top" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/ns_stars"
+        android:gravity="top|fill_horizontal"
+        android:height="300dp" />
+    <item
+        android:drawable="@drawable/ac_bg_decor"
+        android:gravity="top|fill_horizontal"
+        android:height="280dp" />
+    <item
+        android:drawable="@drawable/ac_bg_wave"
+        android:gravity="bottom|fill_horizontal"
+        android:height="160dp" />
+</layer-list>

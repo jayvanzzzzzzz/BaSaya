@@ -3,14 +3,14 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:top="4dp">
         <shape android:shape="rectangle">
-            <solid android:color="#CFC3FF" />
+            <solid android:color="@color/pg_unread_lip" />
             <corners android:radius="22dp" />
         </shape>
     </item>
     <item android:bottom="4dp">
         <shape android:shape="rectangle">
-            <solid android:color="#FBFAFF" />
-            <stroke android:width="1.5dp" android:color="#DCD3FF" />
+            <solid android:color="@color/pg_unread_bg" />
+            <stroke android:width="1.5dp" android:color="@color/pg_unread_stroke" />
             <corners android:radius="22dp" />
         </shape>
     </item>

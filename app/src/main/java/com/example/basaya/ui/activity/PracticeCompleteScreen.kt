@@ -15,10 +15,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.example.basaya.R
 import com.example.basaya.ui.game.ConfettiView
 import com.example.basaya.ui.pronunciation.PronunciationBookView
+import com.example.basaya.ui.theme.useDarkStatusBarIconsInLightTheme
 
 class PracticeCompleteScreen : AppCompatActivity() {
 
@@ -34,7 +34,7 @@ class PracticeCompleteScreen : AppCompatActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        useDarkStatusBarIconsInLightTheme()
 
         val score = intent.getIntExtra("SCORE", 0)
         val total = intent.getIntExtra("TOTAL", 1)

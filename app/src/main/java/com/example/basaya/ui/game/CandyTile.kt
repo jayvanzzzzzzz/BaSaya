@@ -1,9 +1,12 @@
 package com.example.basaya.ui.game
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
+import androidx.core.content.ContextCompat
+import com.example.basaya.R
 
 /** Builds the 3D "candy" tile used for crossword cells: a darker lip under a bright face. */
 internal object CandyTile {
@@ -21,7 +24,11 @@ internal object CandyTile {
         Colors(Color.parseColor("#2FA84F"), Color.parseColor("#1F8139"))  // green
     )
 
-    val EMPTY = Colors(Color.WHITE, Color.parseColor("#C5D3E6"))
+    /** An unsolved cell; follows light/dark mode. */
+    fun empty(context: Context) = Colors(
+        ContextCompat.getColor(context, R.color.cw_tile_empty),
+        ContextCompat.getColor(context, R.color.cw_tile_empty_lip)
+    )
 
     fun create(colors: Colors, sizePx: Int): Drawable {
         val radius = sizePx * 0.22f

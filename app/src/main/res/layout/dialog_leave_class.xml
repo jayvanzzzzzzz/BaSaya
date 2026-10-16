@@ -25,7 +25,7 @@
         android:layout_marginTop="10dp"
         android:fontFamily="@font/lexend"
         android:gravity="center"
-        android:textColor="#25231D"
+        android:textColor="@color/dlg_ink"
         android:textSize="20sp"
         android:textStyle="bold"
         tools:text="Aalis ka ba sa klase?" />
@@ -38,7 +38,7 @@
         android:fontFamily="@font/quicksand_medium"
         android:gravity="center"
         android:lineSpacingExtra="3dp"
-        android:textColor="#6B675D"
+        android:textColor="@color/dlg_body"
         android:textSize="14sp"
         tools:text="Kapag pumayag ang iyong guro, aalis ka sa Grade 8 - Aguinaldo." />
 
@@ -71,7 +71,7 @@
         android:fontFamily="@font/be_vietnam_bold"
         android:textAllCaps="false"
         android:textSize="15sp"
-        app:backgroundTint="#D64545"
+        app:backgroundTint="@color/dlg_danger"
         app:cornerRadius="16dp"
         tools:text="Humiling na umalis" />
 
@@ -85,7 +85,7 @@
         android:focusable="true"
         android:fontFamily="@font/be_vietnam_bold"
         android:gravity="center"
-        android:textColor="#315EAE"
+        android:textColor="@color/dlg_action"
         android:textSize="14sp"
         tools:text="Manatili sa klase" />
 </LinearLayout>

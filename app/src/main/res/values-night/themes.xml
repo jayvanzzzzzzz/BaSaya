@@ -1,7 +1,35 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Dark ("Night Sky") theme: deep navy, indigo surfaces, violet primary. -->
     <style name="Base.Theme.BaSaya" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/ns_violet</item>
+        <item name="colorOnPrimary">@color/ns_on_accent</item>
+        <item name="colorPrimaryContainer">#3B2F7A</item>
+        <item name="colorOnPrimaryContainer">#E8DEFF</item>
+        <item name="colorSecondary">@color/ns_periwinkle</item>
+        <item name="colorOnSecondary">@color/ns_on_accent</item>
+        <item name="colorSecondaryContainer">@color/ns_violet_tint</item>
+        <item name="colorOnSecondaryContainer">#E8DEFF</item>
+        <item name="colorTertiary">@color/ns_mint</item>
+        <item name="colorOnTertiary">@color/ns_on_accent</item>
+        <item name="colorTertiaryContainer">@color/ns_mint_tint</item>
+        <item name="colorOnTertiaryContainer">#C8F7DD</item>
+        <item name="colorError">#FF8A95</item>
+        <item name="colorOnError">#4A0A14</item>
+        <item name="colorErrorContainer">@color/ns_coral_tint</item>
+        <item name="colorOnErrorContainer">#FFD9DD</item>
+
+        <item name="android:colorBackground">@color/ns_bg</item>
+        <item name="colorOnBackground">@color/ns_ink</item>
+        <item name="colorSurface">@color/ns_surface</item>
+        <item name="colorOnSurface">@color/ns_ink</item>
+        <item name="colorSurfaceVariant">@color/ns_surface_raised</item>
+        <item name="colorOnSurfaceVariant">@color/ns_ink_soft</item>
+        <item name="colorSurfaceContainerLowest">@color/ns_bg_deep</item>
+        <item name="colorSurfaceContainerLow">@color/ns_surface</item>
+        <item name="colorSurfaceContainer">@color/ns_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/ns_surface_raised</item>
+        <item name="colorSurfaceContainerHighest">#2E3561</item>
+        <item name="colorOutline">#6A709E</item>
+        <item name="colorOutlineVariant">@color/ns_stroke</item>
     </style>
 </resources>

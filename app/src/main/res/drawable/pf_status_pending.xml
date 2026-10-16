@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- "Waiting for the teacher" status box on the account screen. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFF4E0" />
-    <stroke android:width="1.5dp" android:color="#F2C77E" />
+    <solid android:color="@color/pg_pending_bg" />
+    <stroke android:width="1.5dp" android:color="@color/pg_pending_stroke" />
     <corners android:radius="16dp" />
 </shape>

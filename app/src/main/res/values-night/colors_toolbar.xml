@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Top bar (dark): a dimmer sky-to-violet so white text stays crisp, gold ring around an indigo face. -->
+<resources>
+    <color name="tb_start">@color/ns_bar_start</color>
+    <color name="tb_end">@color/ns_bar_end</color>
+    <color name="tb_lip">@color/ns_bar_lip</color>
+    <color name="tb_on">#FFFFFF</color>
+    <color name="tb_on_soft">#D8DEFF</color>
+    <color name="tb_avatar_face">@color/ns_surface</color>
+    <color name="tb_avatar_ink">@color/ns_gold</color>
+    <color name="tb_ring">@color/ns_gold</color>
+    <color name="tb_badge">#FF5C6C</color>
+    <color name="tb_page_bg">@color/ns_bg</color>
+</resources>

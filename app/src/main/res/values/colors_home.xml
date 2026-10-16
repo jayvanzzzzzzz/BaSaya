@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home tab (search, class pill, lesson tabs, empty state). Dark variants live in values-night/colors_home.xml. -->
+<resources>
+    <color name="home_bg">#F7F8FC</color>
+    <color name="home_surface">#FFFFFF</color>
+    <color name="home_ink">#26334D</color>
+    <color name="home_hint">#778199</color>
+    <color name="home_body">#59647A</color>
+    <color name="home_muted">#69758D</color>
+    <color name="home_stroke">#E4E8F0</color>
+    <color name="home_stroke_soft">#EAECF0</color>
+    <color name="home_focus">#7A9CE0</color>
+    <color name="home_accent">#5374BD</color>
+    <color name="home_accent_tint">#EAF0FF</color>
+    <color name="home_accent_ripple">#267DA3E8</color>
+    <color name="home_tabs_track">#EEF1F7</color>
+    <color name="home_class_bg">#E5F4E9</color>
+    <color name="home_class_fg">#356547</color>
+    <color name="home_action">#2D63D7</color>
+    <color name="home_action_pressed">#2452B8</color>
+    <color name="home_dot">#0066CC</color>
+    <!-- Empty-state pictures -->
+    <color name="home_empty_art">#4E76D8</color>
+    <color name="home_empty_art_bg">#E9EEFF</color>
+    <color name="home_empty_join">#5B4FE8</color>
+</resources>

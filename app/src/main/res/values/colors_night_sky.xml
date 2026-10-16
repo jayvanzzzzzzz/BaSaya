@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    "Night Sky" dark palette: deep navy sky, indigo cards, candy accents that glow, gold stars.
+    These never change with the theme; values-night/colors_*.xml point each screen's colors here.
+-->
+<resources>
+    <!-- Sky and cards -->
+    <color name="ns_bg">#0F1226</color>
+    <color name="ns_bg_deep">#0A0C1C</color>
+    <color name="ns_bg_glow">#171B3A</color>
+    <color name="ns_surface">#1A1F3D</color>
+    <color name="ns_surface_raised">#252B52</color>
+    <color name="ns_lip">#0B0E22</color>
+    <color name="ns_stroke">#33396A</color>
+    <color name="ns_divider">#272D55</color>
+    <color name="ns_track">#262C52</color>
+
+    <!-- Text -->
+    <color name="ns_ink">#F2F3FF</color>
+    <color name="ns_ink_soft">#AEB3D9</color>
+    <color name="ns_ink_faint">#7C82AE</color>
+    <!-- Text on the glowing accents below -->
+    <color name="ns_on_accent">#10142B</color>
+
+    <!-- Accents (glow on dark) -->
+    <color name="ns_gold">#FFD45C</color>
+    <color name="ns_gold_lip">#C99A1E</color>
+    <color name="ns_periwinkle">#8EA2FF</color>
+    <color name="ns_mint">#5EE0A0</color>
+    <color name="ns_tangerine">#FFA86B</color>
+    <color name="ns_bubblegum">#FF8DBF</color>
+    <color name="ns_sky">#6CC8FF</color>
+    <color name="ns_violet">#B79CFF</color>
+    <color name="ns_coral">#FF6B81</color>
+
+    <!-- Soft tints behind accent text and icons -->
+    <color name="ns_periwinkle_tint">#1E2A5C</color>
+    <color name="ns_mint_tint">#133A2E</color>
+    <color name="ns_tangerine_tint">#3A2716</color>
+    <color name="ns_bubblegum_tint">#3D1D33</color>
+    <color name="ns_sky_tint">#13314A</color>
+    <color name="ns_violet_tint">#2A2158</color>
+    <color name="ns_coral_tint">#3D1C26</color>
+    <color name="ns_gold_tint">#3A3115</color>
+
+    <!-- Top bar gradient -->
+    <color name="ns_bar_start">#4A74EE</color>
+    <color name="ns_bar_end">#8466F0</color>
+    <color name="ns_bar_lip">#3A2F9E</color>
+</resources>

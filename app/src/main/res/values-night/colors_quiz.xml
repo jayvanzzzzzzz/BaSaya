@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quiz (dark, "Night Sky"): deeper space, indigo cards, candy answer tiles and a gold launch button. -->
+<resources>
+    <color name="qz_bg_top">#120E3A</color>
+    <color name="qz_bg_mid">#231A62</color>
+    <color name="qz_bg_bottom">#3E2A8C</color>
+    <color name="qz_ink">@color/ns_ink</color>
+    <color name="qz_ink_soft">@color/ns_ink_soft</color>
+    <color name="qz_on_bg">#FFFFFF</color>
+    <color name="qz_on_bg_soft">#D9D0FF</color>
+    <color name="qz_card_lip">@color/ns_lip</color>
+    <color name="qz_glass">#33FFFFFF</color>
+    <color name="qz_a">#F25C54</color>
+    <color name="qz_a_lip">#A8352F</color>
+    <color name="qz_b">#5B7CFF</color>
+    <color name="qz_b_lip">#3A55C9</color>
+    <color name="qz_c">#E8890C</color>
+    <color name="qz_c_lip">#A35E05</color>
+    <color name="qz_d">#2FA84F</color>
+    <color name="qz_d_lip">#1A6E31</color>
+    <color name="qz_gold">@color/ns_gold</color>
+    <color name="qz_gold_lip">@color/ns_gold_lip</color>
+    <color name="qz_disabled">#4DFFFFFF</color>
+    <color name="qz_disabled_lip">#26FFFFFF</color>
+
+    <color name="qz_surface">@color/ns_surface</color>
+    <color name="qz_on_gold">#2A1F5C</color>
+    <color name="qz_track">@color/ns_track</color>
+</resources>

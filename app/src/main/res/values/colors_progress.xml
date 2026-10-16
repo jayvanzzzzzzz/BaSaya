@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Student progress screen: one color family per skill. -->
+<!-- Student progress screen: one color family per skill. Dark variants live in values-night/colors_progress.xml. -->
 <resources>
     <color name="pg_bg_top">#EAF1FF</color>
     <color name="pg_bg_bottom">#FFF8EE</color>
@@ -29,4 +29,17 @@
     <color name="pg_up_tint">#DFF5E5</color>
     <color name="pg_down">#C0392B</color>
     <color name="pg_down_tint">#FFE4E1</color>
+    <!-- Cards and shared bits (also used by Profile, Notifications, Join class, lesson dashboard) -->
+    <color name="pg_surface">#FFFFFF</color>
+    <color name="pg_divider">#E9ECF5</color>
+    <color name="pg_section_ink">#5A4BC4</color>
+    <color name="pg_input_bg">#F4F2FF</color>
+    <color name="pg_unread_bg">#FBFAFF</color>
+    <color name="pg_unread_lip">#CFC3FF</color>
+    <color name="pg_unread_stroke">#DCD3FF</color>
+    <color name="pg_pending_bg">#FFF4E0</color>
+    <color name="pg_pending_stroke">#F2C77E</color>
+    <color name="pg_danger">#D64545</color>
+    <color name="pg_danger_tint">#FDECEC</color>
+    <color name="pg_danger_stroke">#F2B8B8</color>
 </resources>

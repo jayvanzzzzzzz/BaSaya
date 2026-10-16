@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pronunciation screen: warm peach stage, coral buddy, teal microphone. -->
+<!-- Pronunciation screen: warm peach stage, coral buddy, teal microphone. Dark variants live in values-night/colors_pronunciation.xml. -->
 <resources>
     <color name="pr_bg_top">#FFD3C0</color>
     <color name="pr_bg_mid">#FFE6D8</color>
@@ -25,4 +25,8 @@
     <color name="pr_cheer_bg">#FFE6E0</color>
     <color name="pr_info">#3B3561</color>
     <color name="pr_info_bg">#ECEAFB</color>
+    <!-- Cards, chips and pills -->
+    <color name="pr_surface">#FFFFFF</color>
+    <color name="pr_pill">#B3FFFFFF</color>
+    <color name="pr_progress_start">#FFB35C</color>
 </resources>

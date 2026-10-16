@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night version of the crossword sun: a glowing full moon with twinkles (it slowly spins in code). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- twinkles around the moon -->
+    <path android:fillColor="#B3FFE7A0" android:pathData="M60,4 l2,6 6,2 -6,2 -2,6 -2,-6 -6,-2 6,-2z" />
+    <path android:fillColor="#80FFFFFF" android:pathData="M108,60 l1.5,4.5 4.5,1.5 -4.5,1.5 -1.5,4.5 -1.5,-4.5 -4.5,-1.5 4.5,-1.5z" />
+    <path android:fillColor="#B3FFE7A0" android:pathData="M60,100 l2,6 6,2 -6,2 -2,6 -2,-6 -6,-2 6,-2z" />
+    <path android:fillColor="#80FFFFFF" android:pathData="M12,54 l1.5,4.5 4.5,1.5 -4.5,1.5 -1.5,4.5 -1.5,-4.5 -4.5,-1.5 4.5,-1.5z" />
+    <!-- soft glow -->
+    <path
+        android:fillColor="#26FFF3C4"
+        android:pathData="M20,60 a40,40 0 1,0 80,0 a40,40 0 1,0 -80,0z" />
+    <path
+        android:fillColor="#33FFF3C4"
+        android:pathData="M28,60 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0z" />
+    <!-- moon -->
+    <path
+        android:fillColor="#FFF1C9"
+        android:pathData="M34,60 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0z" />
+    <!-- craters -->
+    <path
+        android:fillColor="#F2DDA2"
+        android:pathData="M44,54 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0z M62,68 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0z M64,46 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0z M48,72 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0z" />
+</vector>

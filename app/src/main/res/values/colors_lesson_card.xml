@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Lesson list card. Light-only on purpose: the Home screen that hosts it is light-only. -->
+    <!-- Lesson list card (light). Dark variants live in values-night/colors_lesson_card.xml. -->
     <color name="lesson_card_surface">#FFFFFF</color>
     <color name="lesson_card_stroke">#E6E4DA</color>
     <color name="lesson_card_divider">#EFECE3</color>
@@ -11,6 +11,13 @@
     <color name="lesson_card_title">#1F2A24</color>
     <color name="lesson_card_body">#56635C</color>
     <color name="lesson_card_track">#E8E4D9</color>
+    <color name="lesson_card_primary_border">#3E6B55</color>
+    <!-- Downloaded badge in the card footer -->
+    <color name="lesson_downloaded_bg">#EAF4EF</color>
+    <color name="lesson_downloaded_ring">#4D8A6B</color>
+    <color name="lesson_downloaded_check">#1F6B4A</color>
+    <!-- Search match behind the title -->
+    <color name="lesson_search_highlight">#FFF176</color>
 
     <!-- Status badge (soft tint + readable foreground) -->
     <color name="lesson_status_done_bg">#E1F0E6</color>

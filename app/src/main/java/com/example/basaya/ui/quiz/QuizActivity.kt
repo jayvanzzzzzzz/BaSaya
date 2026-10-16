@@ -258,7 +258,7 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    /** Idle: white tile with a colored letter badge. Picked: the whole tile lights up in its color. */
+    /** Idle: card-colored tile with a colored letter badge. Picked: the whole tile lights up in its color. */
     private fun renderChoice(tile: LinearLayout, choiceIndex: Int, choiceText: String, selected: Boolean) {
         val (fillRes, lipRes) = letterColors[choiceIndex % letterColors.size]
         val accent = ContextCompat.getColor(this, fillRes)
@@ -269,7 +269,7 @@ class QuizActivity : AppCompatActivity() {
         tile.background = if (selected) {
             candy(accent, accentLip, dp(20f).toFloat())
         } else {
-            candy(Color.WHITE, ContextCompat.getColor(this, R.color.qz_card_lip), dp(20f).toFloat())
+            candy(ContextCompat.getColor(this, R.color.qz_surface), ContextCompat.getColor(this, R.color.qz_card_lip), dp(20f).toFloat())
         }
 
         tile.findViewWithTag<TextView>("letter").apply {

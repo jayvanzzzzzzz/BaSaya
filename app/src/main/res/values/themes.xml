@@ -1,11 +1,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.BaSaya" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <!-- Base application theme (light). Dark colors live in values-night/themes.xml. -->
+    <style name="Base.Theme.BaSaya" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <!-- Shared by light and dark, so it stays out of the night override above. -->
+    <style name="Theme.BaSaya" parent="Base.Theme.BaSaya">
         <item name="android:fontFamily">@font/be_vietnam_regular</item>
         <item name="fontFamily">@font/be_vietnam_regular</item>
     </style>
-
-    <style name="Theme.BaSaya" parent="Base.Theme.BaSaya" />
 </resources>

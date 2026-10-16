@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Crossword game palette: sunny sky, candy tiles, deep indigo ink. -->
+<!-- Crossword game palette: sunny sky, candy tiles, deep indigo ink. Dark variants live in values-night/colors_crossword.xml. -->
 <resources>
     <color name="cw_sky_top">#5EC2FF</color>
     <color name="cw_sky_mid">#A6E1FF</color>
@@ -23,4 +23,9 @@
     <color name="cw_shuffle_lip">#B5D3F3</color>
     <color name="cw_shuffle_icon">#3F6FD1</color>
     <color name="cw_star">#FFB800</color>
+    <!-- Buttons, pills, empty grid cells -->
+    <color name="cw_surface">#FFFFFF</color>
+    <color name="cw_wheel_glow">#59FFFFFF</color>
+    <color name="cw_tile_empty">#FFFFFF</color>
+    <color name="cw_tile_empty_lip">#C5D3E6</color>
 </resources>

@@ -22,6 +22,7 @@ import com.example.basaya.R
 class BottomNavController(
     private val underline: View,
     private val items: List<NavItem>,
+    private val initialIndex: Int = 0,
     @param:ColorRes private val tabColors: List<Int> = listOf(
         R.color.nav_tab_home, R.color.nav_tab_progress, R.color.nav_tab_chat, R.color.nav_tab_profile
     ),
@@ -33,11 +34,11 @@ class BottomNavController(
         val label: TextView
     )
 
-    private var selectedIndex = 0
+    private var selectedIndex = initialIndex
     private val context = underline.context
     private val inactive = ContextCompat.getColor(context, R.color.nav_inactive)
     private val labelFont = ResourcesCompat.getFont(context, R.font.quicksand_medium)
-    private var bubbleColor = colorFor(0)
+    private var bubbleColor = colorFor(initialIndex)
 
     init {
         items.forEachIndexed { index, item ->
@@ -46,7 +47,7 @@ class BottomNavController(
                 selectTab(index, animate = true)
             }
         }
-        underline.post { selectTab(0, animate = false) }
+        underline.post { selectTab(initialIndex, animate = false) }
     }
 
     private fun colorFor(index: Int) = ContextCompat.getColor(context, tabColors[index % tabColors.size])

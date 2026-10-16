@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paper dialogs (lesson status, leave class, offline) and the join-class sheet. Dark variants live in values-night/colors_dialog.xml. -->
+<resources>
+    <color name="dlg_paper">#FFFDF8</color>
+    <color name="dlg_stroke">#E6DEC9</color>
+    <color name="dlg_ink">#25231D</color>
+    <color name="dlg_body">#6B675D</color>
+    <color name="dlg_link">#5F5A50</color>
+    <color name="dlg_action">#315EAE</color>
+    <color name="dlg_danger">#D64545</color>
+    <color name="dlg_icon">#667085</color>
+    <color name="dlg_icon_dark">#37474F</color>
+    <color name="dlg_offline_paper">#FFFCF5</color>
+    <color name="dlg_offline_stroke">#E8DFCE</color>
+    <color name="dlg_offline_body">#686257</color>
+    <color name="dlg_offline_icon_bg">#E8EEF9</color>
+    <!-- "Done" coin icon -->
+    <color name="dlg_check_halo">#F2F6FF</color>
+    <color name="dlg_check_ring">#6F96DE</color>
+    <color name="dlg_check_mark">#FFFFFF</color>
+
+    <color name="sheet_surface">#FFFFFF</color>
+    <color name="sheet_handle">#D0D5DD</color>
+    <color name="sheet_title">#182230</color>
+    <color name="sheet_body">#667085</color>
+    <color name="sheet_action">#2D63D7</color>
+    <color name="sheet_action_bg">#EAF1FF</color>
+</resources>

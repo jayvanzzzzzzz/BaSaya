@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lecture screen (dark, "Night Sky"): a bedtime storybook, indigo pages lit by a gold reading lamp. -->
+<resources>
+    <color name="lecture_bg_top">#141A3F</color>
+    <color name="lecture_bg_bottom">@color/ns_bg</color>
+    <color name="lecture_ink">@color/ns_ink</color>
+    <color name="lecture_ink_soft">@color/ns_ink_soft</color>
+    <color name="lecture_primary">#5B7CFF</color>
+    <color name="lecture_primary_pressed">#4A68E0</color>
+    <color name="lecture_paper">@color/ns_surface</color>
+    <color name="lecture_paper_stroke">@color/ns_stroke</color>
+    <color name="lecture_highlight">#3D3418</color>
+    <color name="lecture_highlight_edge">@color/ns_gold</color>
+    <color name="lecture_progress_track">@color/ns_track</color>
+    <color name="lecture_button_surface">@color/ns_surface_raised</color>
+    <color name="lecture_button_stroke">@color/ns_stroke</color>
+    <color name="lecture_ripple">#408EA2FF</color>
+</resources>

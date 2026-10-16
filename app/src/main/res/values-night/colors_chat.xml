@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Class chat tab (dark, "Night Sky"): indigo bubbles, violet teacher, same sky-to-violet for your own. -->
+<resources>
+    <color name="ch_bg">@color/ns_bg</color>
+    <color name="ch_ink">@color/ns_ink</color>
+    <color name="ch_ink_soft">@color/ns_ink_soft</color>
+    <color name="ch_line">@color/ns_stroke</color>
+    <color name="ch_lip">@color/ns_lip</color>
+    <color name="ch_bubble_in">@color/ns_surface_raised</color>
+    <color name="ch_teacher">#9B7BFF</color>
+    <color name="ch_teacher_tint">#2C2463</color>
+    <color name="ch_teacher_line">#4A3C9A</color>
+    <color name="ch_mine_start">@color/ns_bar_start</color>
+    <color name="ch_mine_end">@color/ns_bar_end</color>
+    <color name="ch_mine_lip">@color/ns_bar_lip</color>
+    <color name="ch_closed">@color/ns_tangerine</color>
+    <color name="ch_closed_tint">@color/ns_tangerine_tint</color>
+    <color name="ch_dot">#FF5C6C</color>
+    <color name="ch_send_off">#3A4170</color>
+
+    <color name="ch_surface">@color/ns_surface</color>
+    <color name="ch_closed_line">#6B4A22</color>
+    <color name="ch_member_me">#221C4A</color>
+</resources>

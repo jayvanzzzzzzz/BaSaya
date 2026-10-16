@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Register screen accents (dark). -->
 <resources>
-    <color name="register_step_name_bg">#4A3B12</color>
-    <color name="register_step_name_fg">#FFDD85</color>
-    <color name="register_step_account_bg">#1E3657</color>
-    <color name="register_step_account_fg">#A6C8FF</color>
-    <color name="register_sticker_bg">#FFC94D</color>
+    <!-- Register screen accents (dark, "Night Sky"). Base palette comes from values-night/colors_login.xml. -->
+    <color name="register_step_name_bg">@color/ns_gold_tint</color>
+    <color name="register_step_name_fg">@color/ns_gold</color>
+    <color name="register_step_account_bg">@color/ns_periwinkle_tint</color>
+    <color name="register_step_account_fg">@color/ns_periwinkle</color>
+    <color name="register_sticker_bg">@color/ns_gold</color>
     <color name="register_sticker_fg">#3D2C00</color>
-    <color name="register_divider">#2A3446</color>
+    <color name="register_divider">@color/ns_divider</color>
 </resources>

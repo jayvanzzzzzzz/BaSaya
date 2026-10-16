@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Top bar (light). Dark variants live in values-night/colors_toolbar.xml. -->
 <resources>
     <color name="tb_start">#4F8BFF</color>
     <color name="tb_end">#8A6CF0</color>
     <color name="tb_lip">#5A4BC4</color>
     <color name="tb_on">#FFFFFF</color>
     <color name="tb_on_soft">#E3EAFF</color>
+    <color name="tb_avatar_face">#FFFFFF</color>
     <color name="tb_avatar_ink">#5B4BD8</color>
     <color name="tb_ring">#FFC93C</color>
     <color name="tb_badge">#F25C54</color>

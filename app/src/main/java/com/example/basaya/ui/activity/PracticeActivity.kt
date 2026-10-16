@@ -27,7 +27,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.model.ActivityPage
@@ -38,6 +37,7 @@ import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.ActivityRepository
 import com.example.basaya.ui.game.ConfettiView
 import com.example.basaya.ui.pronunciation.PronunciationBookView
+import com.example.basaya.ui.theme.useDarkStatusBarIconsInLightTheme
 import com.google.android.flexbox.FlexboxLayout
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -78,7 +78,7 @@ class PracticeActivity : AppCompatActivity() {
         @param:DrawableRes val icon: Int?
     ) {
         IDLE(R.color.ac_tile, R.color.ac_tile_lip, R.color.ac_ink, null),
-        PICKED(R.color.ac_pick, R.color.ac_pick_lip, R.color.ac_ink, null),
+        PICKED(R.color.ac_pick, R.color.ac_pick_lip, R.color.ac_on_pick, null),
         RIGHT(R.color.ac_right, R.color.ac_right_lip, android.R.color.white, R.drawable.ac_ic_check),
         WRONG(R.color.ac_wrong, R.color.ac_wrong_lip, android.R.color.white, R.drawable.ac_ic_cross)
     }
@@ -97,7 +97,7 @@ class PracticeActivity : AppCompatActivity() {
             insets
         }
 
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        useDarkStatusBarIconsInLightTheme()
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 

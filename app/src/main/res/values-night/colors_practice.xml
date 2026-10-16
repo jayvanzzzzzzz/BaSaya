@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Practice (Gawain) screen (dark, "Night Sky"): a teal night desk, candy tiles that still pop. -->
+<resources>
+    <color name="ac_bg_top">#0E2A2E</color>
+    <color name="ac_bg_mid">#101C36</color>
+    <color name="ac_bg_bottom">@color/ns_bg</color>
+    <color name="ac_ink">@color/ns_ink</color>
+    <color name="ac_ink_soft">@color/ns_ink_soft</color>
+    <color name="ac_lip">@color/ns_lip</color>
+    <color name="ac_tile">@color/ns_surface_raised</color>
+    <color name="ac_tile_lip">@color/ns_lip</color>
+    <color name="ac_pick">#FFD54A</color>
+    <color name="ac_pick_lip">#C99A1E</color>
+    <color name="ac_right">#2FA84F</color>
+    <color name="ac_right_lip">#1A6E31</color>
+    <color name="ac_wrong">#F25C54</color>
+    <color name="ac_wrong_lip">#A8352F</color>
+    <color name="ac_check">#5B7CFF</color>
+    <color name="ac_check_lip">#3A55C9</color>
+    <color name="ac_disabled">#363C68</color>
+    <color name="ac_disabled_lip">#22274A</color>
+    <color name="ac_track">@color/ns_track</color>
+    <color name="ac_track_done">#2FA84F</color>
+    <color name="ac_good_bg">@color/ns_mint_tint</color>
+    <color name="ac_good_text">@color/ns_mint</color>
+    <color name="ac_retry_bg">@color/ns_coral_tint</color>
+    <color name="ac_retry_text">@color/ns_coral</color>
+
+    <color name="ac_surface">@color/ns_surface</color>
+    <color name="ac_pill">#B31A1F3D</color>
+    <color name="ac_on_pick">#1F2D3D</color>
+    <color name="ac_star_off">#3A4170</color>
+    <color name="ac_track_done_start">#5EE0A0</color>
+    <color name="ac_wave_back">#0F2F33</color>
+    <color name="ac_wave_front">#123A3A</color>
+</resources>

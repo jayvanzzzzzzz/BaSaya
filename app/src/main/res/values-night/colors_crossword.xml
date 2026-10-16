@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crossword (dark, "Night Sky"): starry night over moonlit hills, candy tiles glow. -->
+<resources>
+    <color name="cw_sky_top">#0B0F2E</color>
+    <color name="cw_sky_mid">#151B4A</color>
+    <color name="cw_sky_bottom">#232A62</color>
+    <color name="cw_ink">@color/ns_ink</color>
+    <color name="cw_panel">#D91A1F3D</color>
+    <color name="cw_panel_stroke">@color/ns_stroke</color>
+    <color name="cw_select">#FF8A3D</color>
+    <color name="cw_select_lip">#B8561A</color>
+    <color name="cw_wheel_ring">@color/ns_gold</color>
+    <color name="cw_success">@color/ns_mint</color>
+    <color name="cw_error">@color/ns_coral</color>
+    <color name="cw_btn_lip">@color/ns_lip</color>
+    <color name="cw_shuffle_fill">@color/ns_periwinkle_tint</color>
+    <color name="cw_shuffle_lip">@color/ns_lip</color>
+    <color name="cw_shuffle_icon">@color/ns_periwinkle</color>
+    <color name="cw_star">@color/ns_gold</color>
+
+    <color name="cw_surface">@color/ns_surface</color>
+    <color name="cw_wheel_glow">#338EA2FF</color>
+    <color name="cw_tile_empty">@color/ns_surface_raised</color>
+    <color name="cw_tile_empty_lip">@color/ns_lip</color>
+</resources>

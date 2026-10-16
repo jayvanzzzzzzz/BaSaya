@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Progress palette (dark, "Night Sky"). Also drives Profile, Notifications, Join class and the
+    lesson dashboard. Skill accents are mid-tones: readable as text on indigo cards and still
+    bright enough under white step numbers and icons.
+-->
+<resources>
+    <color name="pg_bg_top">#141838</color>
+    <color name="pg_bg_bottom">@color/ns_bg</color>
+    <color name="pg_ink">@color/ns_ink</color>
+    <color name="pg_ink_soft">@color/ns_ink_soft</color>
+    <color name="pg_card_lip">@color/ns_lip</color>
+    <color name="pg_track">@color/ns_track</color>
+    <color name="pg_star_off">#3A4170</color>
+    <color name="pg_star_on">@color/ns_gold</color>
+    <!-- Hero card: violet night instead of a bright sunny gold -->
+    <color name="pg_hero_top">#3A2C8C</color>
+    <color name="pg_hero_bottom">#6B3FA0</color>
+    <color name="pg_hero_lip">#21185A</color>
+
+    <color name="pg_unawa">#6E8EFF</color>
+    <color name="pg_unawa_tint">@color/ns_periwinkle_tint</color>
+    <color name="pg_talasalitaan">#2BA85A</color>
+    <color name="pg_talasalitaan_tint">@color/ns_mint_tint</color>
+    <color name="pg_pagkilala">#E07E14</color>
+    <color name="pg_pagkilala_tint">@color/ns_tangerine_tint</color>
+    <color name="pg_pagbigkas">#F0605A</color>
+    <color name="pg_pagbigkas_tint">@color/ns_coral_tint</color>
+    <color name="pg_pagsusulit">#9873F2</color>
+    <color name="pg_pagsusulit_tint">@color/ns_violet_tint</color>
+    <color name="pg_up">@color/ns_mint</color>
+    <color name="pg_up_tint">@color/ns_mint_tint</color>
+    <color name="pg_down">@color/ns_coral</color>
+    <color name="pg_down_tint">@color/ns_coral_tint</color>
+
+    <color name="pg_surface">@color/ns_surface</color>
+    <color name="pg_divider">@color/ns_divider</color>
+    <color name="pg_section_ink">@color/ns_violet</color>
+    <color name="pg_input_bg">@color/ns_surface_raised</color>
+    <color name="pg_unread_bg">#221C4A</color>
+    <color name="pg_unread_lip">#3B2F7A</color>
+    <color name="pg_unread_stroke">#5A49B0</color>
+    <color name="pg_pending_bg">@color/ns_gold_tint</color>
+    <color name="pg_pending_stroke">#8A6D22</color>
+    <color name="pg_danger">#FF7A85</color>
+    <color name="pg_danger_tint">@color/ns_coral_tint</color>
+    <color name="pg_danger_stroke">#7A2E3C</color>
+</resources>

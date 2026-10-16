@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dialogs and sheets (dark, "Night Sky"). -->
+<resources>
+    <color name="dlg_paper">@color/ns_surface</color>
+    <color name="dlg_stroke">@color/ns_stroke</color>
+    <color name="dlg_ink">@color/ns_ink</color>
+    <color name="dlg_body">@color/ns_ink_soft</color>
+    <color name="dlg_link">@color/ns_ink_soft</color>
+    <color name="dlg_action">@color/ns_periwinkle</color>
+    <color name="dlg_danger">#FF7A85</color>
+    <color name="dlg_icon">@color/ns_ink_soft</color>
+    <color name="dlg_icon_dark">@color/ns_ink_soft</color>
+    <color name="dlg_offline_paper">@color/ns_surface</color>
+    <color name="dlg_offline_stroke">@color/ns_stroke</color>
+    <color name="dlg_offline_body">@color/ns_ink_soft</color>
+    <color name="dlg_offline_icon_bg">@color/ns_periwinkle_tint</color>
+    <color name="dlg_check_halo">@color/ns_periwinkle_tint</color>
+    <color name="dlg_check_ring">#B9C6FF</color>
+    <color name="dlg_check_mark">@color/ns_on_accent</color>
+
+    <color name="sheet_surface">@color/ns_surface</color>
+    <color name="sheet_handle">@color/ns_stroke</color>
+    <color name="sheet_title">@color/ns_ink</color>
+    <color name="sheet_body">@color/ns_ink_soft</color>
+    <color name="sheet_action">@color/ns_periwinkle</color>
+    <color name="sheet_action_bg">@color/ns_periwinkle_tint</color>
+</resources>

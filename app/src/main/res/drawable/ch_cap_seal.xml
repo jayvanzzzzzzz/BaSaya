@@ -2,5 +2,5 @@
 <!-- Teacher seal: purple circle with a white ring. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
     <solid android:color="@color/ch_teacher" />
-    <stroke android:width="2dp" android:color="#FFFFFF" />
+    <stroke android:width="2dp" android:color="@color/ch_surface" />
 </shape>

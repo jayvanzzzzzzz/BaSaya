@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         private const val EXTRA_HIGHLIGHT_LESSONS = "highlightLessonIds"
         private const val EXTRA_OPEN_CHAT = "openChat"
         private const val TAB_CHAT = 2
+        private const val STATE_TAB = "selectedTab"
 
         /** Opens the Chat tab (reusing the running screen); from a class chat notification. */
         fun chatIntent(context: Context): Intent =
@@ -88,10 +89,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
-    private val homeFragment by lazy { HomeFragment() }
-    private val progressFragment by lazy { ProgressFragment() }
-    private val chatFragment by lazy { ChatFragment() }
-    private val profileFragment by lazy { ProfileFragment() }
+    // After a recreate (e.g. switching light/dark) the fragment manager has already restored the tabs.
+    private val homeFragment by lazy { restoredTab("home") ?: HomeFragment() }
+    private val progressFragment by lazy { restoredTab("progress") ?: ProgressFragment() }
+    private val chatFragment by lazy { restoredTab("chat") ?: ChatFragment() }
+    private val profileFragment by lazy { restoredTab("profile") ?: ProfileFragment() }
+    private var selectedTab = 0
+
+    private inline fun <reified T : Fragment> restoredTab(tag: String): T? =
+        supportFragmentManager.findFragmentByTag(tag) as? T
 
     // Chat tab's unread dot: follows the class's chat/state while this screen is visible.
     private lateinit var chatUnreadDot: View
@@ -135,6 +141,7 @@ class MainActivity : AppCompatActivity() {
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        selectedTab = savedInstanceState?.getInt(STATE_TAB, 0) ?: 0
 
         ClassNotifications.createChannels(this)
         if (savedInstanceState == null) askNotificationPermission()
@@ -233,6 +240,11 @@ class MainActivity : AppCompatActivity() {
         bellAnimator?.cancel()
         bellAnimator = null
         stopChatDot()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_TAB, selectedTab)
     }
 
     private fun highlightIds(intent: Intent?): List<String>? =
@@ -404,14 +416,18 @@ class MainActivity : AppCompatActivity() {
                 }
         }
 
-        supportFragmentManager.beginTransaction().apply {
-            add(R.id.frameLayout, profileFragment, "profile").hide(profileFragment)
-            add(R.id.frameLayout, chatFragment, "chat").hide(chatFragment)
-            add(R.id.frameLayout, progressFragment, "progress").hide(progressFragment)
-            add(R.id.frameLayout, homeFragment, "home")
-        }.commitAllowingStateLoss()
-
-        activeFragment = homeFragment
+        if (restoredTab<Fragment>("home") == null) {
+            supportFragmentManager.beginTransaction().apply {
+                add(R.id.frameLayout, profileFragment, "profile").hide(profileFragment)
+                add(R.id.frameLayout, chatFragment, "chat").hide(chatFragment)
+                add(R.id.frameLayout, progressFragment, "progress").hide(progressFragment)
+                add(R.id.frameLayout, homeFragment, "home")
+            }.commitAllowingStateLoss()
+            activeFragment = homeFragment
+        } else {
+            activeFragment = listOf(homeFragment, progressFragment, chatFragment, profileFragment)
+                .firstOrNull { !it.isHidden } ?: homeFragment
+        }
 
         setupBottomNav()
         deliverHighlight()
@@ -444,8 +460,10 @@ class MainActivity : AppCompatActivity() {
                 BottomNavController.NavItem(navProgress, iconProgress, labelProgress),
                 BottomNavController.NavItem(navChat, iconChat, labelChat),
                 BottomNavController.NavItem(navProfile, iconProfile, labelProfile)
-            )
+            ),
+            initialIndex = selectedTab
         ) { index ->
+            selectedTab = index
             val target = when (index) {
                 0 -> homeFragment
                 1 -> progressFragment

@@ -87,7 +87,7 @@
                         android:importantForAccessibility="no"
                         android:rotation="-12"
                         android:src="@drawable/cw_ic_star"
-                        app:tint="@color/ac_tile_lip" />
+                        app:tint="@color/ac_star_off" />
 
                     <ImageView
                         android:id="@+id/star2"
@@ -98,7 +98,7 @@
                         android:layout_marginBottom="10dp"
                         android:importantForAccessibility="no"
                         android:src="@drawable/cw_ic_star"
-                        app:tint="@color/ac_tile_lip" />
+                        app:tint="@color/ac_star_off" />
 
                     <ImageView
                         android:id="@+id/star3"
@@ -107,7 +107,7 @@
                         android:importantForAccessibility="no"
                         android:rotation="12"
                         android:src="@drawable/cw_ic_star"
-                        app:tint="@color/ac_tile_lip" />
+                        app:tint="@color/ac_star_off" />
                 </LinearLayout>
 
                 <!-- Score card -->

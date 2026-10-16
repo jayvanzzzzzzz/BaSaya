@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pronunciation screen (dark, "Night Sky"): plum night stage, coral buddy, teal microphone. -->
+<resources>
+    <color name="pr_bg_top">#2A1838</color>
+    <color name="pr_bg_mid">#1B1636</color>
+    <color name="pr_bg_bottom">@color/ns_bg</color>
+    <color name="pr_ink">@color/ns_ink</color>
+    <color name="pr_ink_soft">@color/ns_ink_soft</color>
+    <color name="pr_coral">#F0604E</color>
+    <color name="pr_coral_lip">#A63A2F</color>
+    <color name="pr_teal">#1FA89B</color>
+    <color name="pr_teal_lip">#11665F</color>
+    <color name="pr_teal_ring">#8040D9C9</color>
+    <color name="pr_white_lip">@color/ns_lip</color>
+    <color name="pr_track">@color/ns_track</color>
+    <color name="pr_heart">@color/ns_coral</color>
+    <color name="pr_success">@color/ns_mint</color>
+    <color name="pr_success_bg">@color/ns_mint_tint</color>
+    <color name="pr_okay">@color/ns_gold</color>
+    <color name="pr_okay_bg">@color/ns_gold_tint</color>
+    <color name="pr_cheer">@color/ns_coral</color>
+    <color name="pr_cheer_bg">@color/ns_coral_tint</color>
+    <color name="pr_info">@color/ns_periwinkle</color>
+    <color name="pr_info_bg">@color/ns_periwinkle_tint</color>
+
+    <color name="pr_surface">@color/ns_surface</color>
+    <color name="pr_pill">#B31A1F3D</color>
+    <color name="pr_progress_start">#FFB35C</color>
+</resources>

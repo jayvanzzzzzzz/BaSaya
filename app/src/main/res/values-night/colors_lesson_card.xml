@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lesson list card (dark, "Night Sky"): indigo card, mint primary with dark text on it. -->
+<resources>
+    <color name="lesson_card_surface">@color/ns_surface</color>
+    <color name="lesson_card_stroke">@color/ns_stroke</color>
+    <color name="lesson_card_divider">@color/ns_divider</color>
+    <color name="lesson_card_ripple">#265EE0A0</color>
+    <color name="lesson_card_primary">@color/ns_mint</color>
+    <color name="lesson_card_primary_pressed">#4BC488</color>
+    <color name="lesson_card_eyebrow">@color/ns_mint</color>
+    <color name="lesson_card_title">@color/ns_ink</color>
+    <color name="lesson_card_body">@color/ns_ink_soft</color>
+    <color name="lesson_card_track">@color/ns_track</color>
+    <color name="lesson_card_primary_border">#8AEBBE</color>
+    <color name="lesson_downloaded_bg">@color/ns_mint_tint</color>
+    <color name="lesson_downloaded_ring">#3E9E72</color>
+    <color name="lesson_downloaded_check">@color/ns_mint</color>
+    <color name="lesson_search_highlight">#6B5714</color>
+    <!-- Status badge -->
+    <color name="lesson_status_done_bg">@color/ns_mint_tint</color>
+    <color name="lesson_status_done_fg">@color/ns_mint</color>
+    <color name="lesson_status_progress_bg">@color/ns_gold_tint</color>
+    <color name="lesson_status_progress_fg">@color/ns_gold</color>
+    <color name="lesson_status_new_bg">@color/ns_surface_raised</color>
+    <color name="lesson_status_new_fg">@color/ns_ink_soft</color>
+    <!-- Difficulty -->
+    <color name="lesson_diff_beginner">@color/ns_mint</color>
+    <color name="lesson_diff_intermediate">@color/ns_tangerine</color>
+    <color name="lesson_diff_advanced">@color/ns_coral</color>
+    <color name="lesson_diff_default">@color/ns_ink_soft</color>
+</resources>

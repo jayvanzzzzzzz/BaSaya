@@ -6,8 +6,8 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
+import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.view.animation.AccelerateDecelerateInterpolator
 import com.google.android.material.card.MaterialCardView
 import android.text.SpannableString
@@ -75,7 +75,7 @@ class LessonAdapter(
         private val downloadButton: LinearLayout = itemView.findViewById(R.id.downloadButton)
 
         fun bind(lesson: LessonEntity) {
-            tvTitle.text = buildHighlightedTitle(lesson.title, highlightQuery)
+            tvTitle.text = buildHighlightedTitle(tvTitle.context, lesson.title, highlightQuery)
             tvDescription.text = lesson.description
             tvDifficultyLabel.text = lesson.difficulty.replaceFirstChar { it.uppercase() }
             tvLessonEyebrow.text = if (lesson.order > 0) {
@@ -325,7 +325,7 @@ class LessonAdapter(
         tvProgressPercent.text = "$percent%"
     }
 
-    private fun buildHighlightedTitle(title: String, query: String): CharSequence {
+    private fun buildHighlightedTitle(context: Context, title: String, query: String): CharSequence {
         if (query.isBlank()) return title
 
         val startIndex = title.indexOf(query, ignoreCase = true)
@@ -335,7 +335,7 @@ class LessonAdapter(
 
         return SpannableString(title).apply {
             setSpan(
-                BackgroundColorSpan(Color.parseColor("#FFF176")),
+                BackgroundColorSpan(ContextCompat.getColor(context, R.color.lesson_search_highlight)),
                 startIndex,
                 endIndex,
                 SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE

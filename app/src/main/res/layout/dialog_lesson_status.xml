@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
         android:fontFamily="@font/lexend"
-        android:textColor="#25231D"
+        android:textColor="@color/dlg_ink"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -31,7 +31,7 @@
         android:layout_marginTop="9dp"
         android:fontFamily="@font/quicksand_medium"
         android:lineSpacingExtra="3dp"
-        android:textColor="#6B675D"
+        android:textColor="@color/dlg_body"
         android:textSize="14sp" />
 
     <com.google.android.material.button.MaterialButton
@@ -42,7 +42,7 @@
         android:fontFamily="@font/quicksand_medium"
         android:textAllCaps="false"
         android:textStyle="bold"
-        app:backgroundTint="#315EAE"
+        app:backgroundTint="@color/dlg_action"
         app:cornerRadius="15dp" />
 
     <TextView
@@ -51,7 +51,7 @@
         android:layout_height="44dp"
         android:gravity="center"
         android:fontFamily="@font/quicksand_medium"
-        android:textColor="#5F5A50"
+        android:textColor="@color/dlg_link"
         android:textSize="14sp"
         android:textStyle="bold"
         android:visibility="gone" />

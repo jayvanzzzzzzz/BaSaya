@@ -81,4 +81,12 @@
     <string name="pf_leave_cancelled">Kinansela na ang paghiling.</string>
     <string name="pf_leave_failed">Hindi naipadala. Subukan muli.</string>
     <string name="pf_leave_need_internet">Kailangan ng internet para dito.</string>
+
+    <!-- Theme (light / dark) -->
+    <string name="pf_section_appearance">Itsura</string>
+    <string name="pf_theme">Tema ng app</string>
+    <string name="pf_theme_sub">Maliwanag sa araw, madilim sa gabi</string>
+    <string name="pf_theme_system">Awtomatiko</string>
+    <string name="pf_theme_light">Maliwanag</string>
+    <string name="pf_theme_dark">Madilim</string>
 </resources>
