@@ -9,8 +9,8 @@ import com.google.firebase.firestore.DocumentSnapshot
  * - Only the lessons of the student's current class count (synced into Room from
  *   classes/{classId}/classLessons). Other documents under users/{uid}/assignedLessons,
  *   such as old test assignments or lessons from a previous class, are ignored.
- * - A lesson is finished only when every part is done: Lecture, Laro (or skipped by the
- *   teacher), Gawain, Bigkas and Pagsusulit.
+ * - A lesson is finished only when every part is done: Lecture, Laro and Gawain (or skipped
+ *   by the teacher), Bigkas and Pagsusulit.
  */
 object LessonCompletion {
 
@@ -20,10 +20,10 @@ object LessonCompletion {
         return docs.filter { it.id in ids }
     }
 
-    fun isFinished(doc: DocumentSnapshot, gameSkipped: Boolean): Boolean =
+    fun isFinished(doc: DocumentSnapshot, gameSkipped: Boolean, activitySkipped: Boolean): Boolean =
         doc.getBoolean("lectureFinished") == true &&
             (gameSkipped || doc.getBoolean("gameFinished") == true) &&
-            doc.getBoolean("activityFinished") == true &&
+            (activitySkipped || doc.getBoolean("activityFinished") == true) &&
             doc.getBoolean("pronunciationFinished") == true &&
             doc.getBoolean("quizFinished") == true
 
@@ -41,13 +41,16 @@ object LessonCompletion {
         return classLessons.filter { lesson ->
             val due = lesson.dueAt ?: return@filter true
             if (due >= joinedAt) return@filter true
-            byId[lesson.id]?.let { isFinished(it, lesson.gameSkipped) } == true
+            byId[lesson.id]?.let { isFinished(it, lesson.gameSkipped, lesson.activitySkipped) } == true
         }
     }
 
     /** Number of class lessons whose every part is done. */
     fun finishedCount(docs: List<DocumentSnapshot>, classLessons: List<LessonEntity>): Int {
-        val skipped = classLessons.filter { it.gameSkipped }.map { it.id }.toSet()
-        return classDocs(docs, classLessons).count { isFinished(it, gameSkipped = it.id in skipped) }
+        val byId = classLessons.associateBy { it.id }
+        return classDocs(docs, classLessons).count {
+            val lesson = byId[it.id]
+            isFinished(it, gameSkipped = lesson?.gameSkipped == true, activitySkipped = lesson?.activitySkipped == true)
+        }
     }
 }

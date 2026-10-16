@@ -184,15 +184,16 @@ class LessonAdapter(
         val context = tvProgress.context
 
         val lectureFinished = lesson.lectureFinished
-        // A game the teacher skipped is not part of the lesson: it never counts as "started",
-        // and it never blocks the lesson from being complete.
+        // A game or Gawain the teacher skipped is not part of the lesson: it never counts as
+        // "started", and it never blocks the lesson from being complete.
         val gameFinished = lesson.gameFinished && !lesson.gameSkipped
         val gameDone = lesson.gameFinished || lesson.gameSkipped
-        val activityFinished = lesson.activityFinished
+        val activityFinished = lesson.activityFinished && !lesson.activitySkipped
+        val activityDone = lesson.activityFinished || lesson.activitySkipped
         val quizFinished = lesson.quizFinished
 
         val anyFinished = lectureFinished || gameFinished || activityFinished || quizFinished
-        val allFinished = lectureFinished && gameDone && activityFinished && quizFinished
+        val allFinished = lectureFinished && gameDone && activityDone && quizFinished
 
         val foregroundRes = when {
             allFinished -> {
@@ -310,11 +311,11 @@ class LessonAdapter(
     }
 
     private fun bindProgressBar(progressLesson: ProgressBar, tvProgressPercent: TextView, lesson: LessonEntity) {
-        // 4 content types per lesson, or 3 when the teacher skipped the game
+        // 4 content types per lesson, minus the game and/or Gawain when the teacher skipped them
         val parts = listOfNotNull(
             lesson.lectureFinished,
             lesson.gameFinished.takeUnless { lesson.gameSkipped },
-            lesson.activityFinished,
+            lesson.activityFinished.takeUnless { lesson.activitySkipped },
             lesson.quizFinished
         )
         val completedCount = parts.count { it }

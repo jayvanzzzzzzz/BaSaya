@@ -90,6 +90,7 @@ class ProgressFragment : Fragment() {
 
     private var loadJob: Job? = null
     private var allGamesSkipped = false
+    private var allActivitiesSkipped = false
     /** The student's class lessons (from Room); the only lessons that count. */
     private var classLessons: List<LessonEntity> = emptyList()
     /** [classLessons] minus the ones that closed before the student joined. */
@@ -167,6 +168,8 @@ class ProgressFragment : Fragment() {
 
             // Every class lesson has its game skipped by the teacher → there is nothing to measure.
             allGamesSkipped = classLessons.isNotEmpty() && classLessons.all { it.gameSkipped }
+            // Same for the Gawain → nothing to measure for Pagkilala.
+            allActivitiesSkipped = classLessons.isNotEmpty() && classLessons.all { it.activitySkipped }
 
             showHero(name, docs, summary)
             showSkills(docs, summary)
@@ -208,8 +211,8 @@ class ProgressFragment : Fragment() {
             }
         }
 
-        // Lessons finished: class lessons whose every part is done (Lecture, Laro or skipped,
-        // Gawain, Bigkas, Pagsusulit). Lessons that closed before the student joined don't count.
+        // Lessons finished: class lessons whose every part is done (Lecture, Laro and Gawain or
+        // skipped, Bigkas, Pagsusulit). Lessons that closed before the student joined don't count.
         val total = countedLessons.size
         val finished = LessonCompletion.finishedCount(docs, countedLessons)
         tvLessonsDone.text = getString(R.string.pg_lessons_done, finished, total)
@@ -230,6 +233,8 @@ class ProgressFragment : Fragment() {
                 lectureCompletionState(docs)
             } else if (skill == Skill.TALASALITAAN && skillSummary.lessons == 0 && allGamesSkipped) {
                 noGameState()
+            } else if (skill == Skill.PAGKILALA && skillSummary.lessons == 0 && allActivitiesSkipped) {
+                noActivityState()
             } else {
                 scoredState(skillSummary)
             }
@@ -268,6 +273,12 @@ class ProgressFragment : Fragment() {
         trend = null,
         lessonScores = emptyList(),
         message = R.string.pg_msg_no_game
+    )
+
+    /** Pagkilala when the teacher skipped the Gawain in every assigned lesson. */
+    private fun noActivityState() = noGameState().copy(
+        level = R.string.pg_level_no_activity,
+        message = R.string.pg_msg_no_activity
     )
 
     /** Pag-unawa has no score until lectures have comprehension questions: show completion. */

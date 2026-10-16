@@ -135,6 +135,11 @@ class LessonRepository(private val context: Context) {
             lessonsSnapshot.documents.map { doc -> async { doc.id to GameStatus.isSkipped(doc.id, firestore) } }.awaitAll()
         }.toMap()
         val previousSkipped = existingLessons.associate { it.id to it.gameSkipped }
+        // Same for "Skip Gawain"
+        val skippedActivities = coroutineScope {
+            lessonsSnapshot.documents.map { doc -> async { doc.id to ActivityStatus.isSkipped(doc.id, firestore) } }.awaitAll()
+        }.toMap()
+        val previousSkippedActivities = existingLessons.associate { it.id to it.activitySkipped }
 
         // When the student joined the class. A lesson whose deadline passed before then (and
         // that they never finished) is left out: they could never have done it.
@@ -149,7 +154,11 @@ class LessonRepository(private val context: Context) {
         val closedBeforeJoining = lessonsSnapshot.documents.map { it.id }.filter { id ->
             val due = linkSchedules[id]?.dueAt
             val finished = progressDocs[id]?.let {
-                LessonCompletion.isFinished(it, skippedGames[id] ?: previousSkipped[id] ?: false)
+                LessonCompletion.isFinished(
+                    it,
+                    gameSkipped = skippedGames[id] ?: previousSkipped[id] ?: false,
+                    activitySkipped = skippedActivities[id] ?: previousSkippedActivities[id] ?: false
+                )
             } == true
             joinedAt != null && due != null && due < joinedAt && !finished
         }.toSet()
@@ -172,6 +181,7 @@ class LessonRepository(private val context: Context) {
                 quizFinished = progress?.quizFinished ?: false,
                 isDownloaded = existingDownloadedIds.contains(doc.id),
                 gameSkipped = skippedGames[doc.id] ?: previousSkipped[doc.id] ?: false,
+                activitySkipped = skippedActivities[doc.id] ?: previousSkippedActivities[doc.id] ?: false,
                 openAt = linkSchedules[doc.id]?.openAt,
                 dueAt = linkSchedules[doc.id]?.dueAt,
                 assignedAt = linkSchedules[doc.id]?.assignedAt

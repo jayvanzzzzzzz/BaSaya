@@ -35,6 +35,7 @@
     <string name="pg_level_done">Tapos na</string>
     <string name="pg_level_in_progress">Nasa progreso</string>
     <string name="pg_level_no_game">Walang laro</string>
+    <string name="pg_level_no_activity">Walang gawain</string>
 
     <string name="pg_msg_mahusay">Ang galing mo! Ituloy mo lang.</string>
     <string name="pg_msg_umuunlad">Malapit ka na! Kaunting ensayo pa.</string>
@@ -45,6 +46,7 @@
     <string name="pg_msg_lecture_done">Natapos mo ang lahat ng lektura!</string>
     <string name="pg_msg_lecture_progress">Ituloy ang pagbasa ng mga lektura.</string>
     <string name="pg_msg_no_game">Walang laro sa mga aralin mo ngayon.</string>
+    <string name="pg_msg_no_activity">Walang gawain sa mga aralin mo ngayon.</string>
 
     <string name="pg_trend_up">↑ Umaangat</string>
     <string name="pg_trend_down">↓ Bumaba</string>

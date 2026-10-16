@@ -23,6 +23,9 @@ data class LessonEntity(
     // Teacher chose "Skip game for this lesson" in basaya-web (lessons/{id}/game/status).
     @ColumnInfo(defaultValue = "0")
     val gameSkipped: Boolean = false,
+    // Teacher chose "Skip Gawain for this lesson" in basaya-web (lessons/{id}/activity/status).
+    @ColumnInfo(defaultValue = "0")
+    val activitySkipped: Boolean = false,
     // Teacher's optional schedule (classes/{classId}/classLessons/{lessonId}), epoch millis.
     val openAt: Long? = null,
     val dueAt: Long? = null,

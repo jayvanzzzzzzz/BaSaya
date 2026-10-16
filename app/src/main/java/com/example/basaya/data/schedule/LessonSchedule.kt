@@ -38,11 +38,11 @@ object LessonSchedule {
         return Availability.OPEN
     }
 
-    /** Every part is done (a game the teacher skipped doesn't count). */
+    /** Every part is done (a game or Gawain the teacher skipped doesn't count). */
     fun isComplete(lesson: LessonEntity): Boolean =
         lesson.lectureFinished &&
             (lesson.gameFinished || lesson.gameSkipped) &&
-            lesson.activityFinished &&
+            (lesson.activityFinished || lesson.activitySkipped) &&
             lesson.quizFinished
 
     /** Open lessons, and closed ones the student finished (review only). */

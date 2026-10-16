@@ -25,6 +25,7 @@ import com.example.basaya.R
 import com.example.basaya.data.cache.CompletionStateCache
 import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.data.audio.LectureAudioCache
+import com.example.basaya.data.repository.ActivityStatus
 import com.example.basaya.data.repository.GameStatus
 import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.ui.activity.PracticeActivity
@@ -153,7 +154,7 @@ class DashboardActivity : AppCompatActivity() {
         tvLessonTitle = findViewById(R.id.tvLessonTitle)
         tvLessonDescription = findViewById(R.id.tvLessonDesc)
 
-        hideGameIfSkipped()
+        hideSkippedParts()
 
         lifecycleScope.launch {
             try {
@@ -715,25 +716,35 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     /**
-     * When the teacher chose "Skip game for this lesson" in basaya-web, the Laro stop is removed
-     * from the path and the remaining stops are renumbered 1–4.
+     * When the teacher chose "Skip game" or "Skip Gawain for this lesson" in basaya-web, that
+     * stop is removed from the path and the remaining stops are renumbered.
      */
-    private fun hideGameIfSkipped() {
+    private fun hideSkippedParts() {
         if (lessonId.isBlank()) return
         lifecycleScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val skipped = GameStatus.isSkipped(lessonId)
-                ?: uid?.let { id ->
+            val game = GameStatus.isSkipped(lessonId)
+            val activity = ActivityStatus.isSkipped(lessonId)
+            // Offline and never read: fall back to what the last lesson sync saved.
+            val saved = if (game == null || activity == null) {
+                uid?.let { id ->
                     AppDatabase.getDatabase(this@DashboardActivity).lessonDao()
-                        .getLessonsForUser(id).firstOrNull { it.id == lessonId }?.gameSkipped
+                        .getLessonsForUser(id).firstOrNull { it.id == lessonId }
                 }
-                ?: false
-            if (!skipped) return@launch
+            } else {
+                null
+            }
+            val gameSkipped = game ?: saved?.gameSkipped ?: false
+            val activitySkipped = activity ?: saved?.activitySkipped ?: false
+            if (!gameSkipped && !activitySkipped) return@launch
 
-            (gameCard.parent as? View)?.visibility = View.GONE
-            findViewById<TextView>(R.id.stepActivity).text = "2"
-            findViewById<TextView>(R.id.stepPronunciation).text = "3"
-            findViewById<TextView>(R.id.stepQuiz).text = "4"
+            if (gameSkipped) (gameCard.parent as? View)?.visibility = View.GONE
+            if (activitySkipped) (activityCard.parent as? View)?.visibility = View.GONE
+            // Lecture stays 1; the stops after it count on from 2.
+            var number = if (gameSkipped) 2 else 3
+            if (!activitySkipped) findViewById<TextView>(R.id.stepActivity).text = (number++).toString()
+            findViewById<TextView>(R.id.stepPronunciation).text = (number++).toString()
+            findViewById<TextView>(R.id.stepQuiz).text = number.toString()
         }
     }
 
