@@ -45,6 +45,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.example.basaya.data.chat.ClassChat
 import com.example.basaya.ui.fragment.ChatFragment
 import com.example.basaya.ui.fragment.ProfileFragment
+import com.example.basaya.ui.theme.ThemeReveal
 import com.google.firebase.firestore.ListenerRegistration
 import com.example.basaya.ui.fragment.ProgressFragment
 import com.google.firebase.auth.FirebaseAuth
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         private const val EXTRA_OPEN_CHAT = "openChat"
         private const val TAB_CHAT = 2
         private const val STATE_TAB = "selectedTab"
+        private const val STATE_FIRST_NAME = "firstName"
 
         /** Opens the Chat tab (reusing the running screen); from a class chat notification. */
         fun chatIntent(context: Context): Intent =
@@ -95,6 +97,7 @@ class MainActivity : AppCompatActivity() {
     private val chatFragment by lazy { restoredTab("chat") ?: ChatFragment() }
     private val profileFragment by lazy { restoredTab("profile") ?: ProfileFragment() }
     private var selectedTab = 0
+    private var savedFirstName: String? = null
 
     private inline fun <reified T : Fragment> restoredTab(tag: String): T? =
         supportFragmentManager.findFragmentByTag(tag) as? T
@@ -142,6 +145,8 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         selectedTab = savedInstanceState?.getInt(STATE_TAB, 0) ?: 0
+        savedFirstName = savedInstanceState?.getString(STATE_FIRST_NAME)
+        ThemeReveal.playIfPending(this)
 
         ClassNotifications.createChannels(this)
         if (savedInstanceState == null) askNotificationPermission()
@@ -245,6 +250,7 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_TAB, selectedTab)
+        if (::tvName.isInitialized && tvName.text != "...") outState.putString(STATE_FIRST_NAME, tvName.text.toString())
     }
 
     private fun highlightIds(intent: Intent?): List<String>? =
@@ -392,10 +398,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupUI() {
         tvName = findViewById(R.id.tvFirstName)
-        tvName.text = "..."
+        // Recreated (e.g. theme switch): keep the name instead of flashing "..." while it reloads.
+        tvName.text = savedFirstName ?: "..."
         tvAvatarInitial = findViewById(R.id.tvAvatarInitial)
 
-        tvAvatarInitial.text = "0"
+        tvAvatarInitial.text = savedFirstName?.firstOrNull()?.uppercase() ?: "0"
 
         val authHelper = AuthHelper()
         val uid = authHelper.getCurrentUser()?.uid

@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.CrosswordLevelEntity
 import com.example.basaya.data.model.CrosswordGameLevel
+import androidx.room.withTransaction
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
@@ -18,13 +19,15 @@ class CrosswordRepository(private val context: Context) {
 
     /**
      * Room-first, Firestore-fallback for DISPLAY purposes only.
-     * The fallback does NOT write to Room — only syncLevels()
-     * (called from the Download button flow) is allowed to persist locally.
+     * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
      */
     suspend fun getLevels(lessonId: String): List<CrosswordGameLevel> {
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
+            // When online, refresh the downloaded copy so level edits made in basaya-web reach
+            // the student (Gawain and quiz do the same). Offline, the saved copy is used as before.
+            fetchLevelEntities(lessonId)?.let { replaceSavedLevels(lessonId, it) }
             return db.crosswordLevelDao().getLevelsForLesson(lessonId)
                 .map { entity ->
                     CrosswordGameLevel(
@@ -43,6 +46,12 @@ class CrosswordRepository(private val context: Context) {
      * Only called from the lesson Download button (LessonRepository.downloadLesson).
      */
     suspend fun syncLevels(lessonId: String) {
+        val levels = fetchLevelEntities(lessonId) ?: return // Offline — leave whatever's already cached alone
+        replaceSavedLevels(lessonId, levels)
+    }
+
+    /** The lesson's levels from the server, or null when it can't be reached. */
+    private suspend fun fetchLevelEntities(lessonId: String): List<CrosswordLevelEntity>? {
         val snapshot = try {
             firestore
                 .collection("lessons")
@@ -52,10 +61,10 @@ class CrosswordRepository(private val context: Context) {
                 .get(Source.SERVER)
                 .await()
         } catch (e: Exception) {
-            return // Offline — leave whatever's already cached alone
+            return null
         }
 
-        val levels = snapshot.documents.map { doc ->
+        return snapshot.documents.map { doc ->
             CrosswordLevelEntity(
                 id = doc.id,
                 lessonId = lessonId,
@@ -64,8 +73,17 @@ class CrosswordRepository(private val context: Context) {
                 order = doc.getLong("order")?.toInt() ?: 0
             )
         }
+    }
 
-        db.crosswordLevelDao().insertAll(levels)
+    /**
+     * The saved levels become exactly these. basaya-web gives the levels new ids on every
+     * save, so only inserting would keep the old levels next to the new ones.
+     */
+    private suspend fun replaceSavedLevels(lessonId: String, levels: List<CrosswordLevelEntity>) {
+        db.withTransaction {
+            db.crosswordLevelDao().deleteByLessonId(lessonId)
+            db.crosswordLevelDao().insertAll(levels)
+        }
     }
 
     /**

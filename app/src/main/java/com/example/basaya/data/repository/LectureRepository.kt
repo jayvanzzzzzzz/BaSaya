@@ -1,6 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.basaya.data.audio.LectureAudioStore
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.LectureEntity
@@ -21,25 +22,54 @@ class LectureRepository(private val context: Context) {
 
     /**
      * Room-first, Firestore-fallback for DISPLAY purposes only.
-     * The fallback does NOT write to Room — only downloadLecture()/syncLecture()
-     * (called from the Download button flow) are allowed to persist locally.
+     * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
      */
     suspend fun getLecture(lessonId: String): Lecture? {
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
-            db.lectureDao().getLecture(lessonId)?.let { cached ->
-                val pagesType = object : TypeToken<List<LecturePage>>() {}.type
-                return Lecture(
-                    id = lessonId,
-                    title = cached.title,
-                    pages = gson.fromJson(cached.pagesJson, pagesType)
-                )
-            }
-            return null
+            val saved = savedLecture(lessonId)
+            // When online, refresh the downloaded copy so edits made in basaya-web reach the
+            // student (Gawain and quiz do the same). Offline, the saved copy is used as before.
+            val fresh = fetchFromFirestore(lessonId) ?: return saved
+            return if (refreshSaved(lessonId, fresh, saved)) fresh else saved
         }
 
         return fetchFromFirestore(lessonId)
+    }
+
+    private suspend fun savedLecture(lessonId: String): Lecture? {
+        val cached = db.lectureDao().getLecture(lessonId) ?: return null
+        val pagesType = object : TypeToken<List<LecturePage>>() {}.type
+        return Lecture(
+            id = lessonId,
+            title = cached.title,
+            pages = gson.fromJson(cached.pagesJson, pagesType)
+        )
+    }
+
+    /**
+     * Saves the new version of a downloaded lecture. Its audio is downloaded again only when
+     * a sentence's audio changed; if that fails, the saved copy stays as it was (false).
+     */
+    private suspend fun refreshSaved(lessonId: String, fresh: Lecture, saved: Lecture?): Boolean {
+        val audioOf = { lecture: Lecture? -> lecture?.pages?.map { it.pageNumber to it.audioUrls.orEmpty() } }
+        if (audioOf(fresh) != audioOf(saved)) {
+            try {
+                LectureAudioStore.download(context, lessonId, fresh.pages)
+            } catch (e: Exception) {
+                Log.w("LectureRepository", "Could not update the lecture audio for $lessonId", e)
+                return false
+            }
+        }
+        db.lectureDao().insert(
+            LectureEntity(
+                lessonId = lessonId,
+                title = fresh.title,
+                pagesJson = gson.toJson(fresh.pages)
+            )
+        )
+        return true
     }
 
     /** Fetches + caches to Room. Called from the Download button flow. */

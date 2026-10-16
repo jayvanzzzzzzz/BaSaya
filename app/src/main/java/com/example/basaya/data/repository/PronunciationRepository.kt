@@ -1,6 +1,7 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.basaya.data.audio.PronunciationAudioStore
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.PronunciationEntity
@@ -20,14 +21,27 @@ class PronunciationRepository(private val context: Context) {
 
     /**
      * Room-first, Firestore-fallback for DISPLAY purposes only.
-     * The fallback does NOT write to Room — only downloadPronunciation()
-     * (called from the Download button flow) is allowed to persist locally.
+     * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
      */
     suspend fun getActivity(lessonId: String): PronunciationActivityData? {
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
-            return db.pronunciationDao().getActivity(lessonId)?.toPronunciationActivityData()
+            val saved = db.pronunciationDao().getActivity(lessonId)?.toPronunciationActivityData()
+            // When online, refresh the downloaded copy so word edits made in basaya-web reach the
+            // student (Gawain and quiz do the same). The audio is downloaded again only when it
+            // changed; if that fails, the saved copy stays as it was. Offline, it's used as before.
+            val fresh = fetchFromFirestore(lessonId) ?: return saved
+            if (fresh.audioRefs != saved?.audioRefs) {
+                try {
+                    PronunciationAudioStore.download(context, lessonId, fresh.audioRefs)
+                } catch (e: Exception) {
+                    Log.w("PronunciationRepo", "Could not update the word audio for $lessonId", e)
+                    return saved
+                }
+            }
+            db.pronunciationDao().insert(fresh.toEntity(lessonId))
+            return fresh
         }
 
         return fetchFromFirestore(lessonId)

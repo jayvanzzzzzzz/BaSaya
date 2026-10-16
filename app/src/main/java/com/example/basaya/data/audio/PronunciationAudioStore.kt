@@ -17,16 +17,17 @@ object PronunciationAudioStore {
     fun localFile(context: Context, lessonId: String, wordIndex: Int): File =
         File(lessonDir(context, lessonId), "w$wordIndex.mp3")
 
-    /** Downloads every word that has a cloud URL. Throws if any file fails. */
+    /**
+     * Downloads every word that has a cloud URL, replacing the lesson's saved audio.
+     * Throws if any file fails, and then the audio saved before stays as it was.
+     */
     suspend fun download(context: Context, lessonId: String, audioRefs: List<String>) =
         withContext(Dispatchers.IO) {
-            val dir = lessonDir(context, lessonId)
-            dir.deleteRecursively() // drop audio from an older version of the activity
-            dir.mkdirs()
-
-            audioRefs.forEachIndexed { index, url ->
-                if (url.startsWith("https://")) {
-                    LectureAudioStore.downloadFile(url, localFile(context, lessonId, index))
+            LectureAudioStore.replaceDir(lessonDir(context, lessonId)) { staging ->
+                audioRefs.forEachIndexed { index, url ->
+                    if (url.startsWith("https://")) {
+                        LectureAudioStore.downloadFile(url, File(staging, "w$index.mp3"))
+                    }
                 }
             }
         }

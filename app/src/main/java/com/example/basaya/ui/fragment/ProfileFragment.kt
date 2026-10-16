@@ -16,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
@@ -23,6 +24,7 @@ import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.auth.PasswordRule
 import com.example.basaya.ui.LogInActivity
 import com.example.basaya.ui.theme.ThemeMode
+import com.example.basaya.ui.theme.ThemeReveal
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
@@ -117,6 +119,7 @@ class ProfileFragment : Fragment() {
         view.findViewById<MaterialButton>(R.id.btnLogout).setOnClickListener { confirmLogout() }
         setupThemePicker(view.findViewById(R.id.pfThemeGroup))
         setupAppVersion(view.findViewById(R.id.pfVersion))
+        savedInstanceState?.let { restoreState(view, it) }
 
         loadProfile()
         return view
@@ -560,7 +563,10 @@ class ProfileFragment : Fragment() {
 
     // ───────────────────────────── Theme ─────────────────────────────
 
-    /** System / Light / Dark. Picking one re-themes the app right away (screens are recreated). */
+    /**
+     * System / Light / Dark. Picking one re-themes the app right away: the screen is recreated
+     * and the new colors grow out of the tapped button (see [ThemeReveal]).
+     */
     private fun setupThemePicker(group: MaterialButtonToggleGroup) {
         val buttons = mapOf(
             ThemeMode.SYSTEM to R.id.pfThemeSystem,
@@ -571,8 +577,39 @@ class ProfileFragment : Fragment() {
         group.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
             val mode = buttons.entries.first { it.value == checkedId }.key
-            if (mode != ThemeMode.saved(requireContext())) ThemeMode.choose(requireContext(), mode)
+            if (mode == ThemeMode.saved(requireContext())) return@addOnButtonCheckedListener
+            // Let the segment show as picked for a moment before the screen is recreated.
+            val tapped = group.findViewById<View>(checkedId)
+            group.postDelayed({
+                if (isAdded) ThemeReveal.switchTo(requireActivity(), mode, tapped)
+            }, 120)
         }
+    }
+
+    // Survive the recreate after a theme switch: same scroll spot, no "loading" flash.
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        view?.let { outState.putInt(STATE_SCROLL_Y, it.scrollY) }
+        outState.putStringArray(
+            STATE_PROFILE,
+            with(profile) { arrayOf(firstName, middleName, lastName, gender, dob, classId, className) }
+        )
+        outState.putString(STATE_LEAVE, leaveState.name)
+        outState.putString(STATE_DECLINED_NOTE, declinedNote)
+    }
+
+    private fun restoreState(view: View, state: Bundle) {
+        state.getStringArray(STATE_PROFILE)?.takeIf { it.size == 7 }?.let { p ->
+            profile = Profile(p[0], p[1], p[2], p[3], p[4], p[5], p[6])
+            showProfile()
+        }
+        leaveState = state.getString(STATE_LEAVE)
+            ?.let { name -> LeaveState.entries.firstOrNull { it.name == name } } ?: leaveState
+        declinedNote = state.getString(STATE_DECLINED_NOTE).orEmpty()
+        showClassSection()
+
+        val scrollY = state.getInt(STATE_SCROLL_Y, 0)
+        if (scrollY > 0) view.doOnLayout { view.scrollTo(0, scrollY) }
     }
 
     // ───────────────────────────── Logout & version ─────────────────────────────
@@ -602,6 +639,11 @@ class ProfileFragment : Fragment() {
     }
 
     private companion object {
+        const val STATE_SCROLL_Y = "scrollY"
+        const val STATE_PROFILE = "profile"
+        const val STATE_LEAVE = "leaveState"
+        const val STATE_DECLINED_NOTE = "declinedNote"
+
         val FILIPINO_MONTHS = listOf(
             "Enero", "Pebrero", "Marso", "Abril", "Mayo", "Hunyo",
             "Hulyo", "Agosto", "Setyembre", "Oktubre", "Nobyembre", "Disyembre"

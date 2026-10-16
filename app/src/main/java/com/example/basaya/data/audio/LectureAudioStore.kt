@@ -20,23 +20,47 @@ object LectureAudioStore {
     private const val TIMEOUT_MS = 15_000
 
     fun localFile(context: Context, lessonId: String, pageNumber: Int, sentenceIndex: Int): File =
-        File(lessonDir(context, lessonId), "p${pageNumber}_s${sentenceIndex}.mp3")
+        File(lessonDir(context, lessonId), fileName(pageNumber, sentenceIndex))
 
-    /** Downloads every sentence that has a cloud URL. Throws if any file fails. */
+    private fun fileName(pageNumber: Int, sentenceIndex: Int) = "p${pageNumber}_s${sentenceIndex}.mp3"
+
+    /**
+     * Downloads every sentence that has a cloud URL, replacing the lesson's saved audio.
+     * Throws if any file fails, and then the audio saved before stays as it was.
+     */
     suspend fun download(context: Context, lessonId: String, pages: List<LecturePage>) =
         withContext(Dispatchers.IO) {
-            val dir = lessonDir(context, lessonId)
-            dir.deleteRecursively() // drop audio from an older version of the lecture
-            dir.mkdirs()
-
-            pages.forEach { page ->
-                page.audioUrls.orEmpty().forEachIndexed { index, url ->
-                    if (url.isNotBlank()) {
-                        downloadFile(url, localFile(context, lessonId, page.pageNumber, index))
+            replaceDir(lessonDir(context, lessonId)) { staging ->
+                pages.forEach { page ->
+                    page.audioUrls.orEmpty().forEachIndexed { index, url ->
+                        if (url.isNotBlank()) {
+                            downloadFile(url, File(staging, fileName(page.pageNumber, index)))
+                        }
                     }
                 }
             }
         }
+
+    /**
+     * Fills a staging folder, then swaps it in for `dir` (dropping audio from an older version).
+     * On failure the staging folder is removed and `dir` is left untouched.
+     */
+    internal fun replaceDir(dir: File, fill: (staging: File) -> Unit) {
+        val staging = File(dir.parentFile, "${dir.name}.new")
+        staging.deleteRecursively()
+        staging.mkdirs()
+        try {
+            fill(staging)
+        } catch (e: Exception) {
+            staging.deleteRecursively()
+            throw e
+        }
+        dir.deleteRecursively()
+        if (!staging.renameTo(dir)) {
+            staging.deleteRecursively()
+            throw IOException("Could not save the audio for ${dir.name}")
+        }
+    }
 
     fun delete(context: Context, lessonId: String) {
         lessonDir(context, lessonId).deleteRecursively()
