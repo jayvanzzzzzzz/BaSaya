@@ -5,14 +5,24 @@ import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.CrosswordLevelEntity
 import com.example.basaya.data.model.CrosswordGameLevel
 import androidx.room.withTransaction
+import com.example.basaya.data.progress.PracticeLessons
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import com.example.basaya.data.entity.CrosswordProgress
 import com.google.firebase.auth.FirebaseAuth
 import kotlin.Float
+import java.util.concurrent.ConcurrentHashMap
 
 class CrosswordRepository(private val context: Context) {
+
+    private companion object {
+        /**
+         * Levels of lessons that aren't downloaded, kept in memory (never in Room) while the
+         * app is open, so "Next level" still works if the connection drops mid-game.
+         */
+        val sessionLevels = ConcurrentHashMap<String, List<CrosswordGameLevel>>()
+    }
 
     private val db by lazy { AppDatabase.getDatabase(context) }
     private val firestore = FirebaseFirestore.getInstance()
@@ -55,7 +65,7 @@ class CrosswordRepository(private val context: Context) {
         val snapshot = try {
             firestore
                 .collection("lessons")
-                .document(lessonId)
+                .document(PracticeLessons.contentId(lessonId))
                 .collection("game")
                 .orderBy("level")
                 .get(Source.SERVER)
@@ -92,10 +102,10 @@ class CrosswordRepository(private val context: Context) {
      * lesson hasn't been downloaded yet.
      */
     suspend fun fetchLevelsRemote(lessonId: String): List<CrosswordGameLevel> {
-        return try {
+        val levels = try {
             val snapshot = firestore
                 .collection("lessons")
-                .document(lessonId)
+                .document(PracticeLessons.contentId(lessonId))
                 .collection("game")
                 .orderBy("level")
                 .get(Source.SERVER)
@@ -109,8 +119,11 @@ class CrosswordRepository(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
-            emptyList() // Offline and not downloaded
+            // Offline and not downloaded: levels read earlier while the app is open still work.
+            return sessionLevels[lessonId].orEmpty()
         }
+        if (levels.isNotEmpty()) sessionLevels[lessonId] = levels
+        return levels
     }
 
     /**

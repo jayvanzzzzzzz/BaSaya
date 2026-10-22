@@ -48,6 +48,10 @@
         <activity
             android:name=".ui.notifications.NotificationsActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.dictionary.DictionaryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_book" />
@@ -90,7 +94,11 @@
             android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
-            android:exported="true">
+            android:exported="true" />
+        <activity
+            android:name=".ui.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BaSaya.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

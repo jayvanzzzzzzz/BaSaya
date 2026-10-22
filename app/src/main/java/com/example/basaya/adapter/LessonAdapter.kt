@@ -8,21 +8,23 @@ import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Typeface
 import android.view.animation.AccelerateDecelerateInterpolator
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.PopupMenu
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.basaya.R
 import com.example.basaya.data.entity.LessonEntity
@@ -32,17 +34,17 @@ import com.example.basaya.data.schedule.LessonSchedule.Availability
 class LessonAdapter(
     private var lessonList: List<LessonEntity>,
     private val onItemClick: (LessonEntity) -> Unit,
-    private val onDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit,
+    private val onDownloadClick: (LessonEntity, onProgress: (Int) -> Unit, onResult: (Boolean) -> Unit) -> Unit,
     private val onRemoveDownloadClick: (LessonEntity, onResult: (Boolean) -> Unit) -> Unit
 ) : RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
 
     private var highlightQuery: String = ""
 
-    // Tracks which lessonIds currently have a download in flight, so the
-    // spinner survives view recycling and re-binds correctly.
-    private val downloadingIds = mutableSetOf<String>()
+    // Percent (0–100) of each lesson with a download in flight, so the
+    // progress ring survives view recycling and re-binds correctly.
+    private val downloadProgress = mutableMapOf<String, Int>()
 
-    // Tracks which lessonIds are currently being removed, so the 3-dot
+    // Tracks which lessonIds are currently being removed, so the remove
     // menu can't be double-tapped mid-delete.
     private val removingIds = mutableSetOf<String>()
 
@@ -60,61 +62,43 @@ class LessonAdapter(
     inner class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
-        private val tvDescription: TextView = itemView.findViewById(R.id.tvDescription)
+        private val tvMeta: TextView = itemView.findViewById(R.id.tvMeta)
         private val tvSchedule: TextView = itemView.findViewById(R.id.tvSchedule)
-        private val tvProgress: TextView = itemView.findViewById(R.id.tvProgress)
-        private val tvDifficultyLabel: TextView = itemView.findViewById(R.id.tvDifficultyLabel)
-        private val vDifficultyDot: View = itemView.findViewById(R.id.vDifficultyDot)
-        private val tvLessonEyebrow: TextView = itemView.findViewById(R.id.tvLessonEyebrow)
-        private val progressLesson: ProgressBar = itemView.findViewById(R.id.progressLesson)
-        private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
-        private val tvCheckDownload: TextView = itemView.findViewById(R.id.tvCheckDownload)
+        private val progressRow: View = itemView.findViewById(R.id.progressRow)
+        private val segLecture: View = itemView.findViewById(R.id.segLecture)
+        private val segGame: View = itemView.findViewById(R.id.segGame)
+        private val segActivity: View = itemView.findViewById(R.id.segActivity)
+        private val segQuiz: View = itemView.findViewById(R.id.segQuiz)
+        private val tvProgressLabel: TextView = itemView.findViewById(R.id.tvProgressLabel)
         private val ibDownload: ImageView = itemView.findViewById(R.id.ibDownload)
-        private val pbDownload: ProgressBar = itemView.findViewById(R.id.pbDownload)
-        private val ibMoreOptions: ImageButton = itemView.findViewById(R.id.ibMoreOptions)
-        private val downloadButton: LinearLayout = itemView.findViewById(R.id.downloadButton)
+        private val pbDownload: CircularProgressIndicator = itemView.findViewById(R.id.pbDownload)
+        private val downloadButton: View = itemView.findViewById(R.id.downloadButton)
 
         fun bind(lesson: LessonEntity) {
             tvTitle.text = buildHighlightedTitle(tvTitle.context, lesson.title, highlightQuery)
-            tvDescription.text = lesson.description
-            tvDifficultyLabel.text = lesson.difficulty.replaceFirstChar { it.uppercase() }
-            tvLessonEyebrow.text = if (lesson.order > 0) {
-                itemView.context.getString(R.string.lesson_card_eyebrow_numbered, lesson.order)
-            } else {
-                itemView.context.getString(R.string.lesson_card_eyebrow)
-            }
+            tvMeta.text = buildMeta(itemView.context, lesson)
 
-            bindProgressBadge(tvProgress, lesson)
-            bindProgressBar(progressLesson, tvProgressPercent, lesson)
-            bindDownloadState(lesson)
+            bindSteps(lesson)
+            bindDownloadState(lesson, animate = false)
             bindSchedule(tvSchedule, lesson)
             // Locked lessons stay visible but dimmed; tapping explains why.
             itemView.alpha = if (LessonSchedule.canOpen(itemView.context, lesson)) 1f else 0.6f
             if (glowIds.remove(lesson.id)) playGlow(itemView as MaterialCardView)
 
-            val difficultyColor = ContextCompat.getColor(
-                itemView.context,
-                when (lesson.difficulty.lowercase()) {
-                    "beginner"     -> R.color.lesson_diff_beginner
-                    "intermediate" -> R.color.lesson_diff_intermediate
-                    "advanced"     -> R.color.lesson_diff_advanced
-                    else           -> R.color.lesson_diff_default
-                }
-            )
-
-            vDifficultyDot.backgroundTintList = ColorStateList.valueOf(difficultyColor)
-            tvDifficultyLabel.setTextColor(difficultyColor)
-
             itemView.setOnClickListener { onItemClick(lesson) }
 
             downloadButton.setOnClickListener {
-                if (lesson.isDownloaded || downloadingIds.contains(lesson.id)) return@setOnClickListener
+                if (downloadProgress.containsKey(lesson.id) || removingIds.contains(lesson.id)) return@setOnClickListener
+                if (lesson.isDownloaded) {
+                    showRemoveDownloadMenu(lesson)
+                    return@setOnClickListener
+                }
 
-                downloadingIds.add(lesson.id)
-                bindDownloadState(lesson)
+                downloadProgress[lesson.id] = 0
+                bindDownloadState(lesson, animate = false)
 
-                onDownloadClick(lesson) { success ->
-                    downloadingIds.remove(lesson.id)
+                onDownloadClick(lesson, { percent -> updateDownloadProgress(lesson.id, percent) }) { success ->
+                    downloadProgress.remove(lesson.id)
 
                     if (success) {
                         markDownloaded(lesson.id)
@@ -123,15 +107,55 @@ class LessonAdapter(
                     }
                 }
             }
+        }
 
-            ibMoreOptions.setOnClickListener {
-                if (removingIds.contains(lesson.id)) return@setOnClickListener
-                showRemoveDownloadMenu(lesson)
+        /**
+         * One segment per lesson part (lecture, game, Gawain, quiz); parts the teacher skipped are
+         * hidden. Finished parts fill amber while the lesson is in progress and all turn green once
+         * it is done. A Practice lesson saves no progress, so it has no step bar.
+         */
+        private fun bindSteps(lesson: LessonEntity) {
+            if (lesson.practice) {
+                progressRow.visibility = View.GONE
+                return
+            }
+            progressRow.visibility = View.VISIBLE
+
+            val context = itemView.context
+            val parts = listOf(
+                Triple(segLecture, lesson.lectureFinished, false),
+                Triple(segGame, lesson.gameFinished, lesson.gameSkipped),
+                Triple(segActivity, lesson.activityFinished, lesson.activitySkipped),
+                Triple(segQuiz, lesson.quizFinished, false)
+            )
+            val shown = parts.filterNot { it.third }
+            val doneCount = shown.count { it.second }
+            val allDone = doneCount == shown.size
+
+            val fill = ContextCompat.getColor(context, if (allDone) R.color.lesson_seg_done else R.color.lesson_seg_progress)
+            val track = ContextCompat.getColor(context, R.color.lesson_card_track)
+            parts.forEach { (segment, finished, skipped) ->
+                segment.visibility = if (skipped) View.GONE else View.VISIBLE
+                segment.backgroundTintList = ColorStateList.valueOf(if (finished) fill else track)
+            }
+
+            val labelColor = when {
+                allDone -> R.color.lesson_status_done_fg
+                doneCount > 0 -> R.color.lesson_status_progress_fg
+                else -> R.color.lesson_status_new_fg
+            }
+            tvProgressLabel.setTextColor(ContextCompat.getColor(context, labelColor))
+            if (allDone) {
+                tvProgressLabel.setText(R.string.lesson_card_done)
+                progressRow.contentDescription = context.getString(R.string.lesson_card_done_cd)
+            } else {
+                tvProgressLabel.text = context.getString(R.string.lesson_card_parts, doneCount, shown.size)
+                progressRow.contentDescription = context.getString(R.string.lesson_card_parts_cd, doneCount, shown.size)
             }
         }
 
         private fun showRemoveDownloadMenu(lesson: LessonEntity) {
-            val popup = PopupMenu(itemView.context, ibMoreOptions)
+            val popup = PopupMenu(itemView.context, downloadButton)
             popup.menu.add("Alisin ang Download")
 
             popup.setOnMenuItemClickListener {
@@ -152,81 +176,82 @@ class LessonAdapter(
             popup.show()
         }
 
-        private fun bindDownloadState(lesson: LessonEntity) {
-            val isDownloading = downloadingIds.contains(lesson.id)
+        /**
+         * Outline arrow → progress ring → outline check. The ring spins until the first progress
+         * arrives (the lesson data is still being fetched), then fills to the download percent.
+         */
+        fun bindDownloadState(lesson: LessonEntity, animate: Boolean = true) {
+            val context = itemView.context
+            val progress = downloadProgress[lesson.id]
 
             when {
-                isDownloading -> {
+                progress != null -> {
                     ibDownload.visibility = View.GONE
+                    val indeterminate = progress == 0
+                    if (pbDownload.isIndeterminate != indeterminate) {
+                        // Switch modes while hidden; some Material versions refuse it while shown.
+                        pbDownload.visibility = View.INVISIBLE
+                        pbDownload.isIndeterminate = indeterminate
+                    }
+                    if (!indeterminate) pbDownload.setProgressCompat(progress, animate)
                     pbDownload.visibility = View.VISIBLE
-                    ibMoreOptions.visibility = View.GONE
-                    tvCheckDownload.text = "Dina-download..."
+                    downloadButton.contentDescription = if (indeterminate) {
+                        context.getString(R.string.lesson_card_downloading_cd)
+                    } else {
+                        context.getString(R.string.lesson_card_downloading_percent_cd, progress)
+                    }
                 }
                 lesson.isDownloaded -> {
                     ibDownload.visibility = View.VISIBLE
                     pbDownload.visibility = View.GONE
                     ibDownload.setImageResource(R.drawable.ic_check_download)
-                    ibMoreOptions.visibility = View.VISIBLE
-                    tvCheckDownload.text = "Na-download na"
+                    downloadButton.contentDescription = context.getString(R.string.lesson_card_downloaded_cd)
                 }
                 else -> {
                     ibDownload.visibility = View.VISIBLE
                     pbDownload.visibility = View.GONE
                     ibDownload.setImageResource(R.drawable.ic_download)
-                    ibMoreOptions.visibility = View.GONE
-                    tvCheckDownload.text = "I-download"
+                    downloadButton.contentDescription = context.getString(R.string.lesson_card_download_cd)
                 }
             }
         }
     }
 
-    private fun bindProgressBadge(tvProgress: TextView, lesson: LessonEntity) {
-        val context = tvProgress.context
-
-        val lectureFinished = lesson.lectureFinished
-        // A game or Gawain the teacher skipped is not part of the lesson: it never counts as
-        // "started", and it never blocks the lesson from being complete.
-        val gameFinished = lesson.gameFinished && !lesson.gameSkipped
-        val gameDone = lesson.gameFinished || lesson.gameSkipped
-        val activityFinished = lesson.activityFinished && !lesson.activitySkipped
-        val activityDone = lesson.activityFinished || lesson.activitySkipped
-        val quizFinished = lesson.quizFinished
-
-        val anyFinished = lectureFinished || gameFinished || activityFinished || quizFinished
-        val allFinished = lectureFinished && gameDone && activityDone && quizFinished
-
-        val foregroundRes = when {
-            allFinished -> {
-                tvProgress.text = "Tapos na"
-                tvProgress.setBackgroundResource(R.drawable.bg_lesson_status_done)
-                tvProgress.setCompoundDrawablesWithIntrinsicBounds(
-                    R.drawable.ic_status_check, 0, 0, 0
-                )
-                R.color.lesson_status_done_fg
-            }
-            anyFinished -> {
-                tvProgress.text = "Nasa progreso"
-                tvProgress.setBackgroundResource(R.drawable.bg_lesson_status_progress)
-                tvProgress.setCompoundDrawablesWithIntrinsicBounds(
-                    R.drawable.ic_status_progress, 0, 0, 0
-                )
-                R.color.lesson_status_progress_fg
-            }
-            else -> {
-                tvProgress.text = "Hindi pa nasisimulan"
-                tvProgress.setBackgroundResource(R.drawable.bg_lesson_status_new)
-                tvProgress.setCompoundDrawablesWithIntrinsicBounds(
-                    R.drawable.ic_status_locked, 0, 0, 0
-                )
-                R.color.lesson_status_new_fg
-            }
+    /** "Aralin 3 · Pagtataya · ● Beginner", with the mode and difficulty in their own colors. */
+    private fun buildMeta(context: Context, lesson: LessonEntity): CharSequence {
+        val meta = SpannableStringBuilder()
+        if (lesson.order > 0) {
+            meta.append(context.getString(R.string.lesson_card_number, lesson.order)).append(" · ")
         }
 
-        // Status icons are white vectors; tint them to match the soft badge foreground.
-        val foreground = ContextCompat.getColor(context, foregroundRes)
-        tvProgress.setTextColor(foreground)
-        TextViewCompat.setCompoundDrawableTintList(tvProgress, ColorStateList.valueOf(foreground))
-        tvProgress.compoundDrawablePadding = (5 * context.resources.displayMetrics.density).toInt()
+        val (modeText, modeColor) = if (lesson.practice) {
+            R.string.lesson_mode_practice to R.color.pg_pagkilala
+        } else {
+            R.string.lesson_mode_assessment to R.color.pg_unawa
+        }
+        meta.appendSpan(context.getString(modeText), ContextCompat.getColor(context, modeColor))
+
+        if (lesson.difficulty.isNotBlank()) {
+            val difficultyColor = ContextCompat.getColor(
+                context,
+                when (lesson.difficulty.lowercase()) {
+                    "beginner"     -> R.color.lesson_diff_beginner
+                    "intermediate" -> R.color.lesson_diff_intermediate
+                    "advanced"     -> R.color.lesson_diff_advanced
+                    else           -> R.color.lesson_diff_default
+                }
+            )
+            meta.append(" · ")
+            meta.appendSpan("● " + lesson.difficulty.replaceFirstChar { it.uppercase() }, difficultyColor)
+        }
+        return meta
+    }
+
+    private fun SpannableStringBuilder.appendSpan(text: String, color: Int) {
+        val start = length
+        append(text)
+        setSpan(ForegroundColorSpan(color), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setSpan(StyleSpan(Typeface.BOLD), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
     /** About 2.5 s of a gold-and-violet glowing outline and a gentle pulse, then back to normal. */
@@ -273,27 +298,19 @@ class LessonAdapter(
         val availability = LessonSchedule.availability(context, lesson)
 
         val text: String
-        val backgroundRes: Int
         val foregroundRes: Int
-        val iconRes: Int
         when {
             availability == Availability.NOT_YET_OPEN || availability == Availability.NEEDS_INTERNET -> {
                 text = context.getString(R.string.schedule_opens, LessonSchedule.format(lesson.openAt))
-                backgroundRes = R.drawable.bg_lesson_status_new
                 foregroundRes = R.color.lesson_status_new_fg
-                iconRes = R.drawable.ic_status_locked
             }
             availability == Availability.CLOSED -> {
                 text = context.getString(R.string.schedule_closed, LessonSchedule.format(lesson.dueAt))
-                backgroundRes = R.drawable.bg_lesson_status_new
                 foregroundRes = R.color.lesson_diff_advanced
-                iconRes = R.drawable.ic_status_locked
             }
             lesson.dueAt != null -> {
                 text = context.getString(R.string.schedule_due, LessonSchedule.format(lesson.dueAt))
-                backgroundRes = R.drawable.bg_lesson_status_progress
                 foregroundRes = R.color.lesson_status_progress_fg
-                iconRes = 0
             }
             else -> {
                 tvSchedule.visibility = View.GONE
@@ -301,29 +318,9 @@ class LessonAdapter(
             }
         }
 
-        val foreground = ContextCompat.getColor(context, foregroundRes)
         tvSchedule.visibility = View.VISIBLE
         tvSchedule.text = text
-        tvSchedule.setBackgroundResource(backgroundRes)
-        tvSchedule.setTextColor(foreground)
-        tvSchedule.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
-        TextViewCompat.setCompoundDrawableTintList(tvSchedule, ColorStateList.valueOf(foreground))
-    }
-
-    private fun bindProgressBar(progressLesson: ProgressBar, tvProgressPercent: TextView, lesson: LessonEntity) {
-        // 4 content types per lesson, minus the game and/or Gawain when the teacher skipped them
-        val parts = listOfNotNull(
-            lesson.lectureFinished,
-            lesson.gameFinished.takeUnless { lesson.gameSkipped },
-            lesson.activityFinished.takeUnless { lesson.activitySkipped },
-            lesson.quizFinished
-        )
-        val completedCount = parts.count { it }
-
-        val percent = (completedCount * 100) / parts.size
-
-        progressLesson.progress = percent
-        tvProgressPercent.text = "$percent%"
+        tvSchedule.setTextColor(ContextCompat.getColor(context, foregroundRes))
     }
 
     private fun buildHighlightedTitle(context: Context, title: String, query: String): CharSequence {
@@ -354,12 +351,30 @@ class LessonAdapter(
         holder.bind(lessonList[position])
     }
 
+    override fun onBindViewHolder(holder: LessonViewHolder, position: Int, payloads: List<Any>) {
+        // A progress tick only touches the ring, so the card doesn't flash on every percent.
+        if (payloads.isNotEmpty() && payloads.all { it == PAYLOAD_DOWNLOAD_PROGRESS }) {
+            holder.bindDownloadState(lessonList[position])
+        } else {
+            super.onBindViewHolder(holder, position, payloads)
+        }
+    }
+
     override fun getItemCount() = lessonList.size
 
     fun updateList(newList: List<LessonEntity>, query: String = "") {
         lessonList = newList
         highlightQuery = query
         notifyDataSetChanged()
+    }
+
+    /** Moves a lesson's progress ring; ignored once its download has finished. */
+    private fun updateDownloadProgress(lessonId: String, percent: Int) {
+        if (!downloadProgress.containsKey(lessonId)) return
+        downloadProgress[lessonId] = percent
+
+        val index = lessonList.indexOfFirst { it.id == lessonId }
+        if (index != -1) notifyItemChanged(index, PAYLOAD_DOWNLOAD_PROGRESS)
     }
 
     /** Flips a single lesson's isDownloaded flag to true and refreshes just that row. */
@@ -382,5 +397,9 @@ class LessonAdapter(
             this[index] = this[index].copy(isDownloaded = false)
         }
         notifyItemChanged(index)
+    }
+
+    private companion object {
+        const val PAYLOAD_DOWNLOAD_PROGRESS = "download_progress"
     }
 }

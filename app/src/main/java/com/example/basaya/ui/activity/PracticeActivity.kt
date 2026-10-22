@@ -464,6 +464,7 @@ class PracticeActivity : AppCompatActivity() {
                 putExtra("SCORE", score)
                 putExtra("TOTAL", total)
                 putExtra("ACTIVITY_TITLE", practiceData.title)
+                putExtra("LESSON_ID", lessonId)
             }
             startActivity(intent)
             finish()

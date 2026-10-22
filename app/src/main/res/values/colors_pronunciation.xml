@@ -29,4 +29,9 @@
     <color name="pr_surface">#FFFFFF</color>
     <color name="pr_pill">#B3FFFFFF</color>
     <color name="pr_progress_start">#FFB35C</color>
+    <!-- Word meaning button and sheet: the Diksiyonaryo's green, bright so it's noticed -->
+    <color name="pr_word_info">#24994A</color>
+    <color name="pr_word_info_lip">#1B7537</color>
+    <color name="pr_word_info_chip_bg">#E6F6EA</color>
+    <color name="pr_word_info_chip_ink">#1B7537</color>
 </resources>

@@ -20,17 +20,25 @@ object PronunciationAudioStore {
     /**
      * Downloads every word that has a cloud URL, replacing the lesson's saved audio.
      * Throws if any file fails, and then the audio saved before stays as it was.
+     * [onFile] is called on the IO thread after each file is saved.
      */
-    suspend fun download(context: Context, lessonId: String, audioRefs: List<String>) =
-        withContext(Dispatchers.IO) {
-            LectureAudioStore.replaceDir(lessonDir(context, lessonId)) { staging ->
-                audioRefs.forEachIndexed { index, url ->
-                    if (url.startsWith("https://")) {
-                        LectureAudioStore.downloadFile(url, File(staging, "w$index.mp3"))
-                    }
+    suspend fun download(
+        context: Context,
+        lessonId: String,
+        audioRefs: List<String>,
+        onFile: (done: Int, total: Int) -> Unit = { _, _ -> }
+    ) = withContext(Dispatchers.IO) {
+        val total = audioRefs.count { it.startsWith("https://") }
+        var done = 0
+        LectureAudioStore.replaceDir(lessonDir(context, lessonId)) { staging ->
+            audioRefs.forEachIndexed { index, url ->
+                if (url.startsWith("https://")) {
+                    LectureAudioStore.downloadFile(url, File(staging, "w$index.mp3"))
+                    onFile(++done, total)
                 }
             }
         }
+    }
 
     fun delete(context: Context, lessonId: String) {
         lessonDir(context, lessonId).deleteRecursively()

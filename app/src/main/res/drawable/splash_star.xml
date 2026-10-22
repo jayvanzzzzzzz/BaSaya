@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chubby five-point star for the splash sky; tinted per view. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/white"
+        android:strokeColor="@android:color/white"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.5"
+        android:pathData="M12,2.8L14.6,8.6L20.9,9.2L16.1,13.4L17.6,19.6L12,16.3L6.4,19.6L7.9,13.4L3.1,9.2L9.4,8.6Z" />
+</vector>

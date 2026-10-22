@@ -12,8 +12,6 @@
     <color name="lesson_card_body">@color/ns_ink_soft</color>
     <color name="lesson_card_track">@color/ns_track</color>
     <color name="lesson_card_primary_border">#8AEBBE</color>
-    <color name="lesson_downloaded_bg">@color/ns_mint_tint</color>
-    <color name="lesson_downloaded_ring">#3E9E72</color>
     <color name="lesson_downloaded_check">@color/ns_mint</color>
     <color name="lesson_search_highlight">#6B5714</color>
     <!-- Status badge -->
@@ -23,6 +21,9 @@
     <color name="lesson_status_progress_fg">@color/ns_gold</color>
     <color name="lesson_status_new_bg">@color/ns_surface_raised</color>
     <color name="lesson_status_new_fg">@color/ns_ink_soft</color>
+    <!-- Step bar segments -->
+    <color name="lesson_seg_progress">@color/ns_gold</color>
+    <color name="lesson_seg_done">@color/ns_mint</color>
     <!-- Difficulty -->
     <color name="lesson_diff_beginner">@color/ns_mint</color>
     <color name="lesson_diff_intermediate">@color/ns_tangerine</color>

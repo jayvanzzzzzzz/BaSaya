@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Diksiyonaryo: the header's sky-to-violet behind the status bar once the header scrolls away. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:endColor="@color/tb_end"
+        android:startColor="@color/tb_start" />
+</shape>

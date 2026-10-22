@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft halo behind the splash logo. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:endColor="@color/splash_glow_edge"
+        android:gradientRadius="50%p"
+        android:startColor="@color/splash_glow"
+        android:type="radial" />
+</shape>

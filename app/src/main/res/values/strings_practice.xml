@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Practice (Pagsasanay) vs Assessment (Pagtataya): the teacher's choice when adding a lesson in basaya-web -->
+    <string name="lesson_mode_practice">Pagsasanay</string>
+    <string name="lesson_mode_assessment">Pagtataya</string>
+    <string name="lesson_dash_eyebrow_practice">ARALIN · PAGSASANAY</string>
+    <string name="lesson_dash_eyebrow_assessment">ARALIN · PAGTATAYA</string>
+    <string name="practice_path_sub">Pagsasanay ito: sagutan ang kahit anong hakbang, ilang beses man. Hindi naitatala ang iyong iskor.</string>
+    <string name="practice_not_saved">Pagsasanay lang ito. Hindi naitatala ang iyong iskor.</string>
+    <string name="practice_try_again">Subukan muli</string>
+    <string name="practice_play_again">Maglaro muli</string>
+</resources>

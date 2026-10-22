@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Losing the connection inside a lesson that isn't downloaded -->
+    <string name="saved_offline_note">Naka-save sa phone. Ipapadala kapag may internet na.</string>
+    <string name="lecture_audio_offline">Walang internet — hindi ma-play ang tunog ng pahinang ito.</string>
+    <string name="cw_offline_levels">Walang internet. Kumonekta para ma-load ang laro.</string>
+</resources>

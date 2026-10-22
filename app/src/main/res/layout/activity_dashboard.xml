@@ -45,6 +45,7 @@
                 app:tint="@color/tb_on" />
 
             <TextView
+                android:id="@+id/tvLessonEyebrow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
@@ -139,6 +140,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvPathSub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"

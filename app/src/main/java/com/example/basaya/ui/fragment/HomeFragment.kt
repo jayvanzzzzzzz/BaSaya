@@ -28,6 +28,7 @@ import com.example.basaya.adapter.LessonAdapter
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.entity.LessonEntity
 import com.example.basaya.data.notifications.ClassNotifications
+import com.example.basaya.data.repository.LessonPrefetch
 import com.example.basaya.data.repository.LessonRepository
 import com.example.basaya.data.schedule.LessonSchedule
 import com.example.basaya.data.schedule.LessonSchedule.Availability
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import android.app.Dialog
 import android.graphics.Color
@@ -69,6 +71,7 @@ class HomeFragment : Fragment() {
     private lateinit var etSearch: EditText
     private lateinit var btnRefresh: ImageButton
     private lateinit var tvClassName: TextView
+    private lateinit var appBar: AppBarLayout
     // Shown only while the student has no class (leaving is on the account screen).
     private lateinit var btnJoinClass: ImageButton
 
@@ -121,6 +124,7 @@ class HomeFragment : Fragment() {
         btnRefresh = view.findViewById(R.id.btnRefresh)
         tvClassName = view.findViewById(R.id.tvClassName)
         lessonTabs = view.findViewById(R.id.lessonTabs)
+        appBar = view.findViewById(R.id.homeAppBar)
         tabViews = mapOf(
             LessonTab.ALL to view.findViewById(R.id.tabAll),
             LessonTab.OPEN to view.findViewById(R.id.tabOpen),
@@ -138,7 +142,7 @@ class HomeFragment : Fragment() {
         var adapter = LessonAdapter(
             emptyList(),
             onItemClick = { lesson -> openLessonIfAvailable(lesson) },
-            onDownloadClick = { lesson, onResult -> handleDownload(lesson, onResult) },
+            onDownloadClick = { lesson, onProgress, onResult -> handleDownload(lesson, onProgress, onResult) },
             onRemoveDownloadClick = { lesson, onResult -> handleRemoveDownload(lesson, onResult) }
         )
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -175,6 +179,8 @@ class HomeFragment : Fragment() {
         val visibility = if (visible) View.VISIBLE else View.GONE
         tvEmptyLessons.visibility = visibility
         emptyStateScroll.visibility = visibility
+        // Bring the scrolled-away header back so search and refresh are in reach.
+        if (visible) appBar.setExpanded(true, true)
     }
 
     /** Fills the list from allLessons: the picked tab, then the search, in schedule order. */
@@ -299,7 +305,7 @@ class HomeFragment : Fragment() {
             }
     }
 
-    private fun handleDownload(lesson: LessonEntity, onResult: (Boolean) -> Unit) {
+    private fun handleDownload(lesson: LessonEntity, onProgress: (Int) -> Unit, onResult: (Boolean) -> Unit) {
         if (!LessonSchedule.canOpen(requireContext(), lesson)) {
             Toast.makeText(requireContext(), getString(R.string.schedule_download_locked), Toast.LENGTH_SHORT).show()
             onResult(false)
@@ -307,7 +313,10 @@ class HomeFragment : Fragment() {
         }
         lifecycleScope.launch {
             val repo = LessonRepository(requireContext())
-            val success = repo.downloadLesson(lesson.id)
+            // Audio progress arrives on the IO thread; the card is updated on the main thread.
+            val success = repo.downloadLesson(lesson.id) { percent ->
+                activity?.runOnUiThread { onProgress(percent) }
+            }
 
             if (isAdded) {
                 Toast.makeText(
@@ -353,7 +362,9 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch {
             val repo = LessonRepository(requireContext())
-            repo.syncLessons(uid)
+            // Right after launch, the splash screen's sync (done or still running) stands in for a new one.
+            val prefetched = if (isManualRefresh) null else LessonPrefetch.take(uid)
+            if (prefetched != null) prefetched.await() else repo.syncLessons(uid)
             val lessons = repo.getLessons(uid)
 
             allLessons = lessons

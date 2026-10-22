@@ -34,7 +34,10 @@ import com.example.basaya.data.repository.LectureRepository
 import com.example.basaya.data.model.Lecture
 import com.example.basaya.data.model.LecturePage
 import com.example.basaya.data.progress.LessonResume
+import com.example.basaya.data.progress.PracticeLessons
+import com.example.basaya.ui.lecture.ReadAlongTextView
 import com.example.basaya.ui.lecture.TalkingBookView
+import com.example.basaya.utils.Network
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback
@@ -61,6 +64,28 @@ class LectureActivity : AppCompatActivity() {
 
     private var speakerOn: Boolean = true
     private var mediaPlayer: MediaPlayer? = null
+    /** The sentence the bubble is following while its audio plays, and when each word starts. */
+    private var readAlongView: ReadAlongTextView? = null
+    private var readAlongStarts: List<Double> = emptyList()
+    private val readAlongTick = object : Runnable {
+        override fun run() {
+            val view = readAlongView ?: return
+            val player = mediaPlayer ?: return
+            val seconds = try {
+                if (player.isPlaying) player.currentPosition / 1000.0 else -1.0
+            } catch (e: IllegalStateException) {
+                -1.0
+            }
+            if (seconds > 0 && readAlongStarts.isNotEmpty()) {
+                var index = 0
+                while (index + 1 < readAlongStarts.size && readAlongStarts[index + 1] <= seconds) index++
+                view.showWord(index)
+            }
+            view.postOnAnimation(this)
+        }
+    }
+    /** The page whose "no internet, no sound" note was already shown. */
+    private var audioOfflineNotedPage = -1
 
     private lateinit var lecture: Lecture
     private var currentPageIndex = 0
@@ -134,7 +159,7 @@ class LectureActivity : AppCompatActivity() {
             val fetchedLecture = lectureRepository.getLecture(lessonId)
 
             if (fetchedLecture == null || fetchedLecture.pages.isEmpty()) {
-                Toast.makeText(this@LectureActivity, "Lecture content not found.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@LectureActivity, "Walang lektura para sa araling ito.", Toast.LENGTH_SHORT).show()
                 finish()
                 return@launch
             }
@@ -148,6 +173,8 @@ class LectureActivity : AppCompatActivity() {
             val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
             tracking = uid != null && progress?.getBoolean("lectureFinished") != true
             currentPageIndex = LessonResume.lectureStartPage(progress, lecture.pages.size)
+            // Fetch every page's audio now, so the pages keep their sound if the connection drops.
+            LectureAudioCache.prepareAll(this@LectureActivity, lessonId, lecture.pages, currentPageIndex)
 
             setupProgressBars()
             showPage(currentPageIndex)
@@ -266,8 +293,8 @@ class LectureActivity : AppCompatActivity() {
             previous.setTextColor(ContextCompat.getColor(this, R.color.lecture_ink_soft))
         }
 
-        val tv = TextView(this).apply {
-            text = HtmlCompat.fromHtml(sentence, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        val tv = ReadAlongTextView(this).apply {
+            setSentence(HtmlCompat.fromHtml(sentence, HtmlCompat.FROM_HTML_MODE_LEGACY))
             typeface = ResourcesCompat.getFont(this@LectureActivity, R.font.lexend)
             setTextColor(ContextCompat.getColor(this@LectureActivity, R.color.lecture_ink))
             textSize = 20f
@@ -328,18 +355,14 @@ class LectureActivity : AppCompatActivity() {
 
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             if (uid != null) {
-                lifecycleScope.launch {
-                    try {
-                        lectureRepository.markLectureFinished(uid, lessonId)
-                    } catch (e: Exception) {
-                        Log.e("LectureActivity", "Failed to mark lecture finished", e)
-                    }
-                    if (tracking) LessonResume.clear(uid, lessonId, LessonResume.LECTURE)
-                    finish()
+                lectureRepository.markLectureFinished(uid, lessonId)
+                if (tracking) LessonResume.clear(uid, lessonId, LessonResume.LECTURE)
+                // Offline: the lecture was saved on the phone and is sent once online.
+                if (tracking && !PracticeLessons.isPractice(lessonId) && !Network.isOnline(this)) {
+                    Toast.makeText(this, R.string.saved_offline_note, Toast.LENGTH_LONG).show()
                 }
-            } else {
-                finish()
             }
+            finish()
         }
     }
 
@@ -355,15 +378,52 @@ class LectureActivity : AppCompatActivity() {
         val cloudUrl = page.audioUrls?.getOrNull(sentenceIndex).orEmpty()
         val cachedFile = cloudUrl.takeIf { it.isNotBlank() }?.let { LectureAudioCache.file(this, it) }
 
+        val onStarted = { player: MediaPlayer -> startReadAlong(player, page, sentenceIndex) }
         when {
-            localFile.exists() -> playFromSource(localFile.absolutePath)
-            cachedFile != null -> playFromSource(cachedFile.absolutePath)
-            cloudUrl.isNotBlank() -> playFromSource(cloudUrl)
-            else -> playRawResource(page.audioResNames.getOrNull(sentenceIndex).orEmpty())
+            localFile.exists() -> playFromSource(localFile.absolutePath, onStarted)
+            cachedFile != null -> playFromSource(cachedFile.absolutePath, onStarted)
+            cloudUrl.isNotBlank() && !Network.isOnline(this) -> noteAudioOffline()
+            cloudUrl.isNotBlank() -> playFromSource(cloudUrl, onStarted)
+            else -> playRawResource(page.audioResNames.getOrNull(sentenceIndex).orEmpty(), onStarted)
         }
     }
 
-    private fun playFromSource(source: String) {
+    /**
+     * Starts the bubble on the sentence being played: saved word timings when the audio has
+     * them, otherwise timings estimated from its length.
+     */
+    private fun startReadAlong(player: MediaPlayer, page: LecturePage, sentenceIndex: Int) {
+        val view = sentenceContainer.getChildAt(sentenceIndex) as? ReadAlongTextView ?: return
+        val words = view.words
+        val saved = page.wordStarts?.getOrNull(sentenceIndex).orEmpty()
+        val duration = player.duration / 1000.0
+        readAlongStarts = when {
+            saved.size == words.size -> saved
+            duration > 0 -> ReadAlongTextView.estimateStarts(words, duration)
+            else -> return
+        }
+        readAlongView = view
+        view.beginReading()
+        view.postOnAnimation(readAlongTick)
+    }
+
+    private fun stopReadAlong() {
+        readAlongView?.let {
+            it.removeCallbacks(readAlongTick)
+            it.endReading()
+        }
+        readAlongView = null
+        readAlongStarts = emptyList()
+    }
+
+    /** Says once per page that its sound needs the internet, instead of staying silent. */
+    private fun noteAudioOffline() {
+        if (audioOfflineNotedPage == currentPageIndex) return
+        audioOfflineNotedPage = currentPageIndex
+        Toast.makeText(this, R.string.lecture_audio_offline, Toast.LENGTH_LONG).show()
+    }
+
+    private fun playFromSource(source: String, onStarted: (MediaPlayer) -> Unit) {
         val player = MediaPlayer()
         mediaPlayer = player
         try {
@@ -379,12 +439,23 @@ class LectureActivity : AppCompatActivity() {
                 if (mediaPlayer === it && speakerOn) {
                     it.start()
                     talkingBook.setTalking(true)
+                    onStarted(it)
                 }
             }
-            player.setOnCompletionListener { if (mediaPlayer === it) talkingBook.setTalking(false) }
+            player.setOnCompletionListener {
+                if (mediaPlayer === it) {
+                    talkingBook.setTalking(false)
+                    stopReadAlong()
+                }
+            }
             player.setOnErrorListener { mp, what, extra ->
                 Log.w("LectureActivity", "Audio failed ($what/$extra): $source")
-                if (mediaPlayer === mp) talkingBook.setTalking(false)
+                if (mediaPlayer === mp) {
+                    talkingBook.setTalking(false)
+                    stopReadAlong()
+                    // The connection dropped while the sentence was streaming.
+                    if (source.startsWith("http") && !Network.isOnline(this)) noteAudioOffline()
+                }
                 true
             }
             player.prepareAsync()
@@ -394,7 +465,7 @@ class LectureActivity : AppCompatActivity() {
         }
     }
 
-    private fun playRawResource(resName: String) {
+    private fun playRawResource(resName: String, onStarted: (MediaPlayer) -> Unit) {
         if (resName.isBlank()) return
 
         val resId = resources.getIdentifier(resName, "raw", packageName)
@@ -404,12 +475,19 @@ class LectureActivity : AppCompatActivity() {
 
         val player = MediaPlayer.create(this, resId) ?: return
         mediaPlayer = player
-        player.setOnCompletionListener { if (mediaPlayer === it) talkingBook.setTalking(false) }
+        player.setOnCompletionListener {
+            if (mediaPlayer === it) {
+                talkingBook.setTalking(false)
+                stopReadAlong()
+            }
+        }
         player.start()
         talkingBook.setTalking(true)
+        onStarted(player)
     }
 
     private fun stopAudio() {
+        stopReadAlong()
         // release() is valid in every state, including while a stream is still preparing.
         mediaPlayer?.release()
         mediaPlayer = null

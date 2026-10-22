@@ -26,4 +26,5 @@
     <color name="qz_surface">@color/ns_surface</color>
     <color name="qz_on_gold">#2A1F5C</color>
     <color name="qz_track">@color/ns_track</color>
+    <color name="qz_note_bg">@color/ns_surface_raised</color>
 </resources>

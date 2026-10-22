@@ -6,6 +6,7 @@ import com.example.basaya.data.audio.PronunciationAudioStore
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.PronunciationEntity
 import com.example.basaya.data.model.PronunciationActivityData
+import com.example.basaya.data.progress.PracticeLessons
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -48,10 +49,13 @@ class PronunciationRepository(private val context: Context) {
     }
 
     /** Fetches + caches to Room. Called from the Download button flow. */
-    suspend fun downloadPronunciation(lessonId: String): Boolean {
+    suspend fun downloadPronunciation(
+        lessonId: String,
+        onAudioFile: (done: Int, total: Int) -> Unit = { _, _ -> }
+    ): Boolean {
         val fetched = fetchFromFirestore(lessonId) ?: return false
         db.pronunciationDao().insert(fetched.toEntity(lessonId))
-        PronunciationAudioStore.download(context, lessonId, fetched.audioRefs)
+        PronunciationAudioStore.download(context, lessonId, fetched.audioRefs, onAudioFile)
         return true
     }
 
@@ -59,7 +63,7 @@ class PronunciationRepository(private val context: Context) {
         return try {
             val snapshot = firestore
                 .collection("lessons")
-                .document(lessonId)
+                .document(PracticeLessons.contentId(lessonId))
                 .collection("pronunciation")
                 .get(Source.SERVER)
                 .await()
@@ -94,7 +98,12 @@ class PronunciationRepository(private val context: Context) {
         }
     }
 
-    suspend fun markActivityFinished(userId: String, lessonId: String, score: Int, total: Int) {
+    /**
+     * Saves without waiting: offline, Firestore keeps the write on the phone and sends it
+     * once the phone is back online, so the activity can close right away.
+     */
+    fun markActivityFinished(userId: String, lessonId: String, score: Int, total: Int) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         firestore
             .collection("users")
             .document(userId)
@@ -108,7 +117,7 @@ class PronunciationRepository(private val context: Context) {
                     "pronunciationCompletedAt" to FieldValue.serverTimestamp()
                 )
             )
-            .await()
+            .addOnFailureListener { Log.w("PronunciationRepository", "Could not save the pronunciation result", it) }
     }
 
     // --- Cloudflare audio ---

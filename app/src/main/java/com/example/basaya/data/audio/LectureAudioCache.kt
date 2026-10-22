@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
@@ -19,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Lecture sentence audio for lessons that aren't downloaded, kept in cacheDir so a sentence
  * plays the moment it appears. The lesson path waits for the page the lecture opens on
- * (DashboardActivity.openLecture) and the lecture fetches the next page while it is read.
+ * (DashboardActivity.openLecture) and the lecture fetches the next page while it is read,
+ * plus every other page in the background ([prepareAll]) in case the connection drops.
  * Android may clear cacheDir when it needs space; a missing file just downloads again.
  */
 object LectureAudioCache {
@@ -52,6 +54,17 @@ object LectureAudioCache {
                     }
                 }.awaitAll().all { it }
             }
+        }
+    }
+
+    /**
+     * Fetches every page's audio, one page at a time from [from] onward (then the earlier
+     * pages), so a connection lost mid-lecture still leaves the fetched pages with sound.
+     */
+    fun prepareAll(context: Context, lessonId: String, pages: List<LecturePage>, from: Int) {
+        val app = context.applicationContext
+        scope.launch {
+            (pages.drop(from) + pages.take(from)).forEach { preparePage(app, lessonId, it).await() }
         }
     }
 

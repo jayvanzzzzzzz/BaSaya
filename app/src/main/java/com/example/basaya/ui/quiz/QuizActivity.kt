@@ -34,6 +34,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.model.Quiz
 import com.example.basaya.data.model.QuizQuestion
+import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.QuizRepository
@@ -50,6 +51,17 @@ class QuizActivity : AppCompatActivity() {
     /** Choices picked on the current question (several when the question has multiple answers). */
     private val selectedChoices = mutableSetOf<Int>()
     private val userAnswers = mutableListOf<Set<Int>>()
+
+    // Answers are final once "Susunod" is pressed and saved in LessonResume.QUIZ, so closing
+    // continues with the questions not answered yet (same as basaya-web's student/views/quiz.js).
+    /** Questions in the quiz as stored. */
+    private var total = 0
+    /** Each asked question's index in the stored quiz (they are shuffled). */
+    private var positions = emptyList<Int>()
+    /** Saved from earlier sessions: answered question indices, missed question texts, score. */
+    private var answeredBefore = emptySet<Int>()
+    private var missedBefore = emptyList<String>()
+    private var scoreBefore = 0
 
     private lateinit var tvQuizTitle: TextView
     private lateinit var tvQuestionProgress: TextView
@@ -121,10 +133,30 @@ class QuizActivity : AppCompatActivity() {
                 return@launch
             }
 
-            // A new random order of questions and choices every time; closing starts over.
-            quiz = fetchedQuiz.copy(questions = fetchedQuiz.questions.shuffled().map { it.withShuffledChoices() })
+            // Where the student stopped: only the questions not answered yet are asked.
+            total = fetchedQuiz.questions.size
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val resume = uid?.let { LessonResume.of(LessonResume.loadProgress(it, lessonId), LessonResume.QUIZ, total) }
+            answeredBefore = (resume?.get("answered") as? List<*>).orEmpty()
+                .mapNotNull { (it as? Number)?.toInt() }
+                .filter { it in 0 until total }
+                .toSet()
+            missedBefore = (resume?.get("missed") as? List<*>).orEmpty().filterIsInstance<String>()
+            scoreBefore = ((resume?.get("score") as? Number)?.toInt() ?: 0).coerceIn(0, answeredBefore.size)
+
+            // A new random order of questions and choices every time.
+            val remaining = fetchedQuiz.questions.withIndex().filter { it.index !in answeredBefore }.shuffled()
+            positions = remaining.map { it.index }
+            quiz = fetchedQuiz.copy(questions = remaining.map { it.value.withShuffledChoices() })
             tvQuizTitle.text = quiz.title
             userAnswers.addAll(List(quiz.questions.size) { emptySet<Int>() })
+
+            // Every answer was saved but finishing wasn't: finish now.
+            if (quiz.questions.isEmpty()) {
+                btnNextQuestion.isEnabled = false
+                finishQuiz()
+                return@launch
+            }
 
             showQuestion(currentQuestionIndex, animateIn = false)
 
@@ -134,6 +166,7 @@ class QuizActivity : AppCompatActivity() {
 
                 if (currentQuestionIndex < quiz.questions.lastIndex) {
                     currentQuestionIndex++
+                    savePlace(uid)
                     showQuestion(currentQuestionIndex)
                 } else {
                     btnNextQuestion.isEnabled = false
@@ -148,8 +181,9 @@ class QuizActivity : AppCompatActivity() {
     private fun showQuestion(index: Int, animateIn: Boolean = true) {
         val question = quiz.questions[index]
 
-        tvQuestionProgress.text = getString(R.string.qz_question_progress, index + 1, quiz.questions.size)
-        moveRocket((index + 1f) / quiz.questions.size)
+        val number = answeredBefore.size + index + 1
+        tvQuestionProgress.text = getString(R.string.qz_question_progress, number, total)
+        moveRocket(number.toFloat() / total)
 
         tvQuestion.text = question.question
         if (animateIn) {
@@ -351,13 +385,39 @@ class QuizActivity : AppCompatActivity() {
 
     // ───────────────────────────── Finish ─────────────────────────────
 
+    /** Answers so far, earlier sessions included, after [count] questions of this one. */
+    private data class Answered(val answered: List<Int>, val missed: List<String>, val score: Int)
+
+    private fun answeredAfter(count: Int): Answered {
+        // Right only when exactly the correct choice(s) were picked
+        val asked = (0 until count).map { i -> quiz.questions[i] to (userAnswers[i] == quiz.questions[i].correctAnswers) }
+        return Answered(
+            answered = answeredBefore.toList() + positions.take(count),
+            missed = missedBefore + asked.filter { !it.second }.map { it.first.question.trim() },
+            score = scoreBefore + asked.count { it.second }
+        )
+    }
+
+    /** Saves the answers given so far (they count at the deadline if the quiz isn't finished). */
+    private fun savePlace(uid: String?) {
+        uid ?: return
+        val so = answeredAfter(currentQuestionIndex)
+        LessonResume.save(
+            uid, lessonId, LessonResume.QUIZ,
+            mapOf(
+                "done" to so.answered.size,
+                "total" to total,
+                "score" to so.score,
+                "answered" to so.answered,
+                "missed" to so.missed
+            )
+        )
+    }
+
     private fun finishQuiz() {
-        var score = 0
-        quiz.questions.forEachIndexed { i, question ->
-            // Right only when exactly the correct choice(s) were picked
-            if (userAnswers[i] == question.correctAnswers) score++
-        }
-        val total = quiz.questions.size
+        val result = answeredAfter(quiz.questions.size)
+        val missed = result.missed
+        val score = result.score
 
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -365,6 +425,7 @@ class QuizActivity : AppCompatActivity() {
             if (uid != null) {
                 try {
                     quizRepository.saveQuizResult(uid, lessonId, score, total)
+                    LessonResume.clear(uid, lessonId, LessonResume.QUIZ)
                 } catch (e: Exception) {
                     android.util.Log.e("QuizActivity", "Failed to save quiz result", e)
                 }
@@ -373,7 +434,9 @@ class QuizActivity : AppCompatActivity() {
                 try {
                     SkillProgressRepository().recordResult(
                         uid, lessonId, Skill.PAGSUSULIT,
-                        correct = score, attempts = total, items = total
+                        correct = score, attempts = total, items = total,
+                        // The questions' text (they're shuffled), for the teacher's item analysis.
+                        extras = mapOf("missedQuestions" to missed)
                     )
                     SkillProgressRepository.refreshInBackground(uid)
                 } catch (e: Exception) {
@@ -385,6 +448,7 @@ class QuizActivity : AppCompatActivity() {
                 putExtra("SCORE", score)
                 putExtra("TOTAL", total)
                 putExtra("QUIZ_TITLE", quiz.title)
+                putExtra("LESSON_ID", lessonId)
             }
             startActivity(intent)
             finish()

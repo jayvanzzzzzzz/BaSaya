@@ -68,7 +68,7 @@ Browse Assigned Lessons
        ▼
 Open a Lesson
        │
-       ├── Lecture
+       ├── Lektura
        ├── Game
        ├── Activity
        └── Quiz
@@ -85,7 +85,7 @@ Open a Lesson
 Student progress is saved to Firestore, allowing the dashboard to reflect the student's current progress, completed content, scores, and locked/unlocked states.
 
 Content Rules
-Lecture can be revisited even after completion.
+Lektura can be revisited even after completion.
 Game, Activity, and Quiz become locked after completion.
 Completed Game, Activity, and Quiz content displays the student's final score.
 Offline Learning
@@ -98,7 +98,7 @@ Download Lesson
       │
       ▼
 ┌─────────────────────┐
-│ Lecture             │
+│ Lektura             │
 │ Game / Crossword    │
 │ Activity            │
 │ Quiz                │
@@ -112,6 +112,24 @@ Download Lesson
 
 This allows students to access downloaded lesson content even when they don't have an internet connection.
 
+## Diksiyonaryo (Tagalog dictionary)
+
+A Tagalog dictionary that explains words **in Filipino**, the same as the website's `#/diksiyonaryo` (see the website's README for how the word list is built). Students open it from the **book button** in the top bar, next to the bell.
+
+```
+app/src/main/assets/dictionary/tl-seed.json      ──┐   ~1,600 Tagalog Wiktionary words,
+  (bundled in the app, works offline)               │   read once with Gson
+                                                    ├──► Dictionary.search() ──► DictionaryActivity
+Firestore dictionary/{key}                         ──┘   teacher words (added on the website's
+  (online only; skipped when offline)                    teacher portal) replace or hide them
+```
+
+- **Wiktionary words**: `assets/dictionary/tl-seed.json` is the **same file** as the website's `data/dictionary/tl-seed.json` (CC BY-SA 4.0, see `assets/dictionary/LICENSE.md`). It's bundled, so these words work offline and cost no Firestore reads. When the website rebuilds the file (`node tools/build-dictionary.mjs`), copy it here too and release a new app version.
+- **Teacher words**: Firestore `dictionary/{key}`, where `key` is the word in lowercase without accents (bahay). A teacher's word replaces the Wiktionary word with the same key, and `hidden: true` hides it. Teachers manage these on the website. Students only read them, and the Firestore rules allow reads for anyone signed in.
+- **Search** (`data/dictionary/Dictionary.kt`): words starting with what was typed, after a 250 ms pause. Accent marks don't matter (báhay = bahay), and the exact match comes first. Not found? `DictionaryWords.guessRoots()` strips Tagalog affixes (kumakain → kain, mag-aral → aral) and offers those words.
+- **Screen** (`ui/dictionary/DictionaryActivity.kt`, `res/layout/activity_dictionary.xml`): search field, A–Y letters (Abakada), a word list, and a word card with part of speech, meanings, examples, synonyms you can tap, and a "Dinagdag ng guro" tag. Back from a word returns to the list.
+- **Keep in sync with the website**: `DictionaryWords.kt` must match the website's `js/dictionaryWords.js`, so both find the same Firestore doc ids.
+
 ## Student Progress Monitoring (Paano kinukwenta ang progreso)
 
 BaSaya monitors each student on five skills, one per lesson activity. Skills are never averaged into a single lesson grade: a student can be strong in Talasalitaan and weak in Pagbigkas, and one number would hide that.
@@ -124,18 +142,21 @@ Getting an item right on the **first try** is the clearest sign of mastery; need
 
 | Skill | Activity | correct | attempts | items (weight) |
 |---|---|---|---|---|
-| Pag-unawa sa binasa | Lecture | comprehension questions right | questions asked | questions |
+| Lektura (`pagUnawa`) | Lektura | not scored — lectures read | — | — |
 | Talasalitaan | Crossword game | words found | words found + wrong swipes | words found |
 | Pagkilala sa salita | Gawain (practice) | pages right on the first check | pages | pages |
 | Pagbigkas | Pronunciation | words right on the first scored try | words | words |
-| Pagsusulit | Quiz | correct answers | questions | questions |
+| Comprehension (`pagsusulit`) | Quiz (Pagsusulit) | correct answers | questions | questions |
 
 Notes:
-- **Pag-unawa:** lectures have no comprehension questions yet, so this skill shows lecture completion ("2/5", "Tapos na") until a comprehension check saves results in the same format.
+- **Lektura:** lectures have no questions, so this row shows lectures read ("2/5", "Tapos na") until a comprehension check saves results in the same format.
 - **Talasalitaan:** a wrong swipe is a 2+ letter word that isn't in the level. Re-swiping a word already found and single-letter taps don't count. A lesson's levels are played separately, so the counts add up level by level.
 - **Pagkilala sa salita:** a page answered wrong and then fixed with *Subukan Muli* does not earn the point (it is counted in `retries`). `activityScore` uses the same rule.
 - **Pagbigkas:** "no speech heard" never counts as a try. Words missed at least once are saved in `hardWords` for the teacher.
-- A lesson the student hasn't done is **no data, not 0%**.
+- A lesson the student hasn't done yet is **no data, not 0%**, until its deadline passes.
+- **Unfinished at the deadline = the rest is wrong:** once a lesson's deadline passes, each scored part left unfinished (game, Gawain, Bigkas, quiz) is scored over **all** its items (`LessonItems.kt`: crossword words, Gawain pages, Bigkas words, quiz questions). What the student got right so far counts, and every item they didn't reach is wrong. For example, 3 of 5 quiz questions answered with 2 right gives 2/5, and an untouched part gives 0%. "So far" comes from the saved place (`resume.activity.score`, `resume.pronunciation.firstTryCorrect`, `resume.quiz.score`) and, for the crossword, from the levels played. The result is dated at the deadline. Skipped parts, lessons without a deadline, and lessons that closed before the student joined don't count. See `SkillScoring.withMissed`; the web uses the same rule (`js/scoring.js`).
+- **Quiz resume:** an answer is final once *Susunod* is pressed and is saved in `resume.quiz` (`{ done, total, score, answered: [question index], missed: [question text] }`), so reopening the quiz continues with the questions not answered yet.
+- **Comprehension (Pagsusulit):** the quiz also saves `missedQuestions` (the text of each question answered wrong) for the teacher's "What to re-teach" item analysis in the web Class Report.
 
 Saved per lesson in Firestore:
 
@@ -145,7 +166,7 @@ users/{uid}/assignedLessons/{lessonId}
     pagbigkas: { correct: 7, attempts: 10, items: 10, completedAt, eventuallyCorrect: 9, hardWords: ["mataba", "bahay"] }
     talasalitaan: { correct: 12, attempts: 15, items: 12, wrongTries: 3, levels: 3, completedAt }
     pagkilala:  { correct: 2, attempts: 3, items: 3, retries: 1, completedAt }
-    pagsusulit: { correct: 8, attempts: 10, items: 10, completedAt }
+    pagsusulit: { correct: 8, attempts: 10, items: 10, completedAt, missedQuestions: ["Ano ang …?", "Sino si …?"] }
 ```
 
 Quizzes taken before skill tracking still count, because `quizScore / quizTotal` already meant the same thing. Older game, Gawain and pronunciation scores used different rules and are left out.
@@ -193,7 +214,7 @@ Bigger lessons (more words or questions) also count more than small ones.
 
 There is **no combined score** for a student. Each skill keeps its own score, level, trend and alert, so a teacher can see exactly where a student is having a hard time:
 
-| Pag-unawa | Talasalitaan | Pagkilala | Pagbigkas | Pagsusulit |
+| Lektura | Talasalitaan | Pagkilala | Pagbigkas | Comprehension |
 |---|---|---|---|---|
 | Tapos na (2/2) | 79% Umuunlad ↑ | 92% Mahusay | **45% Kailangan ng tulong ↓** | 88% Mahusay |
 
@@ -262,7 +283,7 @@ Admin Dashboard
      ├── Create Lessons
      ├── Edit Lessons
      ├── Delete Lessons
-     ├── Manage Lectures
+     ├── Manage Lektura
      ├── Manage Games
      ├── Manage Activities
      └── Manage Quizzes

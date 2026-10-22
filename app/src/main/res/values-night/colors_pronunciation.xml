@@ -26,4 +26,8 @@
     <color name="pr_surface">@color/ns_surface</color>
     <color name="pr_pill">#B31A1F3D</color>
     <color name="pr_progress_start">#FFB35C</color>
+    <color name="pr_word_info">#2FA957</color>
+    <color name="pr_word_info_lip">#1E7A3D</color>
+    <color name="pr_word_info_chip_bg">@color/ns_mint_tint</color>
+    <color name="pr_word_info_chip_ink">@color/ns_mint</color>
 </resources>

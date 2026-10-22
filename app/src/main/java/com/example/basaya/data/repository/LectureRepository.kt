@@ -7,6 +7,7 @@ import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.LectureEntity
 import com.example.basaya.data.model.Lecture
 import com.example.basaya.data.model.LecturePage
+import com.example.basaya.data.progress.PracticeLessons
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.gson.Gson
@@ -73,8 +74,11 @@ class LectureRepository(private val context: Context) {
     }
 
     /** Fetches + caches to Room. Called from the Download button flow. */
-    suspend fun downloadLecture(lessonId: String): Lecture? {
-        return fetchAndCache(lessonId)
+    suspend fun downloadLecture(
+        lessonId: String,
+        onAudioFile: (done: Int, total: Int) -> Unit = { _, _ -> }
+    ): Lecture? {
+        return fetchAndCache(lessonId, onAudioFile)
     }
 
     /** Kept for any existing manual "refresh this lecture" call sites. */
@@ -85,7 +89,7 @@ class LectureRepository(private val context: Context) {
     suspend fun checkCompletion(lessonId: String): Boolean {
         val snapshot = firestore
             .collection("lessons")
-            .document(lessonId)
+            .document(PracticeLessons.contentId(lessonId))
             .collection("lectures")
             .get()
             .await()
@@ -96,11 +100,14 @@ class LectureRepository(private val context: Context) {
         return doc.getBoolean("finished") ?: false
     }
 
-    private suspend fun fetchAndCache(lessonId: String): Lecture? {
+    private suspend fun fetchAndCache(
+        lessonId: String,
+        onAudioFile: (done: Int, total: Int) -> Unit = { _, _ -> }
+    ): Lecture? {
         val lecture = fetchFromFirestore(lessonId) ?: return null
 
         // Throws on failure so the lesson download is reported as failed, not half-saved.
-        LectureAudioStore.download(context, lessonId, lecture.pages)
+        LectureAudioStore.download(context, lessonId, lecture.pages, onAudioFile)
 
         db.lectureDao().insert(
             LectureEntity(
@@ -117,7 +124,7 @@ class LectureRepository(private val context: Context) {
         return try {
             val snapshot = firestore
                 .collection("lessons")
-                .document(lessonId)
+                .document(PracticeLessons.contentId(lessonId))
                 .collection("lectures")
                 .get(Source.SERVER)
                 .await()
@@ -135,11 +142,15 @@ class LectureRepository(private val context: Context) {
                     pageNumber = (pageMap["pageNumber"] as? Long)?.toInt() ?: 0,
                     sentences = pageMap["sentences"] as? List<String> ?: emptyList(),
                     audioResNames = pageMap["audioResNames"] as? List<String> ?: emptyList(),
-                    // cloudAudio: [{ audioUrl, storageKey, text } | null] written by basaya-web
+                    // cloudAudio: [{ audioUrl, storageKey, text, wordStarts? } | null] written by basaya-web
                     audioUrls = (pageMap["cloudAudio"] as? List<*>).orEmpty().map { entry ->
                         ((entry as? Map<*, *>)?.get("audioUrl") as? String)
                             ?.takeIf { it.startsWith("https://") }
                             .orEmpty()
+                    },
+                    wordStarts = (pageMap["cloudAudio"] as? List<*>).orEmpty().map { entry ->
+                        val starts = ((entry as? Map<*, *>)?.get("wordStarts") as? List<*>).orEmpty()
+                        starts.mapNotNull { (it as? Number)?.toDouble() }.takeIf { it.size == starts.size }.orEmpty()
                     }
                 )
             }
@@ -150,17 +161,24 @@ class LectureRepository(private val context: Context) {
         }
     }
 
-    suspend fun markLectureFinished(userId: String, lessonId: String) {
+    /**
+     * Saves without waiting: offline, Firestore keeps the write on the phone and sends it
+     * once the phone is back online, so the lecture can close right away.
+     */
+    fun markLectureFinished(userId: String, lessonId: String) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         firestore
             .collection("users")
             .document(userId)
             .collection("assignedLessons")
             .document(lessonId)
             .set(mapOf("lectureFinished" to true), SetOptions.merge())
-            .await()
+            .addOnFailureListener { Log.w("LectureRepository", "Could not save lectureFinished", it) }
     }
 
     suspend fun checkCompletion(userId: String, lessonId: String): Boolean {
+        // A Practice lesson saves nothing, so its quiz never waits for the lecture.
+        if (PracticeLessons.isPractice(lessonId)) return true
         val doc = firestore
             .collection("users")
             .document(userId)

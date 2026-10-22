@@ -1,0 +1,9 @@
+<resources>
+    <!-- Android 12+ always shows a system splash first. It is left empty (no icon) in the splash sky
+         color, so the logo's bounce in SplashActivity is the first thing a child sees. -->
+    <style name="Theme.BaSaya.Splash">
+        <item name="android:windowBackground">@color/splash_bg_top</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_top</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+    </style>
+</resources>

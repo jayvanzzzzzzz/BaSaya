@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash screen palette (light). Dark variants live in values-night/colors_splash.xml. -->
+<resources>
+    <color name="splash_bg_top">#F8FAFF</color>
+    <color name="splash_bg_bottom">#E6F0FF</color>
+    <color name="splash_wave_back">#D3E4FB</color>
+    <color name="splash_wave_front">#B3D1F0</color>
+    <color name="splash_glow">#FFF0BF</color>
+    <color name="splash_glow_edge">#00FFF0BF</color>
+    <color name="splash_logo_card">#FFFFFF</color>
+
+    <!-- Floating stars and bubbles -->
+    <color name="splash_star_gold">#FFC93C</color>
+    <color name="splash_star_pink">#FF8DBF</color>
+    <color name="splash_star_sky">#6CB8F5</color>
+    <color name="splash_bubble_mint">#999BE7C4</color>
+    <color name="splash_bubble_violet">#99C9B8FF</color>
+    <color name="splash_bubble_peach">#99FFC7A1</color>
+    <color name="splash_bubble_sky">#99A9D4FF</color>
+
+    <!-- "BaSaya" letter blocks: face, darker lip underneath, and letter color -->
+    <color name="splash_block_coral">#FF6B81</color>
+    <color name="splash_block_coral_lip">#D94A62</color>
+    <color name="splash_block_tangerine">#F7862F</color>
+    <color name="splash_block_tangerine_lip">#CF661A</color>
+    <color name="splash_block_gold">#FFC93C</color>
+    <color name="splash_block_gold_lip">#D9A514</color>
+    <color name="splash_block_mint">#1FA672</color>
+    <color name="splash_block_mint_lip">#157F56</color>
+    <color name="splash_block_sky">#2F95EB</color>
+    <color name="splash_block_sky_lip">#1D74C2</color>
+    <color name="splash_block_violet">#8566F0</color>
+    <color name="splash_block_violet_lip">#6447CC</color>
+    <color name="splash_block_ink">#FFFFFF</color>
+    <!-- Letters on the gold block stay dark in both modes. -->
+    <color name="splash_block_ink_on_gold">#4A3500</color>
+</resources>

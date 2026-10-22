@@ -27,19 +27,27 @@ object LectureAudioStore {
     /**
      * Downloads every sentence that has a cloud URL, replacing the lesson's saved audio.
      * Throws if any file fails, and then the audio saved before stays as it was.
+     * [onFile] is called on the IO thread after each file is saved.
      */
-    suspend fun download(context: Context, lessonId: String, pages: List<LecturePage>) =
-        withContext(Dispatchers.IO) {
-            replaceDir(lessonDir(context, lessonId)) { staging ->
-                pages.forEach { page ->
-                    page.audioUrls.orEmpty().forEachIndexed { index, url ->
-                        if (url.isNotBlank()) {
-                            downloadFile(url, File(staging, fileName(page.pageNumber, index)))
-                        }
+    suspend fun download(
+        context: Context,
+        lessonId: String,
+        pages: List<LecturePage>,
+        onFile: (done: Int, total: Int) -> Unit = { _, _ -> }
+    ) = withContext(Dispatchers.IO) {
+        val total = pages.sumOf { page -> page.audioUrls.orEmpty().count { it.isNotBlank() } }
+        var done = 0
+        replaceDir(lessonDir(context, lessonId)) { staging ->
+            pages.forEach { page ->
+                page.audioUrls.orEmpty().forEachIndexed { index, url ->
+                    if (url.isNotBlank()) {
+                        downloadFile(url, File(staging, fileName(page.pageNumber, index)))
+                        onFile(++done, total)
                     }
                 }
             }
         }
+    }
 
     /**
      * Fills a staging folder, then swaps it in for `dir` (dropping audio from an older version).

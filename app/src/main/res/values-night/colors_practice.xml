@@ -33,4 +33,5 @@
     <color name="ac_track_done_start">#5EE0A0</color>
     <color name="ac_wave_back">#0F2F33</color>
     <color name="ac_wave_front">#123A3A</color>
+    <color name="ac_note_bg">@color/ns_surface_raised</color>
 </resources>

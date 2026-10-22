@@ -6,6 +6,7 @@ import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.ActivityEntity
 import com.example.basaya.data.model.ActivityPage
 import com.example.basaya.data.model.PracticeActivityData
+import com.example.basaya.data.progress.PracticeLessons
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -56,7 +57,7 @@ class ActivityRepository(private val context: Context) {
         return try {
             val snapshot = firestore
                 .collection("lessons")
-                .document(lessonId)
+                .document(PracticeLessons.contentId(lessonId))
                 .collection("activity")
                 .get(Source.SERVER)
                 .await()
@@ -104,7 +105,12 @@ class ActivityRepository(private val context: Context) {
         }
     }
 
-    suspend fun markActivityFinished(userId: String, lessonId: String, score: Int, total: Int) {
+    /**
+     * Saves without waiting: offline, Firestore keeps the write on the phone and sends it
+     * once the phone is back online, so the score screen shows right away.
+     */
+    fun markActivityFinished(userId: String, lessonId: String, score: Int, total: Int) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         firestore
             .collection("users")
             .document(userId)
@@ -119,7 +125,7 @@ class ActivityRepository(private val context: Context) {
                 ),
                 com.google.firebase.firestore.SetOptions.merge()
             )
-            .await()
+            .addOnFailureListener { Log.w(TAG, "Could not save the activity result", it) }
     }
 
     // --- Mapping helpers ---

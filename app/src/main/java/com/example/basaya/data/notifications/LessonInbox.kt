@@ -72,7 +72,8 @@ object LessonInbox {
 
     private fun deadlineEvents(context: Context, lesson: LessonEntity): List<Item> {
         val due = lesson.dueAt ?: return emptyList()
-        if (LessonSchedule.isComplete(lesson)) return emptyList()
+        // A Practice lesson has nothing to finish, so no "due soon" reminders.
+        if (lesson.practice || LessonSchedule.isComplete(lesson)) return emptyList()
 
         val deadline = LessonSchedule.format(due)
         val reminderBody = context.getString(R.string.notif_due_body, lesson.title, deadline)

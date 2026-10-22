@@ -15,16 +15,16 @@
     <string name="pg_section_words">Mga salitang sanayin</string>
     <string name="pg_words_hint">Mga salitang medyo nahirapan ka sa Pagbigkas. Subukan mo ulit!</string>
 
-    <string name="pg_skill_unawa">Pag-unawa sa Binasa</string>
-    <string name="pg_skill_unawa_sub">Lektura</string>
+    <string name="pg_skill_unawa">Lektura</string>
+    <string name="pg_skill_unawa_sub">Mga nabasang aralin</string>
     <string name="pg_skill_talasalitaan">Talasalitaan</string>
     <string name="pg_skill_talasalitaan_sub">Crossword</string>
     <string name="pg_skill_pagkilala">Pagkilala sa Salita</string>
     <string name="pg_skill_pagkilala_sub">Gawain</string>
     <string name="pg_skill_pagbigkas">Pagbigkas</string>
     <string name="pg_skill_pagbigkas_sub">Pronunciation</string>
-    <string name="pg_skill_pagsusulit">Pagsusulit</string>
-    <string name="pg_skill_pagsusulit_sub">Quiz</string>
+    <string name="pg_skill_pagsusulit">Pag-unawa sa Binasa</string>
+    <string name="pg_skill_pagsusulit_sub">Pagsusulit</string>
 
     <string name="pg_level_mahusay">Mahusay</string>
     <string name="pg_level_umuunlad">Umuunlad</string>

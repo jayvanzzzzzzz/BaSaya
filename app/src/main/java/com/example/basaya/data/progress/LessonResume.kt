@@ -8,10 +8,12 @@ import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
 /**
- * Where the student stopped in the lecture, Gawain or Bigkas, so closing the screen or the app
- * (or switching to the website) continues from there. The quiz never resumes.
+ * Where the student stopped in the lecture, Gawain, Bigkas or quiz, so closing the screen or the
+ * app (or switching to the website) continues from there. At the deadline, an unfinished part
+ * is scored from its saved place (SkillScoring.withMissed).
  *
  * users/{uid}/assignedLessons/{lessonId}.resume.{part} = { done, total, ...part fields, updatedAt }
+ * quiz: { score, answered: [question index as stored], missed: [question text] }
  *
  * `done` is how many pages/words are finished and `total` how many there are, which the lesson
  * path shows as "2/5 pages". Same shape as basaya-web's student/data.js (resumeOf/saveResume).
@@ -21,6 +23,7 @@ object LessonResume {
     const val LECTURE = "lecture"
     const val ACTIVITY = "activity"
     const val PRONUNCIATION = "pronunciation"
+    const val QUIZ = "quiz"
 
     private fun lessonDoc(uid: String, lessonId: String) =
         FirebaseFirestore.getInstance()
@@ -29,7 +32,8 @@ object LessonResume {
 
     /** The lesson's progress document, or null when it can't be read (offline with no cache). */
     suspend fun loadProgress(uid: String, lessonId: String): DocumentSnapshot? =
-        try {
+        // A Practice lesson keeps no place: it always starts from the beginning.
+        if (PracticeLessons.isPractice(lessonId)) null else try {
             lessonDoc(uid, lessonId).get().await()
         } catch (e: Exception) {
             Log.w("LessonResume", "Could not read progress for $lessonId", e)
@@ -75,6 +79,7 @@ object LessonResume {
      * and losing one save only costs a few steps.
      */
     fun save(uid: String, lessonId: String, part: String, state: Map<String, Any>) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         lessonDoc(uid, lessonId)
             .set(
                 mapOf("resume" to mapOf(part to state + ("updatedAt" to FieldValue.serverTimestamp()))),
@@ -85,6 +90,7 @@ object LessonResume {
 
     /** Drops the saved place once the part is finished. */
     fun clear(uid: String, lessonId: String, part: String) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         lessonDoc(uid, lessonId)
             .set(mapOf("resume" to mapOf(part to FieldValue.delete())), SetOptions.merge())
             .addOnFailureListener { Log.w("LessonResume", "Could not clear the $part place", it) }

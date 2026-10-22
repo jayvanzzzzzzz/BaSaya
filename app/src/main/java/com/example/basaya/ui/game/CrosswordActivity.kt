@@ -40,14 +40,15 @@ import com.example.basaya.R
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.CrosswordProgress
 import com.example.basaya.data.model.CrosswordGameLevel
+import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.CrosswordRepository
+import com.example.basaya.utils.Network
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -552,8 +553,13 @@ class CrosswordActivity : AppCompatActivity() {
             repo.syncProgress(lessonId)
 
             if (allGameLevels.isEmpty()) {
-                Log.e("CrosswordActivity", "No game levels found for lessonId=$lessonId — check Firestore 'game' subcollection")
-                Toast.makeText(this@CrosswordActivity, "Walang laro para sa araling ito.", Toast.LENGTH_SHORT).show()
+                // Offline, an empty list only means the levels couldn't be read, not that there are none.
+                if (!Network.isOnline(this@CrosswordActivity)) {
+                    Toast.makeText(this@CrosswordActivity, R.string.cw_offline_levels, Toast.LENGTH_LONG).show()
+                } else {
+                    Log.e("CrosswordActivity", "No game levels found for lessonId=$lessonId — check Firestore 'game' subcollection")
+                    Toast.makeText(this@CrosswordActivity, "Walang laro para sa araling ito.", Toast.LENGTH_SHORT).show()
+                }
                 finish()
                 return@launch
             }
@@ -735,37 +741,36 @@ class CrosswordActivity : AppCompatActivity() {
                 val currentLevelNumber = progress?.currentLevel ?: 1
                 val nextLevel = currentLevelNumber + 1
                 val totalLevels = allGameLevels.size
+                // Practice saves nothing: after its last level the game starts over at level 1.
+                val practice = PracticeLessons.isPractice(lessonId)
 
                 db.crosswordProgressDao().saveProgress(
                     CrosswordProgress(
                         lessonId = lessonId,
-                        currentLevel = nextLevel,
+                        currentLevel = if (practice && currentLevelNumber >= totalLevels) 1 else nextLevel,
                         completedLevel = 1,
                         foundWords = ""
                     )
                 )
 
                 val uid = FirebaseAuth.getInstance().currentUser?.uid
-                if (uid != null) {
-                    try {
-                        FirebaseFirestore.getInstance()
-                            .collection("users")
-                            .document(uid)
-                            .collection("assignedLessons")
-                            .document(lessonId)
-                            .set(
-                                mapOf(
-                                    "gameScore" to currentLevelNumber,
-                                    "gameTotal" to totalLevels,
-                                    "gameFinished" to (currentLevelNumber >= totalLevels),
-                                    "gameCompletedAt" to FieldValue.serverTimestamp()
-                                ),
-                                com.google.firebase.firestore.SetOptions.merge()
-                            )
-                            .await()
-                    } catch (e: Exception) {
-                        Log.e("CrosswordActivity", "Failed to sync game progress", e)
-                    }
+                if (uid != null && !practice) {
+                    // Not awaited: offline, Firestore keeps the write and sends it once online.
+                    FirebaseFirestore.getInstance()
+                        .collection("users")
+                        .document(uid)
+                        .collection("assignedLessons")
+                        .document(lessonId)
+                        .set(
+                            mapOf(
+                                "gameScore" to currentLevelNumber,
+                                "gameTotal" to totalLevels,
+                                "gameFinished" to (currentLevelNumber >= totalLevels),
+                                "gameCompletedAt" to FieldValue.serverTimestamp()
+                            ),
+                            com.google.firebase.firestore.SetOptions.merge()
+                        )
+                        .addOnFailureListener { Log.e("CrosswordActivity", "Failed to sync game progress", it) }
 
                     // Talasalitaan skill: words found vs. wrong swipes in this level
                     try {

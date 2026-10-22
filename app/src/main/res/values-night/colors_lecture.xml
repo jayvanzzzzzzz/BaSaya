@@ -15,4 +15,10 @@
     <color name="lecture_button_surface">@color/ns_surface_raised</color>
     <color name="lecture_button_stroke">@color/ns_stroke</color>
     <color name="lecture_ripple">#408EA2FF</color>
+    <!-- Read-along: the soft pill that glides behind the word being spoken (ReadAlongTextView). -->
+    <color name="lecture_bubble">#3A3870</color>
+    <color name="lecture_bubble_end">#2E4372</color>
+    <color name="lecture_bubble_stroke">#6E66C8</color>
+    <color name="lecture_bubble_lip">#22204A</color>
+    <color name="lecture_trail">#5A54A8</color>
 </resources>

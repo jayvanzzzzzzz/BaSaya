@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two soft waves along the bottom of the splash screen. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="400dp"
+    android:height="120dp"
+    android:viewportWidth="400"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="@color/splash_wave_back"
+        android:pathData="M0,46C40,22 80,22 120,40C160,58 200,62 240,42C280,22 320,18 360,36C380,45 392,48 400,46L400,120L0,120Z" />
+    <path
+        android:fillColor="@color/splash_wave_front"
+        android:pathData="M0,78C36,60 72,58 110,72C150,88 190,92 230,76C270,60 310,56 350,70C372,78 388,82 400,80L400,120L0,120Z" />
+</vector>

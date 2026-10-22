@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The "i" on the Bigkas word card: solid green circle with a lip, like the coral speaker. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="3dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/pr_word_info_lip" />
+        </shape>
+    </item>
+    <item android:bottom="3dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/pr_word_info" />
+        </shape>
+    </item>
+</layer-list>

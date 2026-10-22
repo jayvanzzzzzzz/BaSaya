@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Diksiyonaryo button: a book with solid A–Z thumb-index tabs on its edge.
+     Same drawing as the website's top-bar icon (student/index.html). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Cover -->
+    <path
+        android:pathData="M5.5,2.5H18v16H5.5A2.5,2.5 0,0 0,3 21V5a2.5,2.5 0,0 1,2.5 -2.5Z"
+        android:strokeWidth="2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Pages at the bottom -->
+    <path
+        android:pathData="M3,21a2.5,2.5 0,0 1,2.5 -2.5H18v3H5.5"
+        android:strokeWidth="2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Title on the cover -->
+    <path
+        android:pathData="M8,7h6M8,10.5h4"
+        android:strokeWidth="2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round" />
+    <!-- A–Z tabs -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M18,4h2.6a0.9,0.9 0,0 1,0.9 0.9v1a0.9,0.9 0,0 1,-0.9 0.9H18zM18,9h2.6a0.9,0.9 0,0 1,0.9 0.9v1a0.9,0.9 0,0 1,-0.9 0.9H18zM18,14h2.6a0.9,0.9 0,0 1,0.9 0.9v1a0.9,0.9 0,0 1,-0.9 0.9H18z" />
+</vector>

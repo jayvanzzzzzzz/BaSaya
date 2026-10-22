@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_home">Mga Aralin</string>
+    <string name="nav_home">Aralin</string>
     <string name="nav_progress">Progreso</string>
     <string name="nav_profile">Account</string>
 </resources>
+ 

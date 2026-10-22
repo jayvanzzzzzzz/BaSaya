@@ -137,4 +137,48 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/progressBar" />
 
+    <!-- Practice lesson, last level: nothing was saved, and the game can be played again.
+         Offline, it says the level was saved on the phone instead. -->
+    <TextView
+        android:id="@+id/tvPracticeNote"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="32dp"
+        android:fontFamily="@font/quicksand_medium"
+        android:gravity="center"
+        android:text="@string/practice_not_saved"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnNext" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnReplay"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/cw_btn_next"
+        android:fontFamily="@font/lexend"
+        android:gravity="center"
+        android:minWidth="200dp"
+        android:paddingStart="28dp"
+        android:paddingTop="0dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="6dp"
+        android:stateListAnimator="@null"
+        android:text="@string/practice_play_again"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPracticeNote" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,7 @@
 package com.example.basaya.ui.activity
 
 import android.animation.ValueAnimator
+import android.content.Intent
 import android.os.Bundle
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -16,9 +17,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.basaya.R
+import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.ui.game.ConfettiView
 import com.example.basaya.ui.pronunciation.PronunciationBookView
 import com.example.basaya.ui.theme.useDarkStatusBarIconsInLightTheme
+import com.example.basaya.utils.Network
 
 class PracticeCompleteScreen : AppCompatActivity() {
 
@@ -69,6 +72,31 @@ class PracticeCompleteScreen : AppCompatActivity() {
             }
         }
         btnDone.setOnClickListener { finish() }
+
+        // Practice lesson: nothing was saved, so it can be done again right away.
+        val lessonId = intent.getStringExtra("LESSON_ID").orEmpty()
+        if (PracticeLessons.isPractice(lessonId)) {
+            findViewById<View>(R.id.tvPracticeNote).visibility = View.VISIBLE
+            // The note adds height to the card, so a smaller buddy keeps everything on short screens
+            findViewById<View>(R.id.buddy).layoutParams.apply {
+                width = (120 * resources.displayMetrics.density).toInt()
+                height = (141 * resources.displayMetrics.density).toInt()
+            }
+            findViewById<TextView>(R.id.btnRetry).apply {
+                visibility = View.VISIBLE
+                accessibilityDelegate = btnDone.accessibilityDelegate
+                setOnClickListener {
+                    startActivity(Intent(this@PracticeCompleteScreen, PracticeActivity::class.java).putExtra("LESSON_ID", lessonId))
+                    finish()
+                }
+            }
+        } else if (!Network.isOnline(this)) {
+            // Offline: the score was saved on the phone and is sent once online.
+            findViewById<TextView>(R.id.tvPracticeNote).apply {
+                setText(R.string.saved_offline_note)
+                visibility = View.VISIBLE
+            }
+        }
 
         playEntrance(score, total, starCount, celebrate = percent >= 50)
     }

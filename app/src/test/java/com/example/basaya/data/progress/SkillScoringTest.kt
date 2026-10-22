@@ -105,4 +105,68 @@ class SkillScoringTest {
         assertEquals(listOf(Skill.PAGBIGKAS), summary.needsHelp)
         assertNull(summary.skills.getValue(Skill.TALASALITAAN).score)
     }
+
+    private val items = mapOf(
+        Skill.TALASALITAAN to 5, Skill.PAGKILALA to 4, Skill.PAGBIGKAS to 6, Skill.PAGSUSULIT to 10
+    )
+
+    @Test
+    fun partsLeftUndoneAtTheDeadlineCountAsZero() {
+        val results = mapOf(
+            Skill.PAGSUSULIT to listOf(result("a", 80, 1, 100)),
+            Skill.TALASALITAAN to listOf(result("b", 75, 1, 200)) // half-played crossword
+        )
+        val finished = mapOf(
+            "a" to FinishedParts(quiz = true),
+            "c" to FinishedParts(pronunciation = true) // finished before skill tracking: no record
+        )
+        val lessons = listOf(
+            HeldLesson("a", dueAt = 500, gameSkipped = false, activitySkipped = false, items = items),
+            HeldLesson("b", dueAt = 600, gameSkipped = false, activitySkipped = true, items = items),
+            HeldLesson("c", dueAt = 700, gameSkipped = false, activitySkipped = false,
+                items = items + (Skill.PAGKILALA to 0)),
+            HeldLesson("d", dueAt = 2000, gameSkipped = false, activitySkipped = false, items = items), // still open
+            HeldLesson("e", dueAt = null, gameSkipped = false, activitySkipped = false, items = items) // no deadline
+        )
+
+        val out = SkillScoring.withMissed(results, finished, lessons, now = 1000)
+        fun ids(skill: Skill) = out.getValue(skill).map { "${it.lessonId}:${it.correct}/${it.attempts}${if (it.missed) "*" else ""}" }
+
+        // b: the half-played crossword's 4 unplayed words are added as wrong
+        assertEquals(listOf("b:75/104*", "a:0/5*", "c:0/5*"), ids(Skill.TALASALITAAN))
+        assertEquals(listOf("a:0/4*"), ids(Skill.PAGKILALA)) // b skipped, c has no Gawain
+        assertEquals(listOf("a:0/6*", "b:0/6*"), ids(Skill.PAGBIGKAS))
+        assertEquals(listOf("a:80/100", "b:0/10*", "c:0/10*"), ids(Skill.PAGSUSULIT))
+        assertTrue(out.getValue(Skill.PAG_UNAWA).isEmpty())
+        assertEquals(500L, out.getValue(Skill.PAGKILALA).single().completedAtMillis)
+    }
+
+    @Test
+    fun unfinishedPartsKeepWhatWasRightAndTheRestIsWrong() {
+        // 3 of 5 questions answered with 2 right; 4 of 6 Gawain pages with 3 right.
+        val lessons = listOf(
+            HeldLesson("a", 500, false, false, mapOf(Skill.PAGSUSULIT to 5, Skill.PAGKILALA to 6, Skill.PAGBIGKAS to 4))
+        )
+        val finished = mapOf(
+            "a" to FinishedParts(
+                correctSoFar = mapOf(Skill.PAGSUSULIT to 2, Skill.PAGKILALA to 3, Skill.PAGBIGKAS to 9)
+            )
+        )
+        val out = SkillScoring.withMissed(emptyMap(), finished, lessons, now = 1000)
+        assertEquals(2, out.getValue(Skill.PAGSUSULIT).single().correct)
+        assertEquals(5, out.getValue(Skill.PAGSUSULIT).single().attempts)
+        assertEquals(3, out.getValue(Skill.PAGKILALA).single().correct)
+        assertEquals(6, out.getValue(Skill.PAGKILALA).single().attempts)
+        // A saved count above the item count (content edited) is capped
+        assertEquals(4, out.getValue(Skill.PAGBIGKAS).single().correct)
+    }
+
+    @Test
+    fun missedQuizPullsTheScoreDown() {
+        val results = mapOf(Skill.PAGSUSULIT to listOf(result("a", 80, 10, 100)))
+        val lessons = listOf(HeldLesson("b", 600, false, false, items))
+        val summary = SkillScoring.summarize(SkillScoring.withMissed(results, emptyMap(), lessons, now = 1000))
+        // 80% × 10 × 0.85 and 0% × 10 → 68 / 18.5 = 37%
+        assertEquals(37, summary.skills.getValue(Skill.PAGSUSULIT).score)
+    }
 }

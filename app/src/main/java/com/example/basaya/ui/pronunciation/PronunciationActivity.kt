@@ -26,6 +26,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.ColorRes
@@ -37,9 +38,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.audio.PronunciationAudioStore
+import com.example.basaya.data.dictionary.Dictionary
+import com.example.basaya.data.dictionary.Syllables
 import com.example.basaya.data.model.PronunciationActivityData
 import com.example.basaya.data.model.PronunciationWord
 import com.example.basaya.data.progress.LessonResume
+import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillProgressRepository
 import com.example.basaya.data.repository.PronunciationRepository
@@ -47,8 +51,10 @@ import com.example.basaya.speech.PronunciationChecker
 import com.example.basaya.speech.PronunciationScorer
 import com.example.basaya.speech.VoiceRecorder
 import com.example.basaya.speech.WhisperSttClient
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.example.basaya.ui.game.ConfettiView
 import com.example.basaya.ui.theme.useDarkStatusBarIconsInLightTheme
+import com.example.basaya.utils.Network
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -84,6 +90,8 @@ class PronunciationActivity : AppCompatActivity() {
     private lateinit var bookView: PronunciationBookView
     private lateinit var wordCard: View
     private lateinit var tvTargetWord: TextView
+    private lateinit var tvTargetSyllables: TextView
+    private lateinit var btnWordInfo: TextView
     private lateinit var btnSpeaker: ImageButton
     private lateinit var resultStickyNote: LinearLayout
     private lateinit var tvResultBand: TextView
@@ -105,6 +113,10 @@ class PronunciationActivity : AppCompatActivity() {
     private lateinit var pronunciationData: PronunciationActivityData
     private var lessonId: String = ""
     private var wordList: List<PronunciationWord> = emptyList()
+    // Pantig under each word: split right away, then a teacher's fix from the Diksiyonaryo.
+    private var syllables: MutableList<String> = mutableListOf()
+    // Each word's Diksiyonaryo entry (null = not in it, so no "i" button).
+    private var entries: MutableList<Dictionary.Entry?> = mutableListOf()
     private var currentWordIndex = 0
     private var livesRemaining = MAX_LIVES
     private var correctCount = 0
@@ -191,6 +203,9 @@ class PronunciationActivity : AppCompatActivity() {
         bookView = findViewById(R.id.bookView)
         wordCard = findViewById(R.id.wordCard)
         tvTargetWord = findViewById(R.id.tvTargetWord)
+        tvTargetSyllables = findViewById(R.id.tvTargetSyllables)
+        btnWordInfo = findViewById(R.id.btnWordInfo)
+        btnWordInfo.setOnClickListener { showWordMeaning() }
         btnSpeaker = findViewById(R.id.btnSpeaker)
         resultStickyNote = findViewById(R.id.resultStickyNote)
         tvResultBand = findViewById(R.id.tvResultBand)
@@ -260,6 +275,17 @@ class PronunciationActivity : AppCompatActivity() {
                 )
             }
 
+            syllables = wordList.map { Syllables.split(it.word) }.toMutableList()
+            entries = MutableList(wordList.size) { null }
+            wordList.forEachIndexed { index, item ->
+                launch {
+                    val entry = runCatching { Dictionary.lookup(this@PronunciationActivity, item.word) }.getOrNull()
+                    entries[index] = entry
+                    entry?.fixedSyllables?.takeIf { it.isNotBlank() }?.let { syllables[index] = it }
+                    if (index == currentWordIndex && tvTargetWord.text.toString() == item.word) showSyllables()
+                }
+            }
+
             // Continue where the child closed Bigkas (here or on the website): the word, the
             // lives left on it and the score so far.
             val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -307,6 +333,64 @@ class PronunciationActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Pantig under the word and the "ⓘ Kahulugan" chip (display only; checking still uses the
+     * word itself). The chip is gone for words the Diksiyonaryo doesn't have.
+     */
+    private fun showSyllables() {
+        val text = syllables.getOrNull(currentWordIndex).orEmpty()
+        tvTargetSyllables.text = text
+        tvTargetSyllables.contentDescription = getString(R.string.dict_syllables_cd, text)
+        tvTargetSyllables.visibility = if (Syllables.hasBreaks(text)) View.VISIBLE else View.GONE
+
+        val hasMeaning = entries.getOrNull(currentWordIndex) != null
+        val wasShown = btnWordInfo.visibility == View.VISIBLE
+        btnWordInfo.visibility = if (hasMeaning) View.VISIBLE else View.GONE
+        if (hasMeaning && !wasShown) wiggleWordInfo()
+    }
+
+    /** A little wiggle when the chip appears, so the student notices it. Kept gentle so the
+     *  wide pill doesn't swing out of the card. */
+    private fun wiggleWordInfo() {
+        btnWordInfo.rotation = 0f
+        ObjectAnimator.ofFloat(btnWordInfo, View.ROTATION, 0f, -6f, 5f, -3f, 0f).apply {
+            startDelay = 400
+            duration = 900
+            start()
+        }
+    }
+
+    /** The word's meaning from the Diksiyonaryo: first meaning group only, kept short. */
+    private fun showWordMeaning() {
+        val entry = entries.getOrNull(currentWordIndex) ?: return
+        val sense = entry.senses.firstOrNull()
+        val sheet = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_word_info, null)
+        sheet.setContentView(view)
+
+        view.findViewById<TextView>(R.id.tvInfoWord).text = entry.shown
+        val syllableText = syllables.getOrNull(currentWordIndex).orEmpty()
+        view.findViewById<TextView>(R.id.tvInfoSyllables).apply {
+            text = syllableText
+            contentDescription = getString(R.string.dict_syllables_cd, syllableText)
+            visibility = if (Syllables.hasBreaks(syllableText)) View.VISIBLE else View.GONE
+        }
+        view.findViewById<TextView>(R.id.tvInfoPos).apply {
+            text = sense?.pos.orEmpty()
+            visibility = if (sense?.pos.isNullOrBlank()) View.GONE else View.VISIBLE
+        }
+        view.findViewById<TextView>(R.id.tvInfoMeanings).text = sense?.definitions.orEmpty()
+            .mapIndexed { i, definition -> "${i + 1}. $definition" }
+            .joinToString("\n")
+        view.findViewById<TextView>(R.id.tvInfoExamples).apply {
+            val examples = sense?.examples.orEmpty()
+            text = examples.joinToString("\n") { "“$it”" }
+            visibility = if (examples.isEmpty()) View.GONE else View.VISIBLE
+        }
+        view.findViewById<View>(R.id.btnInfoClose).setOnClickListener { sheet.dismiss() }
+        sheet.show()
+    }
+
     private fun showCurrentWord(animate: Boolean) {
         val currentWord = wordList[currentWordIndex]
         livesRemaining = restoredLives ?: MAX_LIVES
@@ -319,8 +403,10 @@ class PronunciationActivity : AppCompatActivity() {
         bookView.setMood(PronunciationBookView.Mood.IDLE)
         tvMicHint.setText(R.string.pr_mic_hint_idle)
 
+        btnWordInfo.visibility = View.GONE // so it wiggles again for the new word
         if (!animate) {
             tvTargetWord.text = currentWord.word
+            showSyllables()
             setButtonsEnabled(true)
             return
         }
@@ -333,6 +419,7 @@ class PronunciationActivity : AppCompatActivity() {
             .setInterpolator(DecelerateInterpolator())
             .withEndAction {
                 tvTargetWord.text = currentWord.word
+                showSyllables()
                 wordCard.translationX = distance * 0.6f
                 wordCard.animate()
                     .translationX(0f).alpha(1f)
@@ -660,6 +747,11 @@ class PronunciationActivity : AppCompatActivity() {
                     SkillProgressRepository.refreshInBackground(uid)
                 } catch (e: Exception) {
                     Log.e("PronunciationActivity", "Failed to save pronunciation progress", e)
+                }
+
+                // Offline: the result was saved on the phone and is sent once online.
+                if (!PracticeLessons.isPractice(lessonId) && !Network.isOnline(this@PronunciationActivity)) {
+                    Toast.makeText(this@PronunciationActivity, R.string.saved_offline_note, Toast.LENGTH_LONG).show()
                 }
             }
 

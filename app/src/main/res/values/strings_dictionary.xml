@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Diksiyonaryo (ui/dictionary/DictionaryActivity) -->
+    <string name="dict_title">Diksiyonaryo</string>
+    <string name="dict_open">Buksan ang Diksiyonaryo</string>
+    <string name="dict_bubble">Anong salita ang hahanapin mo?</string>
+    <string name="dict_search_hint">Hal. bahay, kumain, maganda</string>
+    <string name="dict_letters_cd">Mga titik</string>
+    <string name="dict_try_these">SUBUKAN ANG MGA SALITANG ITO</string>
+    <string name="dict_root_hint">Wala ang “%1$s”. Baka ang salitang-ugat ang hinahanap mo:</string>
+    <string name="dict_empty_title">Wala pa ang salitang ito</string>
+    <string name="dict_empty_body">Tingnan kung tama ang baybay, o sabihin sa iyong guro para maidagdag niya ang “%1$s”.</string>
+    <string name="dict_error_title">Hindi ma-load ang diksiyonaryo</string>
+    <string name="dict_error_body">Subukan muli mamaya.</string>
+    <string name="dict_back_to_list">Bumalik sa listahan</string>
+    <string name="dict_from_teacher">Dinagdag ng guro</string>
+    <!-- Pantig under the word (ba·hay), read aloud by TalkBack -->
+    <string name="dict_syllables_cd">Pantig: %1$s</string>
+    <string name="dict_synonyms">Kasingkahulugan:</string>
+    <!-- Speaker beside the word (DictionaryAudio) -->
+    <string name="dict_play_word">Pakinggan ang “%1$s”</string>
+    <string name="dict_audio_unavailable">Hindi ma-play ang audio. Subukan muli.</string>
+    <string name="dict_credit">Ilang kahulugan mula sa Wiktionary (CC BY-SA). Ang iba ay dinagdag ng mga guro.</string>
+</resources>

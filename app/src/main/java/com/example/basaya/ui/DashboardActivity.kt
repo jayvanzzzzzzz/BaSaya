@@ -24,6 +24,7 @@ import kotlinx.coroutines.tasks.await
 import com.example.basaya.R
 import com.example.basaya.data.cache.CompletionStateCache
 import com.example.basaya.data.progress.LessonResume
+import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.data.audio.LectureAudioCache
 import com.example.basaya.data.repository.ActivityStatus
 import com.example.basaya.data.repository.GameStatus
@@ -156,11 +157,23 @@ class DashboardActivity : AppCompatActivity() {
 
         hideSkippedParts()
 
+        // Pagsasanay or Pagtataya. A Practice lesson saves nothing, so every part stays open.
+        lifecycleScope.launch {
+            val practice = PracticeLessons.refresh(this@DashboardActivity, lessonId)
+            findViewById<TextView>(R.id.tvLessonEyebrow).setText(
+                if (practice) R.string.lesson_dash_eyebrow_practice else R.string.lesson_dash_eyebrow_assessment
+            )
+            if (practice) {
+                findViewById<TextView>(R.id.tvPathSub).setText(R.string.practice_path_sub)
+                showPracticeState()
+            }
+        }
+
         lifecycleScope.launch {
             try {
                 val lessonDoc = firestore
                     .collection("lessons")
-                    .document(lessonId)
+                    .document(PracticeLessons.contentId(lessonId))
                     .get()
                     .await()
 
@@ -275,8 +288,23 @@ class DashboardActivity : AppCompatActivity() {
         quizLockOverlay.visibility = if (locked) View.VISIBLE else View.GONE
     }
 
+    /** Practice: nothing is ever finished or locked, so each part can be done again. */
+    private fun showPracticeState() {
+        lectureFinished = false
+        gameIsFinished = false
+        activityIsFinished = false
+        quizIsFinished = false
+        pronunciationIsFinished = false
+        listOf(
+            lectureCompletedBadge, gameCompletedBadge, activityCompletedBadge,
+            quizCompletedBadge, pronunciationCompletedBadge
+        ).forEach { it.visibility = View.GONE }
+        setQuizLocked(false)
+    }
+
     private fun loadCompletionState() {
         if (lessonId.isBlank()) return
+        if (PracticeLessons.isPractice(lessonId)) return showPracticeState()
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         completionCache.get(lessonId)?.let { cached ->
@@ -460,6 +488,12 @@ class DashboardActivity : AppCompatActivity() {
                 hasPronunciationScore = true
             }
         }
+        if (!hasQuizScore) {
+            started(LessonResume.QUIZ)?.let { (done, total) ->
+                tvQuizCount.text = "$done/$total questions"
+                hasQuizScore = true
+            }
+        }
     }
 
     private fun loadContentCounts() {
@@ -477,7 +511,7 @@ class DashboardActivity : AppCompatActivity() {
             try {
                 val lectureSnapshot = firestore
                     .collection("lessons")
-                    .document(lessonId)
+                    .document(PracticeLessons.contentId(lessonId))
                     .collection("lectures")
                     .limit(1)
                     .get()
@@ -487,14 +521,14 @@ class DashboardActivity : AppCompatActivity() {
 
                 val gameSnapshot = firestore
                     .collection("lessons")
-                    .document(lessonId)
+                    .document(PracticeLessons.contentId(lessonId))
                     .collection("game")
                     .get()
                     .await()
 
                 val activitySnapshot = firestore
                     .collection("lessons")
-                    .document(lessonId)
+                    .document(PracticeLessons.contentId(lessonId))
                     .collection("activity")
                     .limit(1)
                     .get()
@@ -504,7 +538,7 @@ class DashboardActivity : AppCompatActivity() {
 
                 val quizSnapshot = firestore
                     .collection("lessons")
-                    .document(lessonId)
+                    .document(PracticeLessons.contentId(lessonId))
                     .collection("quiz")
                     .limit(1)
                     .get()
@@ -514,7 +548,7 @@ class DashboardActivity : AppCompatActivity() {
 
                 val pronunciationSnapshot = firestore
                     .collection("lessons")
-                    .document(lessonId)
+                    .document(PracticeLessons.contentId(lessonId))
                     .collection("pronunciation")
                     .limit(1)
                     .get()
@@ -723,8 +757,8 @@ class DashboardActivity : AppCompatActivity() {
         if (lessonId.isBlank()) return
         lifecycleScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val game = GameStatus.isSkipped(lessonId)
-            val activity = ActivityStatus.isSkipped(lessonId)
+            val game = GameStatus.isSkipped(PracticeLessons.contentId(lessonId))
+            val activity = ActivityStatus.isSkipped(PracticeLessons.contentId(lessonId))
             // Offline and never read: fall back to what the last lesson sync saved.
             val saved = if (game == null || activity == null) {
                 uid?.let { id ->

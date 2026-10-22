@@ -25,7 +25,9 @@ import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.database.AppDatabase
+import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.data.repository.CrosswordRepository
+import com.example.basaya.utils.Network
 import kotlinx.coroutines.launch
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -74,13 +76,19 @@ class CrosswordCompleteScreen : AppCompatActivity() {
 
         lifecycleScope.launch {
 
-            val lessonDocument = firestore
-                .collection("lessons")
-                .document(lessonId)
-                .get()
-                .await()
+            // Offline with no cached copy, the title falls back to the app name.
+            val lessonTitle = try {
+                firestore
+                    .collection("lessons")
+                    .document(PracticeLessons.contentId(lessonId))
+                    .get()
+                    .await()
+                    .getString("title")
+            } catch (e: Exception) {
+                null
+            }
 
-            title.text = lessonDocument.getString("title") ?: "BaSaya"
+            title.text = lessonTitle ?: "BaSaya"
 
             val repo = CrosswordRepository(this@CrosswordCompleteScreen)
             val levels = repo.getLevels(lessonId)
@@ -96,6 +104,14 @@ class CrosswordCompleteScreen : AppCompatActivity() {
 
             progressBar.max = allLevels
             progressBar.progress = currentLevel
+
+            // Offline: the level was saved on the phone and is sent once online.
+            if (!PracticeLessons.isPractice(lessonId) && !Network.isOnline(this@CrosswordCompleteScreen)) {
+                findViewById<TextView>(R.id.tvPracticeNote).apply {
+                    setText(R.string.saved_offline_note)
+                    visibility = View.VISIBLE
+                }
+            }
 
             if (currentLevel < allLevels) {
 
@@ -131,6 +147,22 @@ class CrosswordCompleteScreen : AppCompatActivity() {
                 btnNext.setOnClickListener {
                     it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     finish()
+                }
+
+                // Practice: nothing was saved and the game is back at level 1, so it can be replayed.
+                if (PracticeLessons.isPractice(lessonId)) {
+                    findViewById<View>(R.id.tvPracticeNote).visibility = View.VISIBLE
+                    findViewById<View>(R.id.btnReplay).apply {
+                        visibility = View.VISIBLE
+                        setOnClickListener {
+                            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            startActivity(
+                                Intent(this@CrosswordCompleteScreen, CrosswordActivity::class.java)
+                                    .putExtra("LESSON_ID", lessonId)
+                            )
+                            finish()
+                        }
+                    }
                 }
             }
 

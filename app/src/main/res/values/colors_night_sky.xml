@@ -33,6 +33,11 @@
     <color name="ns_violet">#B79CFF</color>
     <color name="ns_coral">#FF6B81</color>
 
+    <!-- Moon (night-only scenery) -->
+    <color name="ns_moon">#FFF1C9</color>
+    <color name="ns_moon_crater">#F2DDA2</color>
+    <color name="ns_moon_glow">#FFF3C4</color>
+
     <!-- Soft tints behind accent text and icons -->
     <color name="ns_periwinkle_tint">#1E2A5C</color>
     <color name="ns_mint_tint">#133A2E</color>

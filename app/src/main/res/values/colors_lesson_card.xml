@@ -12,9 +12,7 @@
     <color name="lesson_card_body">#56635C</color>
     <color name="lesson_card_track">#E8E4D9</color>
     <color name="lesson_card_primary_border">#3E6B55</color>
-    <!-- Downloaded badge in the card footer -->
-    <color name="lesson_downloaded_bg">#EAF4EF</color>
-    <color name="lesson_downloaded_ring">#4D8A6B</color>
+    <!-- Downloaded check on the card -->
     <color name="lesson_downloaded_check">#1F6B4A</color>
     <!-- Search match behind the title -->
     <color name="lesson_search_highlight">#FFF176</color>
@@ -26,6 +24,10 @@
     <color name="lesson_status_progress_fg">#875A12</color>
     <color name="lesson_status_new_bg">#F0EEE7</color>
     <color name="lesson_status_new_fg">#5E625C</color>
+
+    <!-- Step bar segments: a finished part, while the lesson is in progress / once it is all done -->
+    <color name="lesson_seg_progress">#B87314</color>
+    <color name="lesson_seg_done">#2E8B57</color>
 
     <!-- Difficulty (same hue families as before, deepened for contrast on white) -->
     <color name="lesson_diff_beginner">#2E7D4F</color>

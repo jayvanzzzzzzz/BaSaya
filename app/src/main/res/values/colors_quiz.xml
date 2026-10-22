@@ -29,4 +29,5 @@
     <color name="qz_surface">#FFFFFF</color>
     <color name="qz_on_gold">#2A1F5C</color>
     <color name="qz_track">#EEE9FF</color>
+    <color name="qz_note_bg">#F3EFFF</color>
 </resources>

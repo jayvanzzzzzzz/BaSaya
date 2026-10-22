@@ -93,7 +93,7 @@
     <string name="lesson_dash_eyebrow">ARALIN</string>
     <string name="lesson_dash_section_start">Pumili ng gawain</string>
     <string name="lesson_dash_section_practice">Oras para magsanay!</string>
-    <string name="lesson_dash_lecture_title">Lecture</string>
+    <string name="lesson_dash_lecture_title">Lektura</string>
     <string name="lesson_dash_lecture_sub">Unawain ang aralin</string>
     <string name="lesson_dash_game_title">Laro</string>
     <string name="lesson_dash_game_sub">Hanapin ang tamang salita</string>
@@ -141,12 +141,15 @@
     <string name="register_save_failed">Hindi na-save ang iyong impormasyon. Subukan muli.</string>
 
     <!-- Lesson list card -->
-    <string name="lesson_card_eyebrow">ARALIN</string>
-    <string name="lesson_card_eyebrow_numbered">ARALIN %1$d</string>
-    <string name="lesson_card_open">Buksan</string>
+    <string name="lesson_card_number">Aralin %1$d</string>
+    <string name="lesson_card_parts">%1$d/%2$d</string>
+    <string name="lesson_card_parts_cd">%1$d sa %2$d na bahagi ang tapos</string>
+    <string name="lesson_card_done">✓ Tapos na</string>
+    <string name="lesson_card_done_cd">Tapos na ang aralin</string>
     <string name="lesson_card_download_cd">I-download ang aralin</string>
     <string name="lesson_card_downloading_cd">Dina-download ang aralin</string>
-    <string name="lesson_card_more_cd">Iba pang opsyon</string>
+    <string name="lesson_card_downloading_percent_cd">Dina-download ang aralin, %1$d%%</string>
+    <string name="lesson_card_downloaded_cd">Na-download na. I-tap para alisin ang download.</string>
     <string name="cw_back">Bumalik</string>
     <string name="cw_shuffle">Haluin ang mga titik</string>
     <string name="cw_level">Antas %1$d</string>
@@ -158,6 +161,9 @@
     <string name="pr_instruction_default">Bigkasin ang salitang ito.</string>
     <string name="pr_close">Isara</string>
     <string name="pr_play_word">Pakinggan ang salita</string>
+    <string name="pr_word_info">Ano ang ibig sabihin ng salita?</string>
+    <string name="pr_word_info_chip">Kahulugan</string>
+    <string name="pr_word_info_close">Isara</string>
     <string name="pr_record">Bigkasin ang salita</string>
     <string name="pr_lives_cd">%1$d buhay</string>
     <string name="pr_mic_hint_idle">Pindutin ang mic at sabihin ang salita</string>

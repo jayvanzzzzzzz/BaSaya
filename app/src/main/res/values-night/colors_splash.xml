@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash screen palette (dark, "Night Sky"). Light variants live in values/colors_splash.xml. -->
+    <color name="splash_bg_top">@color/ns_bg</color>
+    <color name="splash_bg_bottom">#171C40</color>
+    <color name="splash_wave_back">#1C2250</color>
+    <color name="splash_wave_front">#262D63</color>
+    <color name="splash_glow">#4A3A99</color>
+    <color name="splash_glow_edge">#004A3A99</color>
+    <!-- Softer than pure white so the card doesn't glare on the night sky. -->
+    <color name="splash_logo_card">#F2F0FF</color>
+
+    <!-- Floating stars and bubbles -->
+    <color name="splash_star_gold">@color/ns_gold</color>
+    <color name="splash_star_pink">@color/ns_bubblegum</color>
+    <color name="splash_star_sky">@color/ns_sky</color>
+    <color name="splash_bubble_mint">#4D5EE0A0</color>
+    <color name="splash_bubble_violet">#4DB79CFF</color>
+    <color name="splash_bubble_peach">#4DFFA86B</color>
+    <color name="splash_bubble_sky">#4D6CC8FF</color>
+
+    <!-- "BaSaya" letter blocks: glowing candy faces with dark letters -->
+    <color name="splash_block_coral">@color/ns_coral</color>
+    <color name="splash_block_coral_lip">#C94A60</color>
+    <color name="splash_block_tangerine">@color/ns_tangerine</color>
+    <color name="splash_block_tangerine_lip">#C77A45</color>
+    <color name="splash_block_gold">@color/ns_gold</color>
+    <color name="splash_block_gold_lip">@color/ns_gold_lip</color>
+    <color name="splash_block_mint">@color/ns_mint</color>
+    <color name="splash_block_mint_lip">#34A872</color>
+    <color name="splash_block_sky">@color/ns_sky</color>
+    <color name="splash_block_sky_lip">#3A93CC</color>
+    <color name="splash_block_violet">@color/ns_violet</color>
+    <color name="splash_block_violet_lip">#8A6FD6</color>
+    <color name="splash_block_ink">@color/ns_on_accent</color>
+    <color name="splash_block_ink_on_gold">@color/ns_on_accent</color>
+</resources>

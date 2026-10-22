@@ -11,6 +11,7 @@ import com.example.basaya.data.notifications.LessonInbox
 import com.example.basaya.data.notifications.NotificationReadState
 import com.example.basaya.data.notifications.NotificationScheduler
 import com.example.basaya.data.progress.LessonCompletion
+import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.data.schedule.TrustedClock
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -51,6 +52,7 @@ class LessonRepository(private val context: Context) {
 
         if (classId.isNullOrBlank()) {
             db.lessonDao().deleteLessonsForUser(userId)
+            PracticeLessons.set(emptyList())
             return
         }
 
@@ -89,27 +91,40 @@ class LessonRepository(private val context: Context) {
             .await()
 
         // Link docs may be keyed by the lesson id, or carry it in a "lessonId" field
-        // (auto-id links written by the teacher side).
+        // (auto-id links written by the teacher side). A lesson can be in the class twice:
+        // as an Assessment and as Practice ("{lessonId}__practice"), so each link is its own
+        // entry: LessonEntity.id is the entry id, PracticeLessons.contentId() its lesson.
         // The link's "order" is the teacher's ordering for this class.
-        val linkOrders = classLessonsSnapshot.documents.associate { link ->
-            (link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id) to
-                link.getLong("order")?.toInt()
+        data class Link(
+            val entryId: String,
+            val lessonId: String,
+            val order: Int?,
+            val openAt: Long?,
+            val dueAt: Long?,
+            val assignedAt: Long?,
+            val practice: Boolean
+        )
+        val links = classLessonsSnapshot.documents.map { link ->
+            val lessonId = link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id
+            // Practice: nothing the student does in it is saved.
+            val practice = PracticeLessons.isPracticeLink(link)
+            Link(
+                entryId = if (practice) link.id else lessonId,
+                lessonId = lessonId,
+                order = link.getLong("order")?.toInt(),
+                openAt = link.getTimestamp("openAt")?.toDate()?.time,
+                dueAt = link.getTimestamp("dueAt")?.toDate()?.time,
+                // When the teacher added the lesson to the class.
+                assignedAt = link.getTimestamp("createdAt")?.toDate()?.time,
+                practice = practice
+            )
         }
-        // The teacher's optional open date and deadline, and when the lesson was added.
-        data class LinkSchedule(val openAt: Long?, val dueAt: Long?, val assignedAt: Long?)
-        val linkSchedules = classLessonsSnapshot.documents.associate { link ->
-            (link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id) to
-                LinkSchedule(
-                    openAt = link.getTimestamp("openAt")?.toDate()?.time,
-                    dueAt = link.getTimestamp("dueAt")?.toDate()?.time,
-                    assignedAt = link.getTimestamp("createdAt")?.toDate()?.time
-                )
-        }
-        val lessonIds = linkOrders.keys.toList()
-        Log.d(TAG, "classes/$classId/classLessons -> ${lessonIds.size} ids: $lessonIds")
+        val lessonIds = links.map { it.lessonId }.distinct()
+        Log.d(TAG, "classes/$classId/classLessons -> ${links.size} links, lessons: $lessonIds")
 
         if (lessonIds.isEmpty()) {
             db.lessonDao().deleteLessonsForUser(userId)
+            PracticeLessons.set(emptyList())
             return
         }
 
@@ -122,6 +137,7 @@ class LessonRepository(private val context: Context) {
             .get()
             .await()
         Log.d(TAG, "lessons whereIn -> ${lessonsSnapshot.size()} docs")
+        val lessonDocs = lessonsSnapshot.documents.associateBy { it.id }
 
         // preserve isDownloaded flags already stored locally
         val existingLessons = db.lessonDao().getLessonsForUser(userId)
@@ -132,14 +148,18 @@ class LessonRepository(private val context: Context) {
 
         // Which lessons the teacher set to "Skip game" (read in parallel; offline keeps the last known value)
         val skippedGames = coroutineScope {
-            lessonsSnapshot.documents.map { doc -> async { doc.id to GameStatus.isSkipped(doc.id, firestore) } }.awaitAll()
+            lessonDocs.keys.map { id -> async { id to GameStatus.isSkipped(id, firestore) } }.awaitAll()
         }.toMap()
-        val previousSkipped = existingLessons.associate { it.id to it.gameSkipped }
+        val previousSkipped = existingLessons.associate { PracticeLessons.contentId(it.id) to it.gameSkipped }
         // Same for "Skip Gawain"
         val skippedActivities = coroutineScope {
-            lessonsSnapshot.documents.map { doc -> async { doc.id to ActivityStatus.isSkipped(doc.id, firestore) } }.awaitAll()
+            lessonDocs.keys.map { id -> async { id to ActivityStatus.isSkipped(id, firestore) } }.awaitAll()
         }.toMap()
-        val previousSkippedActivities = existingLessons.associate { it.id to it.activitySkipped }
+        val previousSkippedActivities = existingLessons.associate { PracticeLessons.contentId(it.id) to it.activitySkipped }
+        val gameSkipped = { lessonId: String -> skippedGames[lessonId] ?: previousSkipped[lessonId] ?: false }
+        val activitySkipped = { lessonId: String ->
+            skippedActivities[lessonId] ?: previousSkippedActivities[lessonId] ?: false
+        }
 
         // When the student joined the class. A lesson whose deadline passed before then (and
         // that they never finished) is left out: they could never have done it.
@@ -151,45 +171,47 @@ class LessonRepository(private val context: Context) {
             null
         }
         val progressDocs = assignedSnapshot.documents.associateBy { it.id }
-        val closedBeforeJoining = lessonsSnapshot.documents.map { it.id }.filter { id ->
-            val due = linkSchedules[id]?.dueAt
-            val finished = progressDocs[id]?.let {
+        val shownLinks = links.filter { it.lessonId in lessonDocs }.filterNot { link ->
+            val finished = progressDocs[link.entryId]?.let {
                 LessonCompletion.isFinished(
                     it,
-                    gameSkipped = skippedGames[id] ?: previousSkipped[id] ?: false,
-                    activitySkipped = skippedActivities[id] ?: previousSkippedActivities[id] ?: false
+                    gameSkipped = gameSkipped(link.lessonId),
+                    activitySkipped = activitySkipped(link.lessonId)
                 )
             } == true
-            joinedAt != null && due != null && due < joinedAt && !finished
-        }.toSet()
+            joinedAt != null && link.dueAt != null && link.dueAt < joinedAt && !finished
+        }
 
-        val lessons = lessonsSnapshot.documents.filter { it.id !in closedBeforeJoining }.map { doc ->
-            val progress = progressMap[doc.id]
+        val lessons = shownLinks.map { link ->
+            val doc = lessonDocs.getValue(link.lessonId)
+            val progress = progressMap[link.entryId]
 
             LessonEntity(
-                id = doc.id,
+                id = link.entryId,
                 userId = userId,
                 classId = classId,
                 title = doc.getString("title") ?: "",
                 description = doc.getString("description") ?: "",
                 difficulty = doc.getString("difficulty") ?: "",
-                order = linkOrders[doc.id] ?: doc.getLong("order")?.toInt() ?: 0,
+                order = link.order ?: doc.getLong("order")?.toInt() ?: 0,
                 unlocked = true,
                 lectureFinished = progress?.lectureFinished ?: false,
                 gameFinished = progress?.gameFinished ?: false,
                 activityFinished = progress?.activityFinished ?: false,
                 quizFinished = progress?.quizFinished ?: false,
-                isDownloaded = existingDownloadedIds.contains(doc.id),
-                gameSkipped = skippedGames[doc.id] ?: previousSkipped[doc.id] ?: false,
-                activitySkipped = skippedActivities[doc.id] ?: previousSkippedActivities[doc.id] ?: false,
-                openAt = linkSchedules[doc.id]?.openAt,
-                dueAt = linkSchedules[doc.id]?.dueAt,
-                assignedAt = linkSchedules[doc.id]?.assignedAt
+                isDownloaded = existingDownloadedIds.contains(link.entryId),
+                gameSkipped = gameSkipped(link.lessonId),
+                activitySkipped = activitySkipped(link.lessonId),
+                openAt = link.openAt,
+                dueAt = link.dueAt,
+                assignedAt = link.assignedAt,
+                practice = link.practice
             )
         }
 
         db.lessonDao().deleteLessonsForUser(userId)
         db.lessonDao().insertAll(lessons)
+        PracticeLessons.set(links.filter { it.practice }.map { it.entryId })
 
         // Finishing a crossword level always saves gameScore, so a phone past level 1 with no
         // gameScore in Firestore is stale: the teacher removed the lesson (which deletes the
@@ -232,10 +254,28 @@ class LessonRepository(private val context: Context) {
     }
 
     suspend fun getLessons(userId: String): List<LessonEntity> {
-        return db.lessonDao().getLessonsForUser(userId)
+        return db.lessonDao().getLessonsForUser(userId).also { lessons ->
+            PracticeLessons.set(lessons.filter { it.practice }.map { it.id })
+        }
     }
 
-    suspend fun downloadLesson(lessonId: String): Boolean {
+    /**
+     * Saves every part of the lesson for offline use. [onProgress] gets 0–100 and may be called
+     * on a background thread. The audio files take most of the time, so the lecture and
+     * pronunciation steps get the biggest share and move per file; the text steps are 5% each.
+     */
+    suspend fun downloadLesson(lessonId: String, onProgress: (Int) -> Unit = {}): Boolean {
+        var reported = 0
+        fun report(percent: Int) {
+            if (percent > reported) {
+                reported = percent
+                onProgress(percent)
+            }
+        }
+        fun audioShare(start: Int, end: Int) = { done: Int, total: Int ->
+            report(start + (end - start) * done / total.coerceAtLeast(1))
+        }
+
         return try {
             val lectureRepo = LectureRepository(context)
             val crosswordRepo = CrosswordRepository(context)
@@ -243,14 +283,20 @@ class LessonRepository(private val context: Context) {
             val quizRepo = QuizRepository(context)
             val pronunciationRepo = PronunciationRepository(context)
 
-            lectureRepo.downloadLecture(lessonId)
+            lectureRepo.downloadLecture(lessonId, audioShare(0, 50))
+            report(50)
             crosswordRepo.syncLevels(lessonId)
+            report(55)
             crosswordRepo.syncProgress(lessonId)
+            report(60)
             activityRepo.downloadActivity(lessonId)
+            report(65)
             quizRepo.downloadQuiz(lessonId)
-            pronunciationRepo.downloadPronunciation(lessonId)
+            report(70)
+            pronunciationRepo.downloadPronunciation(lessonId, audioShare(70, 100))
 
             db.lessonDao().updateDownloaded(lessonId, true)
+            report(100)
             true
         } catch (e: Exception) {
             false

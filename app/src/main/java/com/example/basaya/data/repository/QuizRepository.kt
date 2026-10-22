@@ -1,10 +1,12 @@
 package com.example.basaya.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.QuizEntity
 import com.example.basaya.data.model.Quiz
 import com.example.basaya.data.model.QuizQuestion
+import com.example.basaya.data.progress.PracticeLessons
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -51,7 +53,7 @@ class QuizRepository(private val context: Context) {
         return try {
             val snapshot = firestore
                 .collection("lessons")
-                .document(lessonId)
+                .document(PracticeLessons.contentId(lessonId))
                 .collection("quiz")
                 .get(Source.SERVER)
                 .await()
@@ -91,7 +93,12 @@ class QuizRepository(private val context: Context) {
         }
     }
 
-    suspend fun saveQuizResult(userId: String, lessonId: String, score: Int, total: Int) {
+    /**
+     * Saves without waiting: offline, Firestore keeps the write on the phone and sends it
+     * once the phone is back online, so the score screen shows right away.
+     */
+    fun saveQuizResult(userId: String, lessonId: String, score: Int, total: Int) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         firestore
             .collection("users")
             .document(userId)
@@ -105,7 +112,7 @@ class QuizRepository(private val context: Context) {
                     "quizCompletedAt" to FieldValue.serverTimestamp()
                 )
             )
-            .await()
+            .addOnFailureListener { Log.w("QuizRepository", "Could not save the quiz result", it) }
     }
 
     // --- Mapping helpers ---

@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.basaya.R
 import com.example.basaya.data.database.AppDatabase
 import com.example.basaya.data.entity.LessonEntity
+import com.example.basaya.data.progress.HeldLesson
 import com.example.basaya.data.progress.LessonCompletion
 import com.example.basaya.data.progress.Skill
 import com.example.basaya.data.progress.SkillLevel
@@ -142,9 +143,11 @@ class ProgressFragment : Fragment() {
             } ?: FirebaseAuth.getInstance().currentUser?.displayName
 
             // Only the lessons of the student's class count (synced into Room by the home screen).
-            // Stray assignedLessons documents — old test assignments, a previous class — are ignored.
+            // Stray assignedLessons documents — old test assignments, a previous class — are ignored,
+            // and so are Practice lessons (they save nothing).
             classLessons = try {
                 AppDatabase.getDatabase(requireContext()).lessonDao().getLessonsForUser(uid)
+                    .filterNot { it.practice }
             } catch (e: Exception) {
                 emptyList()
             }
@@ -163,7 +166,11 @@ class ProgressFragment : Fragment() {
             }
             countedLessons = LessonCompletion.countedLessons(docs, classLessons, joinedAt)
 
-            val summary = SkillScoring.summarize(SkillProgressRepository.resultsFrom(docs))
+            // Parts left undone at a passed deadline count as 0 (SkillScoring.withMissed).
+            val held = countedLessons.map {
+                HeldLesson(it.id, it.dueAt, it.gameSkipped, it.activitySkipped, items = emptyMap())
+            }
+            val summary = SkillScoring.summarize(SkillProgressRepository.scoredResults(docs, held, firestore))
             if (view == null) return@launch
 
             // Every class lesson has its game skipped by the teacher → there is nothing to measure.

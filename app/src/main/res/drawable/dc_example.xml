@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Example sentences: soft blue box with a bar on the left. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/pg_unawa" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item android:left="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/pg_unawa_tint" />
+            <corners android:topRightRadius="10dp" android:bottomRightRadius="10dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,6 +1,8 @@
 package com.example.basaya.data.progress
 
 import android.util.Log
+import com.example.basaya.data.repository.ActivityStatus
+import com.example.basaya.data.repository.GameStatus
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -9,6 +11,9 @@ import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -29,8 +34,11 @@ class SkillProgressRepository(
     private fun lessonDoc(uid: String, lessonId: String) =
         firestore.collection("users").document(uid).collection("assignedLessons").document(lessonId)
 
-    /** Saves one lesson's result for a skill (replaces any earlier result for that lesson). */
-    suspend fun recordResult(
+    /**
+     * Saves one lesson's result for a skill (replaces any earlier result for that lesson).
+     * Doesn't wait for the server: offline, Firestore sends it once the phone is back online.
+     */
+    fun recordResult(
         uid: String,
         lessonId: String,
         skill: Skill,
@@ -39,6 +47,7 @@ class SkillProgressRepository(
         items: Int,
         extras: Map<String, Any> = emptyMap()
     ) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         val record = mapOf(
             "correct" to correct,
             "attempts" to attempts,
@@ -47,15 +56,17 @@ class SkillProgressRepository(
         ) + extras
         lessonDoc(uid, lessonId)
             .set(mapOf("skills" to mapOf(skill.key to record)), SetOptions.merge())
-            .await()
+            .addOnFailureListener { Log.w(TAG, "Could not save the ${skill.key} result", it) }
     }
 
     /**
      * Adds one finished crossword level to the lesson's Talasalitaan record. Levels of a lesson
      * are played separately, so the counts accumulate:
      * correct = words found, attempts = words found + wrong swipes, items = words found.
+     * Doesn't wait for the server: offline, Firestore sends it once the phone is back online.
      */
-    suspend fun addCrosswordLevel(uid: String, lessonId: String, wordsFound: Int, wrongTries: Int) {
+    fun addCrosswordLevel(uid: String, lessonId: String, wordsFound: Int, wrongTries: Int) {
+        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         val record = mapOf(
             "correct" to FieldValue.increment(wordsFound.toLong()),
             "attempts" to FieldValue.increment((wordsFound + wrongTries).toLong()),
@@ -66,7 +77,7 @@ class SkillProgressRepository(
         )
         lessonDoc(uid, lessonId)
             .set(mapOf("skills" to mapOf(Skill.TALASALITAAN.key to record)), SetOptions.merge())
-            .await()
+            .addOnFailureListener { Log.w(TAG, "Could not save the crossword level", it) }
     }
 
     /** Recomputes the summary from every assigned lesson and saves it on the user document. */
@@ -74,21 +85,62 @@ class SkillProgressRepository(
         val allDocs = firestore.collection("users").document(uid)
             .collection("assignedLessons").get().await().documents
 
-        // Only the lessons of the student's class count (see LessonCompletion).
+        // Only the lessons of the student's class count (see LessonCompletion), and never
+        // Practice ones (they save nothing).
         val classId = firestore.collection("users").document(uid).get().await().getString("classId")
-        val classLessonIds = if (classId.isNullOrBlank()) {
-            emptySet()
+        val links = if (classId.isNullOrBlank()) {
+            emptyList()
         } else {
             firestore.collection("classes").document(classId).collection("classLessons")
                 .get().await().documents
-                .map { link -> link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id }
-                .toSet()
+                .filterNot { PracticeLessons.isPracticeLink(it) }
         }
+        val classLessonIds = links
+            .map { link -> link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id }
+            .toSet()
         val docs = allDocs.filter { it.id in classLessonIds }
 
-        val summary = SkillScoring.summarize(resultsFrom(docs))
+        val summary = SkillScoring.summarize(scoredResults(docs, heldLessons(uid, classId, links), firestore))
         saveSummary(uid, summary, lessonsAssigned = classLessonIds.size)
         return summary
+    }
+
+    /**
+     * The class lessons whose deadline has passed, minus those that closed before the student
+     * joined, with their skipped parts, for [scoredResults]. Lessons still open can't be missed.
+     */
+    private suspend fun heldLessons(uid: String, classId: String?, links: List<DocumentSnapshot>): List<HeldLesson> {
+        if (classId.isNullOrBlank()) return emptyList()
+        val now = System.currentTimeMillis()
+        val closed = links.mapNotNull { link ->
+            val dueAt = link.getTimestamp("dueAt")?.toDate()?.time ?: return@mapNotNull null
+            val id = link.getString("lessonId")?.takeIf { it.isNotBlank() } ?: link.id
+            (id to dueAt).takeIf { dueAt < now }
+        }
+        if (closed.isEmpty()) return emptyList()
+        val joinedAt = try {
+            firestore.collection("classes").document(classId)
+                .collection("students").document(uid).get().await()
+                .getTimestamp("joinedAt")?.toDate()?.time
+        } catch (e: Exception) {
+            null
+        }
+        return coroutineScope {
+            closed
+                .filter { (_, dueAt) -> joinedAt == null || dueAt >= joinedAt }
+                .map { (id, dueAt) ->
+                    async {
+                        HeldLesson(
+                            lessonId = id,
+                            dueAt = dueAt,
+                            gameSkipped = GameStatus.isSkipped(id, firestore) == true,
+                            activitySkipped = ActivityStatus.isSkipped(id, firestore) == true,
+                            items = emptyMap()
+                        )
+                    }
+                }
+                .awaitAll()
+        }
     }
 
     suspend fun saveSummary(uid: String, summary: StudentSummary, lessonsAssigned: Int) {
@@ -132,6 +184,41 @@ class SkillProgressRepository(
                     Log.w(TAG, "Could not refresh skill summary", e)
                 }
             }
+        }
+
+        /**
+         * Every lesson's skill records, plus a 0 for each part left undone when a lesson in
+         * [lessons] closed ([SkillScoring.withMissed]). [lessons] are the class lessons the
+         * student is held to; their item counts are read here ([LessonItems]).
+         */
+        suspend fun scoredResults(
+            docs: List<DocumentSnapshot>,
+            lessons: List<HeldLesson>,
+            firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+            now: Long = System.currentTimeMillis()
+        ): Map<Skill, List<LessonSkillResult>> {
+            val closed = lessons.filter { it.dueAt != null && it.dueAt < now }
+            val withItems = coroutineScope {
+                closed.map { lesson -> async { lesson.copy(items = LessonItems.counts(lesson.lessonId, firestore)) } }
+                    .awaitAll()
+            }
+            val finished = docs.associate { doc ->
+                val resume = doc.get("resume") as? Map<*, *>
+                fun saved(part: String, field: String) =
+                    ((resume?.get(part) as? Map<*, *>)?.get(field) as? Number)?.toInt()
+                doc.id to FinishedParts(
+                    game = doc.getBoolean("gameFinished") == true,
+                    activity = doc.getBoolean("activityFinished") == true,
+                    pronunciation = doc.getBoolean("pronunciationFinished") == true,
+                    quiz = doc.getBoolean("quizFinished") == true,
+                    correctSoFar = listOfNotNull(
+                        saved(LessonResume.ACTIVITY, "score")?.let { Skill.PAGKILALA to it },
+                        saved(LessonResume.PRONUNCIATION, "firstTryCorrect")?.let { Skill.PAGBIGKAS to it },
+                        saved(LessonResume.QUIZ, "score")?.let { Skill.PAGSUSULIT to it }
+                    ).toMap()
+                )
+            }
+            return SkillScoring.withMissed(resultsFrom(docs), finished, withItems, now)
         }
 
         /** Reads every lesson's skill records. Lessons without a record are simply absent. */

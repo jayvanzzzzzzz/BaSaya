@@ -30,5 +30,8 @@ data class LessonEntity(
     val openAt: Long? = null,
     val dueAt: Long? = null,
     // When the teacher added the lesson to the class (link createdAt), epoch millis.
-    val assignedAt: Long? = null
+    val assignedAt: Long? = null,
+    // Teacher added it as Practice (link mode "practice"): nothing is saved (PracticeLessons).
+    @ColumnInfo(defaultValue = "0")
+    val practice: Boolean = false
 )

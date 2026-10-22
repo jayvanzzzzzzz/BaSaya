@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bigkas "i": the word and its first meaning from the Diksiyonaryo (PronunciationActivity). -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_join_class_sheet">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="24dp">
+
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:background="@drawable/bg_bottom_sheet_handle"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tvInfoWord"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:accessibilityHeading="true"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:textColor="@color/sheet_title"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            tools:text="báhay" />
+
+        <TextView
+            android:id="@+id/tvInfoSyllables"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:letterSpacing="0.04"
+            android:textColor="@color/sheet_body"
+            android:textSize="17sp"
+            tools:text="bá·hay" />
+
+        <TextView
+            android:id="@+id/tvInfoPos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/pr_word_info_pill"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:paddingStart="12dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="4dp"
+            android:textColor="@color/pr_success"
+            android:textSize="13sp"
+            tools:text="pangngalan" />
+
+        <TextView
+            android:id="@+id/tvInfoMeanings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:lineSpacingMultiplier="1.3"
+            android:textColor="@color/sheet_title"
+            android:textSize="16sp"
+            tools:text="1. Gusali na tirahan ng tao." />
+
+        <TextView
+            android:id="@+id/tvInfoExamples"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/dc_example"
+            android:lineSpacingMultiplier="1.3"
+            android:paddingStart="14dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="10dp"
+            android:textColor="@color/sheet_body"
+            android:textSize="15sp"
+            android:textStyle="italic"
+            tools:text="Malaki ang bahay nila." />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnInfoClose"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="20dp"
+            android:text="@string/pr_word_info_close"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/pr_word_info"
+            app:cornerRadius="18dp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

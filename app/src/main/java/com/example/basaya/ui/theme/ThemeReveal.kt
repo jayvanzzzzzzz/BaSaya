@@ -3,6 +3,7 @@ package com.example.basaya.ui.theme
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -46,7 +47,7 @@ object ThemeReveal {
 
     /** Picks [mode]; animates from [from] when the colors actually change. */
     fun switchTo(activity: Activity, mode: ThemeMode, from: View) {
-        if (activity.isNightTheme() == willBeNight(mode)) {
+        if (activity.isNightTheme() == willBeNight(activity, mode)) {
             ThemeMode.choose(activity, mode) // same colors: nothing is recreated, nothing to animate
             return
         }
@@ -126,11 +127,17 @@ object ThemeReveal {
         }
     }
 
-    private fun willBeNight(mode: ThemeMode): Boolean = when (mode) {
+    private fun willBeNight(context: Context, mode: ThemeMode): Boolean = when (mode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
-        ThemeMode.SYSTEM -> Resources.getSystem().configuration.uiMode and
-            Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        // The phone's own Dark theme switch first: on Android 12+ the app's current choice (sent to
+        // the system by ThemeMode) can mask it in the configuration below.
+        ThemeMode.SYSTEM -> when (context.getSystemService(UiModeManager::class.java)?.nightMode) {
+            UiModeManager.MODE_NIGHT_YES -> true
+            UiModeManager.MODE_NIGHT_NO -> false
+            else -> Resources.getSystem().configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        }
     }
 
     /** The old screen with a transparent hole that grows; swallows taps while it plays. */

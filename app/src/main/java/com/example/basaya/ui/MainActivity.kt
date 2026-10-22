@@ -28,6 +28,8 @@ import com.example.basaya.data.notifications.ClassNotifications
 import com.example.basaya.data.notifications.LessonInbox
 import com.example.basaya.data.notifications.NotificationReadState
 import com.example.basaya.ui.fragment.HomeFragment
+import androidx.appcompat.widget.TooltipCompat
+import com.example.basaya.ui.dictionary.DictionaryActivity
 import com.example.basaya.ui.notifications.NotificationsActivity
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -207,6 +209,12 @@ class MainActivity : AppCompatActivity() {
                     setupUI()
                 }
             }
+        }
+
+        // Icon only: long-press (or a mouse hover) shows "Diksiyonaryo".
+        findViewById<View>(R.id.btnDictionary).apply {
+            TooltipCompat.setTooltipText(this, getString(R.string.dict_title))
+            setOnClickListener { startActivity(DictionaryActivity.intent(this@MainActivity)) }
         }
 
         // Opens the notification list and marks everything as read.

@@ -7,4 +7,10 @@
         <item name="android:fontFamily">@font/be_vietnam_regular</item>
         <item name="fontFamily">@font/be_vietnam_regular</item>
     </style>
+
+    <!-- Launch screen: the window starts in the splash sky color so SplashActivity fades in seamlessly.
+         Android 12+ adds its system splash attributes in values-v31/themes.xml. -->
+    <style name="Theme.BaSaya.Splash">
+        <item name="android:windowBackground">@color/splash_bg_top</item>
+    </style>
 </resources>
