@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Lalabas muna ako": light chunky button with a coral outline, sinks onto its lip when pressed. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <layer-list>
+            <item android:top="5dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/lex_leave_lip" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+            <item android:top="3dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/lex_leave_face" />
+                    <stroke android:width="2dp" android:color="@color/lex_leave" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item android:top="5dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/lex_leave_lip" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+            <item android:bottom="5dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/lex_leave_face" />
+                    <stroke android:width="2dp" android:color="@color/lex_leave" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

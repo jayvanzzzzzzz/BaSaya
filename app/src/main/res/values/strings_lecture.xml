@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lecture screen: the "Aalis ka na?" exit dialog. -->
+<resources>
+    <string name="lex_title">Teka lang, aalis ka na?</string>
+    <string name="lex_message_saved">Huwag mag-alala! Babalikan natin ang pahina %1$d sa susunod mong pagbasa.</string>
+    <string name="lex_message">Ang galing mo na! Kaunti na lang at matatapos mo ang kuwento.</string>
+    <string name="lex_page">Pahina %1$d ng %2$d</string>
+    <string name="lex_stay">Ituloy ang pagbasa</string>
+    <string name="lex_leave">Lalabas muna ako</string>
+</resources>

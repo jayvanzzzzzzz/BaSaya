@@ -232,5 +232,7 @@
     <string name="qz_done">Tapos na</string>
     <string name="ac_pick_count">Pumili ng %1$d salita</string>
     <string name="ac_incomplete">Tama ang napili mo, pero may kulang pa! Pumili ng %1$d salita.</string>
+    <string name="ac_out_of_lives">Naubos ang iyong buhay. Ito ang tamang sagot.</string>
+    <string name="ac_lives_cd">%1$d sa %2$d buhay</string>
     <string name="ac_no_answer_set">Walang nakatakdang sagot ang pahinang ito. Tuloy tayo!</string>
 </resources>

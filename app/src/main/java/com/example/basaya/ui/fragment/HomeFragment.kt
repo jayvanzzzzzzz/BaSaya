@@ -27,6 +27,7 @@ import com.example.basaya.R
 import com.example.basaya.adapter.LessonAdapter
 import com.example.basaya.data.auth.AuthHelper
 import com.example.basaya.data.entity.LessonEntity
+import com.example.basaya.data.progress.LessonStatus
 import com.example.basaya.data.notifications.ClassNotifications
 import com.example.basaya.data.repository.LessonPrefetch
 import com.example.basaya.data.repository.LessonRepository
@@ -63,6 +64,12 @@ class HomeFragment : Fragment() {
     private var currentTab = LessonTab.ALL
     private lateinit var lessonTabs: View
     private lateinit var tabViews: Map<LessonTab, TextView>
+
+    // Status chips under the tabs (null = Lahat). Practice lessons save no progress, so
+    // they're only under Lahat. Same as basaya-web's home status chips.
+    private var currentStatus: LessonStatus? = null
+    private lateinit var statusFilters: View
+    private lateinit var statusChips: Map<LessonStatus?, TextView>
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmptyLessons: TextView
@@ -138,6 +145,8 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+        statusFilters = view.findViewById(R.id.statusFilters)
+        setupStatusChips(view.findViewById(R.id.llStatusFilters))
 
         var adapter = LessonAdapter(
             emptyList(),
@@ -203,9 +212,18 @@ class HomeFragment : Fragment() {
             LessonTab.OPEN -> allLessons.filter { it.id !in closedIds }
             LessonTab.CLOSED -> allLessons.filter { it.id in closedIds }
         }
+        // Chip counts follow the tab, so they match the list.
+        statusChips.forEach { (status, chip) ->
+            val count = inTab.count { inStatus(it, status) }
+            chip.text = getString(statusLabel(status), count)
+            chip.isSelected = status == currentStatus
+            styleStatusChip(chip, status)
+        }
+        statusFilters.visibility = View.VISIBLE
+        val filtered = inTab.filter { inStatus(it, currentStatus) }
         shownLessons = LessonSchedule.sortForList(
             context,
-            if (query.isEmpty()) inTab else inTab.filter { it.title.contains(query, ignoreCase = true) }
+            if (query.isEmpty()) filtered else filtered.filter { it.title.contains(query, ignoreCase = true) }
         )
 
         if (shownLessons.isEmpty()) {
@@ -213,6 +231,12 @@ class HomeFragment : Fragment() {
             val (iconRes, message) = when {
                 query.isNotEmpty() ->
                     R.drawable.ic_empty_search to getString(R.string.empty_no_search_results, query)
+                currentStatus == LessonStatus.DONE ->
+                    R.drawable.ic_empty_lessons to getString(R.string.empty_no_done_lessons)
+                currentStatus == LessonStatus.IN_PROGRESS ->
+                    R.drawable.ic_empty_lessons to getString(R.string.empty_no_progress_lessons)
+                currentStatus == LessonStatus.NOT_STARTED ->
+                    R.drawable.ic_empty_lessons to getString(R.string.empty_no_new_lessons)
                 currentTab == LessonTab.CLOSED ->
                     R.drawable.ic_empty_lessons to getString(R.string.empty_no_closed_lessons)
                 else ->
@@ -230,8 +254,69 @@ class HomeFragment : Fragment() {
         adapter.updateList(shownLessons, query)
     }
 
+    private fun inStatus(lesson: LessonEntity, status: LessonStatus?): Boolean =
+        status == null || (!lesson.practice && LessonStatus.of(lesson) == status)
+
+    private fun statusLabel(status: LessonStatus?): Int = when (status) {
+        null -> R.string.lesson_status_all
+        LessonStatus.DONE -> R.string.lesson_status_done
+        LessonStatus.IN_PROGRESS -> R.string.lesson_status_progress
+        LessonStatus.NOT_STARTED -> R.string.lesson_status_new
+    }
+
+    private fun setupStatusChips(row: LinearLayout) {
+        val density = resources.displayMetrics.density
+        row.contentDescription = getString(R.string.lesson_status_filters_cd)
+        val statuses = listOf(null, LessonStatus.DONE, LessonStatus.IN_PROGRESS, LessonStatus.NOT_STARTED)
+        statusChips = statuses.associateWith { status ->
+            TextView(requireContext()).apply {
+                textSize = 13f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                gravity = android.view.Gravity.CENTER
+                minHeight = (40 * density).toInt()
+                setPadding((14 * density).toInt(), 0, (14 * density).toInt(), 0)
+                isClickable = true
+                isFocusable = true
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { if (status != null) marginStart = (6 * density).toInt() }
+                setOnClickListener {
+                    if (status != currentStatus) {
+                        currentStatus = status
+                        showLessons()
+                    }
+                }
+                row.addView(this)
+            }
+        }
+    }
+
+    /** A pill: white with a thin border, or the status's soft tint and color when picked. */
+    private fun styleStatusChip(chip: TextView, status: LessonStatus?) {
+        val context = requireContext()
+        val (bg, fg) = when (status) {
+            null -> R.color.home_surface to R.color.home_accent
+            LessonStatus.DONE -> R.color.lesson_status_done_bg to R.color.lesson_status_done_fg
+            LessonStatus.IN_PROGRESS -> R.color.lesson_status_progress_bg to R.color.lesson_status_progress_fg
+            LessonStatus.NOT_STARTED -> R.color.lesson_status_new_bg to R.color.lesson_status_new_fg
+        }
+        val density = resources.displayMetrics.density
+        chip.background = android.graphics.drawable.GradientDrawable().apply {
+            cornerRadius = 999f
+            if (chip.isSelected) {
+                setColor(ContextCompat.getColor(context, bg))
+                setStroke((1.5f * density).toInt(), ContextCompat.getColor(context, fg))
+            } else {
+                setColor(ContextCompat.getColor(context, R.color.lesson_card_surface))
+                setStroke((1 * density).toInt(), ContextCompat.getColor(context, R.color.lesson_card_stroke))
+            }
+        }
+        chip.setTextColor(ContextCompat.getColor(context, if (chip.isSelected) fg else R.color.home_hint))
+    }
+
     private fun showEmptyState(state: EmptyLessonsState) {
         lessonTabs.visibility = View.GONE
+        statusFilters.visibility = View.GONE
         recyclerView.visibility = View.GONE
         setEmptyVisible(true)
 
@@ -262,6 +347,7 @@ class HomeFragment : Fragment() {
 
         loadingContainer.visibility = View.VISIBLE
         lessonTabs.visibility = View.GONE
+        statusFilters.visibility = View.GONE
         recyclerView.visibility = View.GONE
         setEmptyVisible(false)
 
@@ -559,8 +645,9 @@ class HomeFragment : Fragment() {
         pendingHighlight = null
 
         // The lesson may be hidden by a search or another tab.
-        if (etSearch.text.isNotEmpty() || currentTab != LessonTab.ALL) {
+        if (etSearch.text.isNotEmpty() || currentTab != LessonTab.ALL || currentStatus != null) {
             currentTab = LessonTab.ALL
+            currentStatus = null
             etSearch.setText("") // Its watcher redraws the list...
             showLessons() // ...unless the search was already empty.
         }
@@ -589,8 +676,26 @@ class HomeFragment : Fragment() {
         super.onResume()
         // Re-check open dates and deadlines that may have passed while away
         // (a lesson can move from Bukas to Sarado).
-        if (allLessons.isNotEmpty() && currentClassId != null && ::tabViews.isInitialized) showLessons()
-        else if (::adapter.isInitialized) adapter.notifyDataSetChanged()
+        if (allLessons.isNotEmpty() && currentClassId != null && ::tabViews.isInitialized) {
+            showLessons()
+            refreshProgress()
+        } else if (::adapter.isInitialized) adapter.notifyDataSetChanged()
+    }
+
+    /** Back from a lesson: pick up what the student just finished, without the refresh button. */
+    private fun refreshProgress() {
+        val uid = authHelper.getCurrentUser()?.uid ?: return
+        if (isRefreshing) return
+        isRefreshing = true
+        lifecycleScope.launch {
+            val repo = LessonRepository(requireContext())
+            repo.refreshProgress(uid)
+            val lessons = repo.getLessons(uid)
+            isRefreshing = false
+            if (!isAdded || lessons.isEmpty()) return@launch
+            allLessons = lessons
+            showLessons()
+        }
     }
 
     private fun showJoinClassSheet() {

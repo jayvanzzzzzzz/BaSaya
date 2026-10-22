@@ -21,4 +21,17 @@
     <color name="lecture_bubble_stroke">#6E66C8</color>
     <color name="lecture_bubble_lip">#22204A</color>
     <color name="lecture_trail">#5A54A8</color>
+    <!-- "Aalis ka na?" exit dialog -->
+    <color name="lex_card">@color/ns_surface</color>
+    <color name="lex_card_stroke">@color/ns_stroke</color>
+    <color name="lex_card_lip">@color/ns_lip</color>
+    <color name="lex_chip_bg">@color/ns_gold_tint</color>
+    <color name="lex_chip_ink">@color/ns_gold</color>
+    <color name="lex_dot_now">@color/ns_gold</color>
+    <color name="lex_sparkle">@color/ns_gold</color>
+    <color name="lex_stay_lip">#3A55C4</color>
+    <color name="lex_on_stay">#FFFFFF</color>
+    <color name="lex_leave">@color/ns_coral</color>
+    <color name="lex_leave_face">@color/ns_surface_raised</color>
+    <color name="lex_leave_lip">@color/ns_coral_tint</color>
 </resources>

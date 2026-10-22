@@ -83,7 +83,7 @@ class DictionaryActivity : AppCompatActivity() {
     /** The running search; a newer one cancels it so an old answer never shows. */
     private var job: Job? = null
     private var showingEntry = false
-    private val audio = DictionaryAudio()
+    private val audio by lazy { DictionaryAudio(this) }
     private var speakJob: Job? = null
     private var speakerButton: ImageButton? = null
     private var wavesJob: Job? = null
@@ -245,6 +245,7 @@ class DictionaryActivity : AppCompatActivity() {
     private fun showEntry(entry: Dictionary.Entry) {
         hideKeyboard()
         showingEntry = true
+        lifecycleScope.launch { audio.preload(entry) }
         detailCard.removeAllViews()
 
         // Back to the list
@@ -429,6 +430,11 @@ class DictionaryActivity : AppCompatActivity() {
         speakJob?.cancel()
         audio.stop()
         speakerButton?.let { setSpeaker(it, Speaker.IDLE) }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        audio.release()
     }
 
     private fun buildLetters() {

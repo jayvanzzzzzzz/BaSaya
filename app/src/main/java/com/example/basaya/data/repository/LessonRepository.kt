@@ -11,6 +11,7 @@ import com.example.basaya.data.notifications.LessonInbox
 import com.example.basaya.data.notifications.NotificationReadState
 import com.example.basaya.data.notifications.NotificationScheduler
 import com.example.basaya.data.progress.LessonCompletion
+import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.data.schedule.TrustedClock
 import com.google.firebase.firestore.FirebaseFirestore
@@ -205,7 +206,8 @@ class LessonRepository(private val context: Context) {
                 openAt = link.openAt,
                 dueAt = link.dueAt,
                 assignedAt = link.assignedAt,
-                practice = link.practice
+                practice = link.practice,
+                started = LessonResume.started(progressDocs[link.entryId])
             )
         }
 
@@ -250,6 +252,33 @@ class LessonRepository(private val context: Context) {
             db.classNotificationDao().upsertAll(items)
         } catch (e: Exception) {
             Log.w(TAG, "Notification sync failed", e)
+        }
+    }
+
+    /**
+     * Re-reads only the progress flags (one query) into the stored lessons, so the list is
+     * current after the student comes back from a lesson. A lesson with no progress doc (e.g.
+     * the teacher reset it) goes back to not started. Offline, Firestore's cache answers.
+     */
+    suspend fun refreshProgress(userId: String) {
+        val docs = try {
+            firestore.collection("users").document(userId)
+                .collection("assignedLessons").get().await()
+                .documents.associateBy { it.id }
+        } catch (e: Exception) {
+            Log.w(TAG, "Progress refresh failed", e)
+            return
+        }
+        db.lessonDao().getLessonsForUser(userId).forEach { lesson ->
+            val doc = docs[lesson.id]
+            db.lessonDao().updateProgress(
+                userId, lesson.id,
+                lectureFinished = doc?.getBoolean("lectureFinished") ?: false,
+                gameFinished = doc?.getBoolean("gameFinished") ?: false,
+                activityFinished = doc?.getBoolean("activityFinished") ?: false,
+                quizFinished = doc?.getBoolean("quizFinished") ?: false,
+                started = LessonResume.started(doc)
+            )
         }
     }
 

@@ -67,6 +67,18 @@ object LessonResume {
         return (state?.get("done") as? Number)?.toInt()?.coerceAtLeast(0) ?: 0
     }
 
+    /**
+     * Something was done even if no part is finished yet: a part left halfway, a game level,
+     * or Bigkas. Makes the lesson Nasa progreso (basaya-web's hasStarted in student/data.js).
+     */
+    fun started(progress: DocumentSnapshot?): Boolean {
+        if (progress == null) return false
+        val resume = progress.get("resume") as? Map<*, *>
+        return resume?.values?.any { ((it as? Map<*, *>)?.get("done") as? Number)?.toInt() ?: 0 > 0 } == true ||
+            (progress.getLong("gameScore") ?: 0) > 0 ||
+            progress.getBoolean("pronunciationFinished") == true
+    }
+
     /** The item count the saved place was made for, or null. */
     fun total(progress: DocumentSnapshot?, part: String): Int? {
         @Suppress("UNCHECKED_CAST")

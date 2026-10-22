@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Aalis ka na?": the book buddy peeks over a sticker card, cheering the child to keep reading. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:id="@+id/lexCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:background="@drawable/lex_bg_card"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="58dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="26dp">
+
+        <TextView
+            android:id="@+id/lexPage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/lex_bg_chip"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:paddingStart="14dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="5dp"
+            android:textColor="@color/lex_chip_ink"
+            android:textSize="12sp"
+            tools:text="Pahina 3 ng 8" />
+
+        <!-- One dot per page: read, here now, still to read -->
+        <LinearLayout
+            android:id="@+id/lexDots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:importantForAccessibility="no"
+            android:orientation="horizontal" />
+
+        <TextView
+            android:id="@+id/lexTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:text="@string/lex_title"
+            android:textColor="@color/lecture_ink"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lexMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:textColor="@color/lecture_ink_soft"
+            android:textSize="15sp"
+            tools:text="Huwag mag-alala! Babalikan natin ang pahina 3 sa susunod mong pagbasa." />
+
+        <TextView
+            android:id="@+id/lexStay"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/lex_btn_stay"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:gravity="center"
+            android:paddingBottom="5dp"
+            android:text="@string/lex_stay"
+            android:textColor="@color/lex_on_stay"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/lexLeave"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/lex_btn_leave"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:gravity="center"
+            android:paddingBottom="5dp"
+            android:text="@string/lex_leave"
+            android:textColor="@color/lex_leave"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <!-- Twinkles around the buddy -->
+    <ImageView
+        android:id="@+id/lexSparkleLeft"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="130dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/splash_sparkle"
+        android:tint="@color/lex_sparkle" />
+
+    <ImageView
+        android:id="@+id/lexSparkleRight"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginStart="120dp"
+        android:layout_marginTop="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/splash_sparkle"
+        android:tint="@color/lex_sparkle" />
+
+    <!-- The book buddy, peeking over the top of the card -->
+    <com.example.basaya.ui.pronunciation.PronunciationBookView
+        android:id="@+id/lexBuddy"
+        android:layout_width="104dp"
+        android:layout_height="118dp"
+        android:layout_gravity="top|center_horizontal"
+        android:importantForAccessibility="no" />
+</FrameLayout>

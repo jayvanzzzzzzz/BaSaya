@@ -16,6 +16,7 @@ import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -51,10 +52,11 @@ class PracticeActivity : AppCompatActivity() {
     private var currentPageIndex = 0
     private var hasChecked = false
     private val selectedIndices = mutableSetOf<Int>()
-    /** Pages answered correctly on the first check. */
+    /** Pages answered correctly within their lives. */
     private var score = 0
-    private val checkedPages = mutableSetOf<Int>()
     private var retries = 0
+    /** Lives left on the current page; at 0 the page counts as wrong and the answer is shown. */
+    private var lives = MAX_LIVES
     private var allAnswered = false
 
     private lateinit var tvPageTag: TextView
@@ -68,8 +70,10 @@ class PracticeActivity : AppCompatActivity() {
     private lateinit var llProgressBars: LinearLayout
     private lateinit var tvPickCount: TextView
     private lateinit var confettiView: ConfettiView
+    private lateinit var llLives: LinearLayout
 
     private val trackSegments = mutableListOf<View>()
+    private val hearts = mutableListOf<ImageView>()
 
     private enum class TileState(
         @param:ColorRes val fill: Int,
@@ -80,7 +84,9 @@ class PracticeActivity : AppCompatActivity() {
         IDLE(R.color.ac_tile, R.color.ac_tile_lip, R.color.ac_ink, null),
         PICKED(R.color.ac_pick, R.color.ac_pick_lip, R.color.ac_on_pick, null),
         RIGHT(R.color.ac_right, R.color.ac_right_lip, android.R.color.white, R.drawable.ac_ic_check),
-        WRONG(R.color.ac_wrong, R.color.ac_wrong_lip, android.R.color.white, R.drawable.ac_ic_cross)
+        WRONG(R.color.ac_wrong, R.color.ac_wrong_lip, android.R.color.white, R.drawable.ac_ic_cross),
+        /** A correct word the child missed, shown once the lives run out. */
+        ANSWER(R.color.ac_right, R.color.ac_right_lip, android.R.color.white, null)
     }
 
     private val density by lazy { resources.displayMetrics.density }
@@ -118,6 +124,7 @@ class PracticeActivity : AppCompatActivity() {
         llProgressBars = findViewById(R.id.llProgressBars)
         tvPickCount = findViewById(R.id.tvPickCount)
         confettiView = findViewById(R.id.confettiView)
+        llLives = findViewById(R.id.llLives)
 
         findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
         announceAsButton(btnAction)
@@ -148,12 +155,15 @@ class PracticeActivity : AppCompatActivity() {
                 currentPageIndex = (resume["done"] as Int).coerceAtMost(practiceData.pages.lastIndex)
                 score = (resume["score"] as? Number)?.toInt() ?: 0
                 retries = (resume["retries"] as? Number)?.toInt() ?: 0
-                // A page already checked wrong before closing no longer counts as a first try.
-                if (resume["tried"] == true) checkedPages.add(currentPageIndex)
+                // Places saved before lives existed only know whether the page was tried.
+                lives = ((resume["lives"] as? Number)?.toInt()
+                    ?: if (resume["tried"] == true) MAX_LIVES - 1 else MAX_LIVES)
+                    .coerceIn(1, MAX_LIVES)
                 allAnswered = (resume["done"] as Int) >= practiceData.pages.size
             }
 
             setupProgressTrack()
+            setupLives()
             showPage(currentPageIndex, animateIn = false)
 
             // Every page was answered before closing: only the result is left to save.
@@ -194,7 +204,7 @@ class PracticeActivity : AppCompatActivity() {
 
     private fun updateProgressTrack() {
         trackSegments.forEachIndexed { i, segment ->
-            val isDone = i < currentPageIndex || (i == currentPageIndex && hasChecked && isCurrentAnswerCorrect())
+            val isDone = i < currentPageIndex || (i == currentPageIndex && isPageOver())
             val wasDone = segment.tag == true
             if (isDone != wasDone) {
                 segment.tag = isDone
@@ -207,6 +217,34 @@ class PracticeActivity : AppCompatActivity() {
             }
         }
         tvPageTag.text = getString(R.string.ac_page, currentPageIndex + 1, practiceData.pages.size)
+        updateLives()
+    }
+
+    // ───────────────────────────── Lives ─────────────────────────────
+
+    private fun setupLives() {
+        llLives.removeAllViews()
+        hearts.clear()
+        repeat(MAX_LIVES) { i ->
+            val heart = ImageView(this).apply {
+                setImageResource(R.drawable.ic_heart_filled)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                layoutParams = LinearLayout.LayoutParams(dp(26f), dp(26f)).apply {
+                    if (i != 0) marginStart = dp(3f)
+                }
+            }
+            llLives.addView(heart)
+            hearts.add(heart)
+        }
+    }
+
+    private fun updateLives() {
+        hearts.forEachIndexed { i, heart ->
+            val lost = i >= lives
+            heart.setColorFilter(ContextCompat.getColor(this, if (lost) R.color.ac_star_off else R.color.ac_wrong))
+            heart.animate().scaleX(if (lost) 0.8f else 1f).scaleY(if (lost) 0.8f else 1f).setDuration(240).start()
+        }
+        llLives.contentDescription = getString(R.string.ac_lives_cd, lives, MAX_LIVES)
     }
 
     // ───────────────────────────── Page & tiles ─────────────────────────────
@@ -301,7 +339,7 @@ class PracticeActivity : AppCompatActivity() {
         tile.contentDescription = when (state) {
             TileState.IDLE -> word
             TileState.PICKED -> getString(R.string.ac_word_selected, word)
-            TileState.RIGHT -> getString(R.string.ac_word_correct, word)
+            TileState.RIGHT, TileState.ANSWER -> getString(R.string.ac_word_correct, word)
             TileState.WRONG -> getString(R.string.ac_word_wrong, word)
         }
     }
@@ -337,6 +375,9 @@ class PracticeActivity : AppCompatActivity() {
 
     private fun isCurrentAnswerCorrect(): Boolean = isPageCorrect(practiceData.pages[currentPageIndex])
 
+    /** The page is over once it's right or its lives ran out. */
+    private fun isPageOver(): Boolean = hasChecked && (isCurrentAnswerCorrect() || lives == 0)
+
     private fun checkAnswer() {
         val page = practiceData.pages[currentPageIndex]
         val correctSet = page.correctIndices.toSet()
@@ -344,6 +385,12 @@ class PracticeActivity : AppCompatActivity() {
         // Every pick is right, but some correct words are still missing
         val isIncomplete = !isCorrect && selectedIndices.isNotEmpty() && correctSet.containsAll(selectedIndices)
         val explanation = page.explanation ?: practiceData.explanation
+        // Any check that isn't fully right costs a life
+        if (!isCorrect) {
+            lives--
+            retries++
+        }
+        val outOfLives = lives == 0
 
         for (i in 0 until chipsContainer.childCount) {
             val tile = chipsContainer.getChildAt(i) as TextView
@@ -363,6 +410,10 @@ class PracticeActivity : AppCompatActivity() {
                     tile.animate().rotation(0f).setDuration(200).start()
                     tile.postDelayed({ shake(tile) }, i * 60L)
                 }
+                outOfLives && shouldBeSelected -> {
+                    applyTileState(tile, page.words[i], TileState.ANSWER)
+                    tile.postDelayed({ pop(tile, 1.12f) }, i * 60L)
+                }
                 else -> {
                     // Unpicked tiles fade back so the result stands out
                     tile.animate().alpha(0.55f).setDuration(250).start()
@@ -373,24 +424,24 @@ class PracticeActivity : AppCompatActivity() {
         hasChecked = true
         updateProgressTrack()
 
-        // Only a page that is right on its first check earns the point; retries are counted
-        // separately so they still show up in the student's progress.
-        val firstCheck = checkedPages.add(currentPageIndex)
-        if (!isCorrect) retries++
-        if (isCorrect && firstCheck) score++
-        savePlace(if (isCorrect) currentPageIndex + 1 else currentPageIndex)
+        // A page right within its lives earns the point; wrong checks are counted as retries
+        // so they still show up in the student's progress.
+        if (isCorrect) score++
+        savePlace(if (isPageOver()) currentPageIndex + 1 else currentPageIndex)
+        val lastPage = currentPageIndex == practiceData.pages.lastIndex
 
-        if (isCorrect) {
+        if (outOfLives) {
+            shake(llLives)
+            showFeedback(good = false, text = "${getString(R.string.ac_out_of_lives)} $explanation".trim())
+            setButton(if (lastPage) R.string.ac_finish else R.string.ac_next, R.drawable.ac_btn_next)
+        } else if (isCorrect) {
             val text = if (correctSet.isEmpty()) {
                 getString(R.string.ac_no_answer_set)
             } else {
                 "${getString(R.string.ac_good)} $explanation".trim()
             }
             showFeedback(good = true, text = text)
-            setButton(
-                if (currentPageIndex == practiceData.pages.lastIndex) R.string.ac_finish else R.string.ac_next,
-                R.drawable.ac_btn_next
-            )
+            setButton(if (lastPage) R.string.ac_finish else R.string.ac_next, R.drawable.ac_btn_next)
             celebrate()
         } else if (isIncomplete) {
             showFeedback(good = false, text = getString(R.string.ac_incomplete, correctSet.size))
@@ -401,7 +452,7 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
-    /** Saves the place: `done` pages finished, and whether page `done` was already tried. */
+    /** Saves the place: `done` pages finished, and the lives left on page `done`. */
     private fun savePlace(done: Int) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         LessonResume.save(
@@ -411,22 +462,20 @@ class PracticeActivity : AppCompatActivity() {
                 "total" to practiceData.pages.size,
                 "score" to score,
                 "retries" to retries,
-                "tried" to (done == currentPageIndex)
+                "lives" to (if (done == currentPageIndex) lives else MAX_LIVES)
             )
         )
     }
 
     private fun goToNext() {
-        val page = practiceData.pages[currentPageIndex]
-        val wasCorrect = isPageCorrect(page)
-
-        if (!wasCorrect) {
-            showPage(currentPageIndex)
+        if (!isPageOver()) {
+            showPage(currentPageIndex) // try the same page again
             return
         }
 
         if (currentPageIndex < practiceData.pages.lastIndex) {
             currentPageIndex++
+            lives = MAX_LIVES
             showPage(currentPageIndex)
         } else {
             finishActivity()
@@ -556,5 +605,9 @@ class PracticeActivity : AppCompatActivity() {
                 info.className = Button::class.java.name
             }
         }
+    }
+
+    private companion object {
+        const val MAX_LIVES = 3
     }
 }

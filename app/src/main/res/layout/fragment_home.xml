@@ -146,6 +146,28 @@
                 android:layout_marginStart="4dp"
                 tools:text="Sarado (2)" />
         </LinearLayout>
+
+        <!-- Lahat / Tapos na / Nasa progreso / Hindi pa nasisimulan, combined with the tabs above.
+             The chips are added in HomeFragment. Shown with the tabs. -->
+        <HorizontalScrollView
+            android:id="@+id/statusFilters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="4dp"
+            android:clipToPadding="false"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:scrollbars="none"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/llStatusFilters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout

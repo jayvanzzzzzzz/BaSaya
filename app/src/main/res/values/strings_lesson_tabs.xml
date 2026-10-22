@@ -6,4 +6,14 @@
     <string name="lesson_tab_closed">Sarado (%1$d)</string>
     <string name="empty_no_open_lessons">Walang bukas na aralin.</string>
     <string name="empty_no_closed_lessons">Walang saradong aralin.</string>
+
+    <!-- Home status chips under the tabs, e.g. "Tapos na (2)" -->
+    <string name="lesson_status_all">Lahat (%1$d)</string>
+    <string name="lesson_status_done">Tapos na (%1$d)</string>
+    <string name="lesson_status_progress">Nasa progreso (%1$d)</string>
+    <string name="lesson_status_new">Hindi pa nasisimulan (%1$d)</string>
+    <string name="lesson_status_filters_cd">Salain ayon sa progreso</string>
+    <string name="empty_no_done_lessons">Wala ka pang natapos na aralin.\nTapusin ang bawat hakbang ng isang aralin para mapunta ito rito.</string>
+    <string name="empty_no_progress_lessons">Walang aralin na nasa progreso.\nAng mga aralin na sinimulan mo na ay makikita rito.</string>
+    <string name="empty_no_new_lessons">Nasimulan mo na ang lahat ng aralin!\nMagaling! Tingnan ang Nasa progreso para ituloy ang mga ito.</string>
 </resources>

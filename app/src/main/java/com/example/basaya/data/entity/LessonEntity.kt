@@ -33,5 +33,8 @@ data class LessonEntity(
     val assignedAt: Long? = null,
     // Teacher added it as Practice (link mode "practice"): nothing is saved (PracticeLessons).
     @ColumnInfo(defaultValue = "0")
-    val practice: Boolean = false
+    val practice: Boolean = false,
+    // Something was done before any part is finished (LessonResume.started): Nasa progreso.
+    @ColumnInfo(defaultValue = "0")
+    val started: Boolean = false
 )

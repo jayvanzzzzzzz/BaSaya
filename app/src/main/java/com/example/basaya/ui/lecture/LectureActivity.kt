@@ -1,6 +1,8 @@
 package com.example.basaya.ui
 
+import android.app.Dialog
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -10,6 +12,7 @@ import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.Button
@@ -18,7 +21,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -37,6 +39,7 @@ import com.example.basaya.data.progress.LessonResume
 import com.example.basaya.data.progress.PracticeLessons
 import com.example.basaya.ui.lecture.ReadAlongTextView
 import com.example.basaya.ui.lecture.TalkingBookView
+import com.example.basaya.ui.pronunciation.PronunciationBookView
 import com.example.basaya.utils.Network
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -494,22 +497,89 @@ class LectureActivity : AppCompatActivity() {
         if (::talkingBook.isInitialized) talkingBook.setTalking(false)
     }
 
+    /** "Aalis ka na?": the book buddy peeks over a sticker card and cheers the child to stay. */
     private fun showConfirmDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Lumabas sa Aralin")
-            .setMessage(
-                if (tracking) "Sigurado ka bang gusto mong lumabas? Itutuloy mo ang aralin sa pahinang ito sa susunod."
-                else "Sigurado ka bang gusto mong lumabas?"
-            )
-            .setPositiveButton("Oo") { dialog, _ ->
-                stopAudio()
-                finish()
-            }
-            .setNegativeButton("Hindi") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .setCancelable(true)
-            .show()
+        val dialog = Dialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_lecture_exit, null)
+        val card = content.findViewById<View>(R.id.lexCard)
+        val buddy = content.findViewById<PronunciationBookView>(R.id.lexBuddy)
+        val tvPage = content.findViewById<TextView>(R.id.lexPage)
+        val dots = content.findViewById<LinearLayout>(R.id.lexDots)
+        val page = currentPageIndex + 1
+
+        if (::lecture.isInitialized && lecture.pages.isNotEmpty()) {
+            tvPage.text = getString(R.string.lex_page, page, lecture.pages.size)
+            addPageDots(dots)
+        } else {
+            tvPage.visibility = View.GONE
+            dots.visibility = View.GONE
+        }
+        content.findViewById<TextView>(R.id.lexMessage).text =
+            if (tracking) getString(R.string.lex_message_saved, page) else getString(R.string.lex_message)
+
+        content.findViewById<View>(R.id.lexStay).setOnClickListener {
+            // A happy little hop before going back to the story.
+            buddy.setMood(PronunciationBookView.Mood.HAPPY)
+            buddy.animate().translationY(-14 * resources.displayMetrics.density).setDuration(140)
+                .withEndAction { dialog.dismiss() }.start()
+        }
+        content.findViewById<View>(R.id.lexLeave).setOnClickListener {
+            dialog.dismiss()
+            stopAudio()
+            finish()
+        }
+
+        dialog.setContentView(content)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88f).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        // Pop in: the card springs up, then the buddy drops onto it and starts thinking.
+        card.scaleX = 0.8f
+        card.scaleY = 0.8f
+        card.alpha = 0f
+        card.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(320)
+            .setInterpolator(OvershootInterpolator(1.6f)).start()
+        buddy.translationY = -40 * resources.displayMetrics.density
+        buddy.alpha = 0f
+        buddy.animate().translationY(0f).alpha(1f).setStartDelay(120).setDuration(420)
+            .setInterpolator(OvershootInterpolator(2.2f))
+            .withEndAction { buddy.setMood(PronunciationBookView.Mood.THINKING) }.start()
+        for (id in intArrayOf(R.id.lexSparkleLeft, R.id.lexSparkleRight)) {
+            val sparkle = content.findViewById<View>(id)
+            sparkle.scaleX = 0f
+            sparkle.scaleY = 0f
+            sparkle.animate().scaleX(1f).scaleY(1f).rotation(90f).setStartDelay(380).setDuration(360)
+                .setInterpolator(OvershootInterpolator(3f)).start()
+        }
+    }
+
+    /** One dot per page on the exit dialog: read, here now (bigger, gold), still to read. */
+    private fun addPageDots(row: LinearLayout) {
+        val density = resources.displayMetrics.density
+        val read = ContextCompat.getColor(this, R.color.lecture_primary)
+        val now = ContextCompat.getColor(this, R.color.lex_dot_now)
+        val todo = ContextCompat.getColor(this, R.color.lecture_progress_track)
+        for (i in lecture.pages.indices) {
+            val size = ((if (i == currentPageIndex) 12 else 8) * density).toInt()
+            row.addView(View(this).apply {
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(
+                        when {
+                            i < currentPageIndex -> read
+                            i == currentPageIndex -> now
+                            else -> todo
+                        }
+                    )
+                }
+            }, LinearLayout.LayoutParams(size, size).apply {
+                if (i != 0) marginStart = (6 * density).toInt()
+            })
+        }
     }
 
     override fun onDestroy() {

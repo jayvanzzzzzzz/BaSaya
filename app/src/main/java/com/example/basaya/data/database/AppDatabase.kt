@@ -34,7 +34,7 @@ import com.example.basaya.data.entity.QuizEntity
         PronunciationEntity::class,
         ClassNotificationEntity::class
     ],
-    version = 15
+    version = 16
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -90,6 +90,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v16: lessons.started (a part left halfway makes the lesson Nasa progreso). */
+        private val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE lessons ADD COLUMN started INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -100,7 +107,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "game_database"
                 )
-                    .addMigrations(MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
+                    .addMigrations(MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
                     .fallbackToDestructiveMigration()
                     .build()
 

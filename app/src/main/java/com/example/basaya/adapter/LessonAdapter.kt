@@ -28,6 +28,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.basaya.R
 import com.example.basaya.data.entity.LessonEntity
+import com.example.basaya.data.progress.LessonStatus
 import com.example.basaya.data.schedule.LessonSchedule
 import com.example.basaya.data.schedule.LessonSchedule.Availability
 
@@ -139,10 +140,10 @@ class LessonAdapter(
                 segment.backgroundTintList = ColorStateList.valueOf(if (finished) fill else track)
             }
 
-            val labelColor = when {
-                allDone -> R.color.lesson_status_done_fg
-                doneCount > 0 -> R.color.lesson_status_progress_fg
-                else -> R.color.lesson_status_new_fg
+            val labelColor = when (LessonStatus.of(lesson)) {
+                LessonStatus.DONE -> R.color.lesson_status_done_fg
+                LessonStatus.IN_PROGRESS -> R.color.lesson_status_progress_fg
+                LessonStatus.NOT_STARTED -> R.color.lesson_status_new_fg
             }
             tvProgressLabel.setTextColor(ContextCompat.getColor(context, labelColor))
             if (allDone) {

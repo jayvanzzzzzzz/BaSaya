@@ -21,4 +21,17 @@
     <color name="lecture_bubble_stroke">#B3ABF8</color>
     <color name="lecture_bubble_lip">#9C92F0</color>
     <color name="lecture_trail">#B9B2F6</color>
+    <!-- "Aalis ka na?" exit dialog: a sticker card the book buddy peeks over. -->
+    <color name="lex_card">#FFFDF6</color>
+    <color name="lex_card_stroke">#F0E3C4</color>
+    <color name="lex_card_lip">#E9DCB8</color>
+    <color name="lex_chip_bg">#FFF3CC</color>
+    <color name="lex_chip_ink">#8A5A00</color>
+    <color name="lex_dot_now">#FFC94D</color>
+    <color name="lex_sparkle">#FFC94D</color>
+    <color name="lex_stay_lip">#1F4AA8</color>
+    <color name="lex_on_stay">#FFFFFF</color>
+    <color name="lex_leave">#E5484D</color>
+    <color name="lex_leave_face">#FFFFFF</color>
+    <color name="lex_leave_lip">#F3C4C6</color>
 </resources>

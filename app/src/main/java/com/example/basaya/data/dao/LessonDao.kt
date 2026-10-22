@@ -23,6 +23,21 @@ interface LessonDao {
     @Query("UPDATE lessons SET isDownloaded = :isDownloaded WHERE id = :lessonId")
     suspend fun updateDownloaded(lessonId: String, isDownloaded: Boolean)
 
+    @Query(
+        """UPDATE lessons SET lectureFinished = :lectureFinished, gameFinished = :gameFinished,
+           activityFinished = :activityFinished, quizFinished = :quizFinished, started = :started
+           WHERE id = :lessonId AND userId = :userId"""
+    )
+    suspend fun updateProgress(
+        userId: String,
+        lessonId: String,
+        lectureFinished: Boolean,
+        gameFinished: Boolean,
+        activityFinished: Boolean,
+        quizFinished: Boolean,
+        started: Boolean
+    )
+
     @Query("SELECT * FROM lessons WHERE id = :lessonId LIMIT 1")
     suspend fun getLesson(lessonId: String): LessonEntity?
 
