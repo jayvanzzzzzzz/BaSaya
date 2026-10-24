@@ -24,7 +24,7 @@ import java.util.Locale
  *    copy it here again whenever the website rebuilds it (tools/build-dictionary.mjs).
  *  - Firestore dictionary/{key}: words teachers add or fix on the website's teacher portal.
  *    The doc id is the search key, so a teacher's word replaces the seed word with the
- *    same key, and `hidden: true` takes a bad seed word out.
+ *    same key, and `hidden: true` marks a seed word deleted (by an admin).
  */
 object Dictionary {
 
@@ -65,7 +65,8 @@ object Dictionary {
 
     private const val TAG = "Dictionary"
     private const val SEED_ASSET = "dictionary/tl-seed.json"
-    private const val MAX_RESULTS = 30
+    /** Every match; the list's page nav splits them (like the website's MAX_RESULTS). */
+    private const val MAX_RESULTS = 2000
 
     private val collator: Collator = Collator.getInstance(Locale("fil"))
     private val seedLock = Mutex()
@@ -183,7 +184,16 @@ object Dictionary {
             .take(3)
     }
 
-    /** A few random words to try before the student types anything. */
-    suspend fun samples(context: Context, count: Int = 6): List<Entry> =
-        loadSeed(context).shuffled().take(count)
+    /**
+     * Every word, A to Z ("Lahat"): the seed with all teacher words laid over it, deleted
+     * ones left out. Reads every teacher doc once; offline it is just the seed.
+     */
+    suspend fun allWords(context: Context): List<Entry> {
+        val found = LinkedHashMap<String, Entry>()
+        loadSeed(context).forEach { found[it.key] = it }
+        orNull { words().get().await().documents.map(::fromDoc) }.orEmpty().forEach { entry ->
+            if (entry.hidden) found.remove(entry.key) else found[entry.key] = entry
+        }
+        return found.values.sortedWith { a, b -> collator.compare(a.key, b.key) }
+    }
 }

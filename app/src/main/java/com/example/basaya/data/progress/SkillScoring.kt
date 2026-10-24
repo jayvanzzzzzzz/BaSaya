@@ -48,7 +48,7 @@ data class HeldLesson(
 /**
  * From a lesson's progress document, for [SkillScoring.withMissed]: which scored parts are
  * finished, and [correctSoFar], the first-try right answers saved in an unfinished part's place
- * (resume.activity.score, resume.pronunciation.firstTryCorrect, resume.quiz.score).
+ * (resume.game.done, resume.activity.score, resume.pronunciation.firstTryCorrect, resume.quiz.score).
  */
 data class FinishedParts(
     val game: Boolean = false,
@@ -119,8 +119,8 @@ object SkillScoring {
      * far counts, and every item they didn't get to counts as wrong. Untouched parts become 0%.
      * Same as the web's js/scoring.js withMissed.
      * Applies when the deadline passed, the part isn't finished (or skipped) and the lesson has
-     * items for it. Right answers so far come from [FinishedParts.correctSoFar], or for the
-     * crossword from the levels already played (its record); the result counts all the part's
+     * items for it. Right answers so far come from [FinishedParts.correctSoFar], plus for the
+     * crossword the levels already played (its record); the result counts all the part's
      * items and is dated at the deadline.
      */
     fun withMissed(
@@ -145,15 +145,19 @@ object SkillScoring {
                 if (skipped || partDone || items <= 0) return@forEach
 
                 val at = list.indexOfFirst { it.lessonId == lesson.lessonId }
+                val saved = (done.correctSoFar[skill] ?: 0).coerceAtLeast(0)
                 if (at >= 0) {
-                    // Only a half-played crossword has a record before it's finished: the words of
-                    // the levels not played are added as wrong.
+                    // Only a half-played crossword has a record before it's finished: the words
+                    // found on the level being played count, and the rest are added as wrong.
                     val result = list[at]
                     val rest = items - result.items
-                    if (rest > 0) list[at] = result.copy(attempts = result.attempts + rest, items = items, missed = true)
+                    if (rest > 0) list[at] = result.copy(
+                        correct = result.correct + saved.coerceAtMost(rest),
+                        attempts = result.attempts + rest, items = items, missed = true
+                    )
                     return@forEach
                 }
-                val correct = (done.correctSoFar[skill] ?: 0).coerceIn(0, items)
+                val correct = saved.coerceAtMost(items)
                 list.add(LessonSkillResult(lesson.lessonId, correct, items, items, due, missed = true))
             }
         }

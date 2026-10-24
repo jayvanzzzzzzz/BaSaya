@@ -220,7 +220,9 @@ class ChatFragment : Fragment() {
                     ""
                 }.ifEmpty { user.getString("fullName").orEmpty() }
             }
-            if (!started) return@launch
+            val teacher = ClassChat.classTeacher(newClass)
+            if (!started || view == null) return@launch
+            adapter?.teacher = teacher
             attach(newClass)
         }
     }

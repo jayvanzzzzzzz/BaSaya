@@ -21,6 +21,8 @@ import kotlinx.coroutines.tasks.await
 object LessonResume {
 
     const val LECTURE = "lecture"
+    /** Crossword: { done: words found on the level being played, total, level }. */
+    const val GAME = "game"
     const val ACTIVITY = "activity"
     const val PRONUNCIATION = "pronunciation"
     const val QUIZ = "quiz"

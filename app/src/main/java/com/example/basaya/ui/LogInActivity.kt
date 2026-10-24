@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.basaya.R
 import com.example.basaya.data.auth.AuthHelper
+import com.example.basaya.data.auth.StudentOnly
 import android.animation.ObjectAnimator
 import android.util.Log
 import android.view.animation.LinearInterpolator
@@ -127,13 +128,11 @@ class LogInActivity : AppCompatActivity() {
                         return@login
                     }
 
-                    // Teachers and admins share the same Firebase project but must use
-                    // their own tools — this app is for students only.
+                    // Only students get in: teachers, admins and any other role use the website.
                     FirebaseFirestore.getInstance().collection("users").document(uid).get()
                         .addOnSuccessListener { doc ->
                             setLoading(false)
-                            val role = doc.getString("role")?.trim()?.lowercase()
-                            if (role == "teacher" || role == "admin") {
+                            if (!StudentOnly.isStudent(doc)) {
                                 authHelper.logout()
                                 showStudentsOnlyDialog()
                                 return@addOnSuccessListener
@@ -178,6 +177,10 @@ class LogInActivity : AppCompatActivity() {
             showForgotPasswordDialog(authHelper)
         }
 
+        // A saved login that turned out not to be a student's (MainActivity signed it out).
+        if (savedInstanceState == null && intent.getBooleanExtra(StudentOnly.EXTRA_STUDENTS_ONLY, false)) {
+            showStudentsOnlyDialog()
+        }
     }
 
     /**

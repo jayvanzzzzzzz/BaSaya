@@ -78,6 +78,18 @@
         </LinearLayout>
 
         <ImageButton
+            android:id="@+id/ibAutoPlay"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_lecture_round_button"
+            android:contentDescription="@string/lecture_auto_play_cd"
+            android:padding="13dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_lecture_play"
+            app:tint="@color/lecture_primary" />
+
+        <ImageButton
             android:id="@+id/ibSpeaker"
             android:layout_width="48dp"
             android:layout_height="48dp"

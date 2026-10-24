@@ -57,6 +57,36 @@ object ClassChat {
         return "${words.subList(start, words.size).joinToString(" ")}, $first"
     }
 
+    // How a teacher wants students to address them (users/{uid}.title); "" = name only.
+    private val TEACHER_TITLES = mapOf("maam" to "Ma'am", "sir" to "Sir")
+
+    /**
+     * The teacher as students see them: "Ma'am Reyes" / "Sir Dela Cruz" when a title is picked,
+     * else "Reyes, Ana" ([lastFirst]). A name that already starts with a title stays as written.
+     * Same as teacherName() in BaSaya-web/js/chat.js.
+     */
+    fun teacherName(name: String, title: String?): String {
+        val clean = name.trim().replace(Regex("\\s+"), " ")
+        val label = TEACHER_TITLES[title.orEmpty()]
+        val titled = clean.split(" ").first().lowercase().replace(".", "") in NAME_TITLES
+        if (label == null || clean.isEmpty() || titled) return lastFirst(clean)
+        return "$label ${lastFirst(clean).substringBefore(",").trim()}"
+    }
+
+    /** The class's teacher and their title, so their chat messages can show "Ma'am Reyes". */
+    data class Teacher(val id: String, val title: String)
+
+    suspend fun classTeacher(classId: String): Teacher? = try {
+        val teacherId = classRef(classId).get().await().getString("teacherId").orEmpty()
+        if (teacherId.isEmpty()) null else {
+            val snap = db.collection("users").document(teacherId).get().await()
+            if (snap.exists()) Teacher(teacherId, snap.getString("title").orEmpty()) else null
+        }
+    } catch (e: Exception) {
+        android.util.Log.w("ClassChat", "Couldn't read the class's teacher", e)
+        null
+    }
+
     data class Message(
         val id: String,
         val text: String,
@@ -214,7 +244,7 @@ object ClassChat {
         val teacher = if (teacherId.isEmpty()) null else try {
             val snap = db.collection("users").document(teacherId).get().await()
             if (snap.exists() && snap.getString("role") == "teacher") {
-                Member(teacherId, lastFirst(snap.getString("displayName").orEmpty()).ifEmpty { "Guro" })
+                Member(teacherId, teacherName(snap.getString("displayName").orEmpty(), snap.getString("title")).ifEmpty { "Guro" })
             } else null
         } catch (e: Exception) {
             android.util.Log.w("ClassChat", "Couldn't read the class's teacher", e)

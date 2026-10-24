@@ -46,6 +46,7 @@ import com.example.basaya.data.repository.CrosswordRepository
 import com.example.basaya.utils.Network
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import com.example.basaya.data.progress.LessonResume
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -68,9 +69,6 @@ class CrosswordActivity : AppCompatActivity() {
     private var isSelecting = false
     private var isShuffling = false
     private var levelCompleted = false
-
-    /** Swiped words that aren't in the level; lowers the Talasalitaan accuracy. */
-    private var wrongTries = 0
 
     private val letterViews = mutableListOf<TextView>()
     private val selectedLetters = mutableListOf<TextView>()
@@ -691,7 +689,6 @@ class CrosswordActivity : AppCompatActivity() {
                 if (word.length < 2) {
                     hidePreview()
                 } else {
-                    wrongTries++
                     previewError()
                 }
             }
@@ -734,6 +731,20 @@ class CrosswordActivity : AppCompatActivity() {
             // check completion AFTER this word is saved
             val completed = currentLevelWords.orEmpty().all { isWordFound(it) }
 
+            // Words found so far also go online: they count if the deadline passes mid-level.
+            val uidNow = FirebaseAuth.getInstance().currentUser?.uid
+            if (!completed && uidNow != null) {
+                val levelWords = currentLevelWords.orEmpty()
+                LessonResume.save(
+                    uidNow, lessonId, LessonResume.GAME,
+                    mapOf(
+                        "done" to levelWords.count { isWordFound(it) },
+                        "total" to levelWords.size,
+                        "level" to (progress?.currentLevel ?: 1)
+                    )
+                )
+            }
+
             if (completed && !levelCompleted) {
                 levelCompleted = true
                 celebrateLevel()
@@ -766,18 +777,18 @@ class CrosswordActivity : AppCompatActivity() {
                                 "gameScore" to currentLevelNumber,
                                 "gameTotal" to totalLevels,
                                 "gameFinished" to (currentLevelNumber >= totalLevels),
-                                "gameCompletedAt" to FieldValue.serverTimestamp()
+                                "gameCompletedAt" to FieldValue.serverTimestamp(),
+                                "resume" to mapOf(LessonResume.GAME to FieldValue.delete())
                             ),
                             com.google.firebase.firestore.SetOptions.merge()
                         )
                         .addOnFailureListener { Log.e("CrosswordActivity", "Failed to sync game progress", it) }
 
-                    // Talasalitaan skill: words found vs. wrong swipes in this level
+                    // Talasalitaan skill: each word of this level counts once
                     try {
                         SkillProgressRepository().addCrosswordLevel(
                             uid, lessonId,
-                            wordsFound = currentLevelWords.orEmpty().size,
-                            wrongTries = wrongTries
+                            wordsFound = currentLevelWords.orEmpty().size
                         )
                         SkillProgressRepository.refreshInBackground(uid)
                     } catch (e: Exception) {

@@ -116,6 +116,8 @@
     <string name="lecture_book_cd">Ang nagsasalitang aklat. Pindutin para ulitin ang pangungusap.</string>
     <string name="lecture_close_cd">Isara ang aralin</string>
     <string name="lecture_speaker_cd">I-on o i-off ang tunog</string>
+    <string name="lecture_auto_play_cd">Kusang basahin ang aralin</string>
+    <string name="lecture_auto_stop_cd">Ihinto ang kusang pagbasa</string>
     <string name="lecture_finish">TAPUSIN</string>
 
     <!-- Register screen -->

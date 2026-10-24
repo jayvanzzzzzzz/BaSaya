@@ -24,6 +24,7 @@ import androidx.fragment.app.Fragment
 import com.example.basaya.R
 import com.example.basaya.controller.BottomNavController
 import com.example.basaya.data.auth.AuthHelper
+import com.example.basaya.data.auth.StudentOnly
 import com.example.basaya.data.notifications.ClassNotifications
 import com.example.basaya.data.notifications.LessonInbox
 import com.example.basaya.data.notifications.NotificationReadState
@@ -84,6 +85,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var tvName: TextView
     private var isUserReady = false
+    // Set when the signed-in account turned out not to be a student's (StudentOnly).
+    private var notStudent = false
 
     private var isProfileMenuActive = false
 
@@ -200,7 +203,10 @@ class MainActivity : AppCompatActivity() {
                 // Logged out: stop this phone getting the class's lesson notifications.
                 ClassNotifications.syncTopic(this@MainActivity, null)
                 if (!isDestroyed && !isFinishing) {
-                    startActivity(Intent(this@MainActivity, LogInActivity::class.java))
+                    startActivity(
+                        Intent(this@MainActivity, LogInActivity::class.java)
+                            .putExtra(StudentOnly.EXTRA_STUDENTS_ONLY, notStudent)
+                    )
                     finish()
                 }
             } else {
@@ -278,6 +284,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Signs out; the auth listener then opens LogInActivity with the "students only" pop-up. */
+    private fun signOutNotStudent() {
+        if (notStudent) return
+        notStudent = true
+        stopChatDot()
+        auth.signOut()
+    }
+
     // ---------- Chat tab unread dot ----------
 
     /** Follows the student's class (it can change: joined, left) and that class's chat/state. */
@@ -286,6 +300,12 @@ class MainActivity : AppCompatActivity() {
         if (userListener != null) return
         userListener = FirebaseFirestore.getInstance().collection("users").document(uid)
             .addSnapshotListener { doc, _ ->
+                // A saved login (or a role changed later) that isn't a student's: sign out.
+                // A missing profile is left alone here so a slow first sync can't lock a student out.
+                if (doc != null && doc.exists() && !StudentOnly.isStudent(doc)) {
+                    signOutNotStudent()
+                    return@addSnapshotListener
+                }
                 val classId = doc?.getString("classId")?.takeIf { it.isNotBlank() }
                 if (doc == null || classId == chatClassId) return@addSnapshotListener
                 chatClassId = classId

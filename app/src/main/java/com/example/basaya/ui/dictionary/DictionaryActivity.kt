@@ -30,6 +30,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.text.HtmlCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -78,7 +79,7 @@ class DictionaryActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private lateinit var buddy: PronunciationBookView
     private lateinit var appBar: AppBarLayout
-    private val adapter = WordAdapter { showEntry(it) }
+    private val adapter = WordAdapter(onClick = { showEntry(it) }, onPageChange = { recycler.scrollToPosition(0) })
 
     /** The running search; a newer one cancels it so an old answer never shows. */
     private var job: Job? = null
@@ -88,6 +89,8 @@ class DictionaryActivity : AppCompatActivity() {
     private var speakerButton: ImageButton? = null
     private var wavesJob: Job? = null
     private var breathing: ObjectAnimator? = null
+    /** "Lahat" ("") and the letters, to mark the one matching the search box. */
+    private val letterChips = mutableListOf<Pair<String, TextView>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -153,7 +156,7 @@ class DictionaryActivity : AppCompatActivity() {
         }
 
         buildLetters()
-        showIntro()
+        showAll()
     }
 
     // ---------- loading ----------
@@ -182,14 +185,15 @@ class DictionaryActivity : AppCompatActivity() {
 
     private fun search(text: String, delayMs: Long) {
         val query = text.trim()
+        markLetter(query)
         if (query.isEmpty()) {
-            showIntro()
+            showAll()
             return
         }
         run(delayMs) {
             val found = Dictionary.search(this, query)
             if (found.isNotEmpty()) {
-                showList(found, null)
+                showList(found, null, paged = true)
                 return@run
             }
             val roots = Dictionary.suggestRoots(this, query)
@@ -198,12 +202,14 @@ class DictionaryActivity : AppCompatActivity() {
         }
     }
 
-    private fun showIntro() {
-        run { showList(Dictionary.samples(this), getString(R.string.dict_try_these)) }
+    /** Before typing (and on "Lahat"): every word, A to Z, with the page nav. */
+    private fun showAll() {
+        run { showList(Dictionary.allWords(this), getString(R.string.dict_all_words), paged = true) }
     }
 
     private fun openWord(word: String) {
         setQuery(word)
+        markLetter(word)
         run {
             val entry = Dictionary.lookup(this, word)
             if (entry != null) showEntry(entry) else search(word, 0)
@@ -229,9 +235,10 @@ class DictionaryActivity : AppCompatActivity() {
         appBar.setExpanded(true, true)
     }
 
-    private fun showList(entries: List<Dictionary.Entry>, heading: String?) {
+    /** [paged]: word lists get the page nav at the bottom; root suggestions don't. */
+    private fun showList(entries: List<Dictionary.Entry>, heading: String?, paged: Boolean = false) {
         showingEntry = false
-        adapter.submit(entries, heading)
+        adapter.submit(entries, heading, paged)
         recycler.scrollToPosition(0)
         showOnly(recycler)
     }
@@ -439,8 +446,9 @@ class DictionaryActivity : AppCompatActivity() {
 
     private fun buildLetters() {
         val row = findViewById<LinearLayout>(R.id.lettersRow)
-        for (letter in LETTERS) {
-            row.addView(chip(letter.uppercase()) {
+        for (letter in listOf("") + LETTERS) {
+            val label = if (letter.isEmpty()) getString(R.string.dict_all) else letter.uppercase()
+            row.addView(chip(label) {
                 hideKeyboard()
                 setQuery(letter)
                 search(letter, 0)
@@ -450,9 +458,22 @@ class DictionaryActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
                 typeface = font(R.font.lexend)
                 setTypeface(typeface, Typeface.BOLD)
+                letterChips += letter to this
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 marginEnd = dp(6)
             })
+        }
+        markLetter("")
+    }
+
+    /** Fills the chip matching the search box: "Lahat" when empty, a letter when it's one letter. */
+    private fun markLetter(query: String) {
+        val typed = query.trim().lowercase()
+        for ((letter, chip) in letterChips) {
+            val on = letter == typed
+            chip.isSelected = on
+            chip.background = ContextCompat.getDrawable(this, if (on) R.drawable.dc_chip_active else R.drawable.dc_chip)
+            chip.setTextColor(ContextCompat.getColor(this, if (on) R.color.pg_surface else R.color.pg_section_ink))
         }
     }
 
@@ -505,28 +526,75 @@ class DictionaryActivity : AppCompatActivity() {
 
     // ---------- list ----------
 
+    /**
+     * The heading, one page of words, then the page nav (like the website's lesson list):
+     * "Ipinapakita ang 11–20 sa 245 salita" over ‹ 1 … 4 5 6 … 25 ›. The page stays while a
+     * word is open, so Back returns to it; a new search starts at page 1.
+     */
     private class WordAdapter(
         private val onClick: (Dictionary.Entry) -> Unit,
+        private val onPageChange: () -> Unit,
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+        companion object {
+            private const val TYPE_HEADING = 0
+            private const val TYPE_WORD = 1
+            private const val TYPE_PAGER = 2
+            private const val PAGE_SIZE = 10
+
+            /** Page numbers to show, with null where pages are skipped: 1 … 4 5 6 … 12 (js/pagination.js) */
+            fun pageList(current: Int, pages: Int): List<Int?> {
+                if (pages <= 7) return (1..pages).toList()
+                val list = mutableListOf<Int?>(1)
+                val from = maxOf(2, minOf(current - 1, pages - 4))
+                val to = minOf(pages - 1, maxOf(current + 1, 5))
+                if (from > 2) list += null
+                list += (from..to)
+                if (to < pages - 1) list += null
+                list += pages
+                return list
+            }
+        }
 
         private var heading: String? = null
         private var entries: List<Dictionary.Entry> = emptyList()
+        private var paged = false
+        private var page = 1
 
-        fun submit(newEntries: List<Dictionary.Entry>, newHeading: String?) {
+        fun submit(newEntries: List<Dictionary.Entry>, newHeading: String?, withPages: Boolean) {
             entries = newEntries
             heading = newHeading
+            paged = withPages
+            page = 1
             @Suppress("NotifyDataSetChanged")
             notifyDataSetChanged()
         }
 
+        private fun goTo(target: Int) {
+            if (target !in 1..pages || target == page) return
+            page = target
+            @Suppress("NotifyDataSetChanged")
+            notifyDataSetChanged()
+            onPageChange()
+        }
+
         private val offset get() = if (heading != null) 1 else 0
+        private val pages get() = maxOf(1, (entries.size + PAGE_SIZE - 1) / PAGE_SIZE)
+        private val start get() = if (paged) (page - 1) * PAGE_SIZE else 0
+        private val shown get() = if (paged) minOf(PAGE_SIZE, entries.size - start) else entries.size
+        private val hasPager get() = paged && entries.isNotEmpty()
 
-        override fun getItemCount() = entries.size + offset
+        override fun getItemCount() = offset + shown + if (hasPager) 1 else 0
 
-        override fun getItemViewType(position: Int) = if (position < offset) 0 else 1
+        override fun getItemViewType(position: Int) = when {
+            position < offset -> TYPE_HEADING
+            position < offset + shown -> TYPE_WORD
+            else -> TYPE_PAGER
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            if (viewType == 0) {
+            if (viewType == TYPE_PAGER) return PagerHolder(parent.context)
+            if (viewType == TYPE_HEADING) {
                 val context = parent.context
                 val view = TextView(context).apply {
                     layoutParams = RecyclerView.LayoutParams(
@@ -546,8 +614,10 @@ class DictionaryActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            if (holder is WordHolder) {
-                val entry = entries[position - offset]
+            if (holder is PagerHolder) {
+                bindPager(holder)
+            } else if (holder is WordHolder) {
+                val entry = entries[start + position - offset]
                 holder.word.text = entry.shown
                 val first = entry.senses.firstOrNull()
                 holder.summary.text = listOfNotNull(first?.pos, first?.definitions?.firstOrNull())
@@ -559,9 +629,99 @@ class DictionaryActivity : AppCompatActivity() {
             }
         }
 
+        private fun bindPager(holder: PagerHolder) {
+            val context = holder.itemView.context
+            holder.summary.text = HtmlCompat.fromHtml(
+                context.getString(R.string.dict_page_summary, start + 1, start + shown, "%,d".format(entries.size)),
+                HtmlCompat.FROM_HTML_MODE_COMPACT,
+            )
+            holder.buttons.removeAllViews()
+            holder.buttons.addView(holder.arrow(next = false, enabled = page > 1) { goTo(page - 1) }, holder.slot())
+            for (item in pageList(page, pages)) {
+                holder.buttons.addView(
+                    if (item == null) holder.gap() else holder.number(item, current = item == page) { goTo(item) },
+                    holder.slot(),
+                )
+            }
+            holder.buttons.addView(holder.arrow(next = true, enabled = page < pages) { goTo(page + 1) }, holder.slot())
+        }
+
         private class WordHolder(view: View) : RecyclerView.ViewHolder(view) {
             val word: TextView = view.findViewById(R.id.tvWord)
             val summary: TextView = view.findViewById(R.id.tvSummary)
+        }
+
+        /** The page nav box, built in code; its buttons are rebuilt on every bind. */
+        private class PagerHolder(context: Context) : RecyclerView.ViewHolder(LinearLayout(context)) {
+            private val density = context.resources.displayMetrics.density
+            private fun dp(value: Int) = (value * density).toInt()
+
+            val summary = TextView(context).apply {
+                gravity = Gravity.CENTER
+                setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                typeface = ResourcesCompat.getFont(context, R.font.public_sans)
+                textSize = 13f
+            }
+            val buttons = FlexboxLayout(context).apply {
+                flexWrap = com.google.android.flexbox.FlexWrap.WRAP
+                justifyContent = com.google.android.flexbox.JustifyContent.CENTER
+                alignItems = com.google.android.flexbox.AlignItems.CENTER
+            }
+
+            init {
+                (itemView as LinearLayout).apply {
+                    orientation = LinearLayout.VERTICAL
+                    background = ContextCompat.getDrawable(context, R.drawable.dc_pager)
+                    setPadding(dp(10), dp(12), dp(10), dp(10))
+                    layoutParams = RecyclerView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply { topMargin = dp(4) }
+                    addView(summary, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+                    addView(buttons, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                        topMargin = dp(8)
+                    })
+                }
+            }
+
+            fun slot() = FlexboxLayout.LayoutParams(dp(38), dp(38)).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) }
+
+            fun number(page: Int, current: Boolean, onClick: () -> Unit) = TextView(itemView.context).apply {
+                text = page.toString()
+                gravity = Gravity.CENTER
+                background = ContextCompat.getDrawable(context, if (current) R.drawable.dc_page_current else R.drawable.dc_chip)
+                setTextColor(ContextCompat.getColor(context, if (current) android.R.color.white else R.color.pg_ink_soft))
+                typeface = ResourcesCompat.getFont(context, R.font.be_vietnam_bold)
+                textSize = 14f
+                contentDescription = context.getString(R.string.dict_page_cd, page)
+                isSelected = current
+                if (!current) {
+                    foreground = with(TypedValue()) {
+                        context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
+                        ContextCompat.getDrawable(context, resourceId)
+                    }
+                    setOnClickListener { onClick() }
+                }
+            }
+
+            fun gap() = TextView(itemView.context).apply {
+                text = "…"
+                gravity = Gravity.CENTER
+                setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+
+            fun arrow(next: Boolean, enabled: Boolean, onClick: () -> Unit) = ImageButton(itemView.context).apply {
+                background = ContextCompat.getDrawable(context, R.drawable.dc_chip)
+                setImageResource(R.drawable.ic_chevron_right)
+                imageTintList = ContextCompat.getColorStateList(context, R.color.pg_section_ink)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(dp(9), dp(9), dp(9), dp(9))
+                if (!next) scaleX = -1f
+                contentDescription = context.getString(if (next) R.string.dict_page_next else R.string.dict_page_prev)
+                isEnabled = enabled
+                alpha = if (enabled) 1f else 0.4f
+                setOnClickListener { onClick() }
+            }
         }
     }
 }

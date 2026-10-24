@@ -62,16 +62,15 @@ class SkillProgressRepository(
     /**
      * Adds one finished crossword level to the lesson's Talasalitaan record. Levels of a lesson
      * are played separately, so the counts accumulate:
-     * correct = words found, attempts = words found + wrong swipes, items = words found.
+     * correct = attempts = items = words found (each word found counts once; wrong swipes don't count).
      * Doesn't wait for the server: offline, Firestore sends it once the phone is back online.
      */
-    fun addCrosswordLevel(uid: String, lessonId: String, wordsFound: Int, wrongTries: Int) {
+    fun addCrosswordLevel(uid: String, lessonId: String, wordsFound: Int) {
         if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         val record = mapOf(
             "correct" to FieldValue.increment(wordsFound.toLong()),
-            "attempts" to FieldValue.increment((wordsFound + wrongTries).toLong()),
+            "attempts" to FieldValue.increment(wordsFound.toLong()),
             "items" to FieldValue.increment(wordsFound.toLong()),
-            "wrongTries" to FieldValue.increment(wrongTries.toLong()),
             "levels" to FieldValue.increment(1),
             "completedAt" to FieldValue.serverTimestamp()
         )
@@ -212,6 +211,7 @@ class SkillProgressRepository(
                     pronunciation = doc.getBoolean("pronunciationFinished") == true,
                     quiz = doc.getBoolean("quizFinished") == true,
                     correctSoFar = listOfNotNull(
+                        saved(LessonResume.GAME, "done")?.let { Skill.TALASALITAAN to it },
                         saved(LessonResume.ACTIVITY, "score")?.let { Skill.PAGKILALA to it },
                         saved(LessonResume.PRONUNCIATION, "firstTryCorrect")?.let { Skill.PAGBIGKAS to it },
                         saved(LessonResume.QUIZ, "score")?.let { Skill.PAGSUSULIT to it }
@@ -231,7 +231,11 @@ class SkillProgressRepository(
                     val record = skills?.get(skill.key) as? Map<*, *>
                     val parsed = record?.let { parseRecord(doc.id, it) }
                         ?: if (skill == Skill.PAGSUSULIT) legacyQuiz(doc) else null
-                    parsed?.let { results.getValue(skill).add(it) }
+                    // Crossword: every word found counts once. Older records also counted wrong
+                    // swipes in attempts; those no longer lower the score.
+                    parsed?.let {
+                        results.getValue(skill).add(if (skill == Skill.TALASALITAAN) it.copy(attempts = it.items) else it)
+                    }
                 }
             }
             return results

@@ -31,6 +31,14 @@ class ChatAdapter(
     private val onLongPressMine: (ClassChat.Message) -> Unit
 ) : ListAdapter<ChatAdapter.Row, RecyclerView.ViewHolder>(Diff) {
 
+    /** The class's teacher, so their messages read "Ma'am Reyes" / "Sir Cruz" when a title is set. */
+    var teacher: ClassChat.Teacher? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            notifyDataSetChanged()
+        }
+
     sealed class Row(val key: String) {
         data class Older(val loading: Boolean) : Row("older")
         data class Day(val label: String, val dayKey: Long) : Row("day:$dayKey")
@@ -159,8 +167,10 @@ class ChatAdapter(
         topPadding(view, row.first)
 
         view.findViewById<View>(R.id.nameRow).visibility = if (row.first) View.VISIBLE else View.GONE
-        // Teachers show as "Dela Cruz, Juan · GURO", like the students' "Last, First".
-        val name = if (m.isTeacher) ClassChat.lastFirst(m.senderName) else m.senderName
+        // Teachers show as "Ma'am Reyes · GURO" when they picked a title, else "Dela Cruz, Juan · GURO"
+        // like the students' "Last, First".
+        val title = teacher?.takeIf { it.id == m.senderId }?.title
+        val name = if (m.isTeacher) ClassChat.teacherName(m.senderName, title) else m.senderName
         view.findViewById<TextView>(R.id.tvName).text = name
         view.findViewById<View>(R.id.tvTeacherTag).visibility = if (m.isTeacher) View.VISIBLE else View.GONE
 

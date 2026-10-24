@@ -7,6 +7,8 @@ import android.graphics.drawable.GradientDrawable
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.GestureDetector
 import android.view.Gravity
@@ -50,6 +52,16 @@ class LectureActivity : AppCompatActivity() {
     companion object {
         /** Open with the speaker off. */
         const val EXTRA_MUTED = "MUTED"
+
+        /** Auto-play's breath after a sentence, and before turning the page. */
+        private const val AUTO_SENTENCE_GAP_MS = 700L
+        private const val AUTO_PAGE_GAP_MS = 1000L
+
+        /** How long auto-play shows a sentence that has no audio (or whose audio failed). */
+        private fun readingTime(sentence: String): Long {
+            val text = HtmlCompat.fromHtml(sentence, HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
+            return 1200L + text.trim().split(Regex("\\s+")).size * 350L
+        }
     }
 
     private lateinit var lessonId: String
@@ -66,6 +78,15 @@ class LectureActivity : AppCompatActivity() {
     private var activeSentenceView: TextView? = null
 
     private var speakerOn: Boolean = true
+    private lateinit var ibAutoPlay: ImageButton
+    /**
+     * The play button reads on by itself: each sentence after the last one ends, turning pages,
+     * until the last page, where the child still taps TAPUSIN. Off each time a lecture opens.
+     */
+    private var autoPlay = false
+    private val autoHandler = Handler(Looper.getMainLooper())
+    private val autoStep = Runnable { advance() }
+    private val autoTurnPage = Runnable { goToNextPage() }
     private var mediaPlayer: MediaPlayer? = null
     /** The sentence the bubble is following while its audio plays, and when each word starts. */
     private var readAlongView: ReadAlongTextView? = null
@@ -135,6 +156,21 @@ class LectureActivity : AppCompatActivity() {
         speakerOn = !intent.getBooleanExtra(EXTRA_MUTED, false)
         ibSpeaker.setImageResource(if (speakerOn) R.drawable.ic_speaker_on else R.drawable.ic_speaker_mute)
         ibSpeaker.setOnClickListener { toggleSpeaker() }
+
+        // Turning auto-play on turns the sound on; a sentence still being read finishes first.
+        ibAutoPlay = findViewById(R.id.ibAutoPlay)
+        ibAutoPlay.setOnClickListener {
+            if (!::lecture.isInitialized) return@setOnClickListener
+            if (autoPlay) return@setOnClickListener setAutoPlay(false)
+            if (!speakerOn) toggleSpeaker()
+            setAutoPlay(true)
+            val reading = try {
+                mediaPlayer?.isPlaying == true
+            } catch (e: IllegalStateException) {
+                false
+            }
+            if (!reading) advance()
+        }
 
         sentenceContainer = findViewById(R.id.allSentenceContainer)
         scrollContent = findViewById(R.id.scrollContent)
@@ -339,8 +375,45 @@ class LectureActivity : AppCompatActivity() {
 
     private fun toggleSpeaker() {
         speakerOn = !speakerOn
-        if (!speakerOn) stopAudio()
+        if (!speakerOn) {
+            setAutoPlay(false) // muting stops auto-play
+            stopAudio()
+        }
         ibSpeaker.setImageResource(if (speakerOn) R.drawable.ic_speaker_on else R.drawable.ic_speaker_mute)
+    }
+
+    private fun setAutoPlay(on: Boolean) {
+        autoPlay = on
+        if (!on) cancelAutoNext()
+        ibAutoPlay.setImageResource(if (on) R.drawable.ic_lecture_pause else R.drawable.ic_lecture_play)
+        ibAutoPlay.contentDescription =
+            getString(if (on) R.string.lecture_auto_stop_cd else R.string.lecture_auto_play_cd)
+    }
+
+    /** While auto-play is on, reads the next sentence (or turns the page) after [delayMs]. */
+    private fun autoNext(delayMs: Long) {
+        cancelAutoNext()
+        if (autoPlay) autoHandler.postDelayed(autoStep, delayMs)
+    }
+
+    private fun cancelAutoNext() {
+        autoHandler.removeCallbacks(autoStep)
+        autoHandler.removeCallbacks(autoTurnPage)
+    }
+
+    /** Auto-play's next step: the next sentence, else the next page. The last page waits for TAPUSIN. */
+    private fun advance() {
+        if (!autoPlay) return
+        when {
+            currentSentenceIndex < lecture.pages[currentPageIndex].sentences.size -> revealNextSentence()
+            currentPageIndex < lecture.pages.lastIndex -> autoHandler.postDelayed(autoTurnPage, AUTO_PAGE_GAP_MS)
+            else -> setAutoPlay(false)
+        }
+    }
+
+    /** A sentence's audio didn't play: auto-play still gives the child time to read it. */
+    private fun autoNextAfterReading(page: LecturePage, sentenceIndex: Int) {
+        autoNext(readingTime(page.sentences.getOrNull(sentenceIndex).orEmpty()))
     }
 
     private fun goToNextPage() {
@@ -374,21 +447,25 @@ class LectureActivity : AppCompatActivity() {
      * lecture opened (LectureAudioCache) -> Cloudflare R2 stream -> bundled res/raw.
      */
     private fun playSentenceAudio(page: LecturePage, sentenceIndex: Int) {
+        cancelAutoNext()
         stopAudio()
-        if (!speakerOn) return
+        if (!speakerOn) return autoNextAfterReading(page, sentenceIndex)
 
         val localFile = LectureAudioStore.localFile(this, lessonId, page.pageNumber, sentenceIndex)
         val cloudUrl = page.audioUrls?.getOrNull(sentenceIndex).orEmpty()
         val cachedFile = cloudUrl.takeIf { it.isNotBlank() }?.let { LectureAudioCache.file(this, it) }
 
         val onStarted = { player: MediaPlayer -> startReadAlong(player, page, sentenceIndex) }
+        val onFailed = { autoNextAfterReading(page, sentenceIndex) }
         when {
-            localFile.exists() -> playFromSource(localFile.absolutePath, onStarted)
-            cachedFile != null -> playFromSource(cachedFile.absolutePath, onStarted)
+            localFile.exists() -> playFromSource(localFile.absolutePath, onStarted, onFailed)
+            cachedFile != null -> playFromSource(cachedFile.absolutePath, onStarted, onFailed)
             cloudUrl.isNotBlank() && !Network.isOnline(this) -> noteAudioOffline()
-            cloudUrl.isNotBlank() -> playFromSource(cloudUrl, onStarted)
+            cloudUrl.isNotBlank() -> playFromSource(cloudUrl, onStarted, onFailed)
             else -> playRawResource(page.audioResNames.getOrNull(sentenceIndex).orEmpty(), onStarted)
         }
+        // Nothing to play (offline, no audio, or it failed to start).
+        if (mediaPlayer == null) onFailed()
     }
 
     /**
@@ -426,7 +503,7 @@ class LectureActivity : AppCompatActivity() {
         Toast.makeText(this, R.string.lecture_audio_offline, Toast.LENGTH_LONG).show()
     }
 
-    private fun playFromSource(source: String, onStarted: (MediaPlayer) -> Unit) {
+    private fun playFromSource(source: String, onStarted: (MediaPlayer) -> Unit, onFailed: () -> Unit) {
         val player = MediaPlayer()
         mediaPlayer = player
         try {
@@ -449,6 +526,7 @@ class LectureActivity : AppCompatActivity() {
                 if (mediaPlayer === it) {
                     talkingBook.setTalking(false)
                     stopReadAlong()
+                    autoNext(AUTO_SENTENCE_GAP_MS)
                 }
             }
             player.setOnErrorListener { mp, what, extra ->
@@ -458,6 +536,7 @@ class LectureActivity : AppCompatActivity() {
                     stopReadAlong()
                     // The connection dropped while the sentence was streaming.
                     if (source.startsWith("http") && !Network.isOnline(this)) noteAudioOffline()
+                    onFailed()
                 }
                 true
             }
@@ -482,6 +561,7 @@ class LectureActivity : AppCompatActivity() {
             if (mediaPlayer === it) {
                 talkingBook.setTalking(false)
                 stopReadAlong()
+                autoNext(AUTO_SENTENCE_GAP_MS)
             }
         }
         player.start()
@@ -499,6 +579,7 @@ class LectureActivity : AppCompatActivity() {
 
     /** "Aalis ka na?": the book buddy peeks over a sticker card and cheers the child to stay. */
     private fun showConfirmDialog() {
+        if (::ibAutoPlay.isInitialized) setAutoPlay(false) // no page turns behind the dialog
         val dialog = Dialog(this)
         val content = layoutInflater.inflate(R.layout.dialog_lecture_exit, null)
         val card = content.findViewById<View>(R.id.lexCard)
@@ -582,8 +663,15 @@ class LectureActivity : AppCompatActivity() {
         }
     }
 
+    /** Leaving the app stops auto-play, so pages don't turn while nobody is reading. */
+    override fun onStop() {
+        super.onStop()
+        if (::ibAutoPlay.isInitialized) setAutoPlay(false)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        cancelAutoNext()
         mediaPlayer?.release()
         mediaPlayer = null
     }

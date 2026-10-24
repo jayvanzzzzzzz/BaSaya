@@ -6,7 +6,8 @@
     <string name="dict_bubble">Anong salita ang hahanapin mo?</string>
     <string name="dict_search_hint">Hal. bahay, kumain, maganda</string>
     <string name="dict_letters_cd">Mga titik</string>
-    <string name="dict_try_these">SUBUKAN ANG MGA SALITANG ITO</string>
+    <string name="dict_all">Lahat</string>
+    <string name="dict_all_words">LAHAT NG SALITA, A HANGGANG Z</string>
     <string name="dict_root_hint">Wala ang “%1$s”. Baka ang salitang-ugat ang hinahanap mo:</string>
     <string name="dict_empty_title">Wala pa ang salitang ito</string>
     <string name="dict_empty_body">Tingnan kung tama ang baybay, o sabihin sa iyong guro para maidagdag niya ang “%1$s”.</string>
@@ -20,5 +21,10 @@
     <!-- Speaker beside the word (DictionaryAudio) -->
     <string name="dict_play_word">Pakinggan ang “%1$s”</string>
     <string name="dict_audio_unavailable">Hindi ma-play ang audio. Subukan muli.</string>
+    <!-- Page nav under the search results, 10 words per page -->
+    <string name="dict_page_summary">Ipinapakita ang &lt;b&gt;%1$d–%2$d&lt;/b&gt; sa &lt;b&gt;%3$s&lt;/b&gt; salita</string>
+    <string name="dict_page_cd">Pahina %1$d</string>
+    <string name="dict_page_prev">Nakaraang pahina</string>
+    <string name="dict_page_next">Susunod na pahina</string>
     <string name="dict_credit">Ilang kahulugan mula sa Wiktionary (CC BY-SA). Ang iba ay dinagdag ng mga guro.</string>
 </resources>
