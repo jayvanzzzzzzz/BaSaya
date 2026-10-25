@@ -202,7 +202,7 @@
                     android:visibility="gone"
                     tools:visibility="visible">
 
-                    <com.example.basaya.ui.pronunciation.PronunciationBookView
+                    <ph.basaya.app.ui.pronunciation.PronunciationBookView
                         android:id="@+id/feedbackBuddy"
                         android:layout_width="78dp"
                         android:layout_height="92dp"
@@ -245,7 +245,7 @@
             android:textSize="18sp" />
     </LinearLayout>
 
-    <com.example.basaya.ui.game.ConfettiView
+    <ph.basaya.app.ui.game.ConfettiView
         android:id="@+id/confettiView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

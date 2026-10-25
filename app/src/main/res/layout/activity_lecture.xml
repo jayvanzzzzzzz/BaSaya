@@ -147,7 +147,7 @@
         android:paddingEnd="16dp"
         android:paddingBottom="14dp">
 
-        <com.example.basaya.ui.lecture.TalkingBookView
+        <ph.basaya.app.ui.lecture.TalkingBookView
             android:id="@+id/talkingBook"
             android:layout_width="104dp"
             android:layout_height="114dp"

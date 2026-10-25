@@ -1,116 +1,63 @@
-BaSaya is a Filipino learning application designed to help students learn through interactive lessons and activities.
+# BaSaya
 
-The system has two main parts:
+BaSaya is a Filipino learning system for elementary students. Students learn through lessons with a lecture (Lektura), a crossword game (Laro), a practice activity (Gawain), pronunciation practice (Bigkas) and a quiz (Pagsusulit). Teachers follow each student's progress skill by skill.
 
-Student Android App — where students access their assigned lessons, lectures, games, activities, and quizzes.
-Admin Web Panel — where teachers and administrators can manage lesson content. (Currently in development.)
+This repo is the **student Android app** and the **basaya-stt** Cloudflare Worker. The websites (admin, teacher and student portals) and the notify-api server are in a separate project, `BaSaya-web`. Its `whole-function-flow.md` explains the whole system from start to finish.
 
-Both clients use the same Firebase backend, allowing lesson content and student progress to stay synchronized.
+## The system
 
- System Architecture
+| Part | Who uses it | What it does |
+|---|---|---|
+| **Android app** (this repo) | Students | Lessons, offline downloads, push notifications, class chat, dictionary |
+| **Student website** (`BaSaya-web/student/`) | Students without Android (iPhone, laptop) | The same lessons and progress as the app, online only |
+| **Teacher website** (`BaSaya-web/teacher/`) | Teachers | Classes, lesson schedules and deadlines, reports, chat, dictionary words |
+| **Admin website** (`BaSaya-web/admin/`) | Admin | Lessons and their content, teacher and student accounts, classes |
+| **Firebase** | All | Logins (Auth), the database (Firestore + security rules), push (FCM) |
+| **notify-api** (Vercel) | Websites | Push notifications, remove/delete jobs, password and contact emails |
+| **basaya-tts** Worker (Cloudflare) | Admin | Makes lecture audio with ElevenLabs and saves it to R2 |
+| **basaya-stt** Worker (Cloudflare, `cloudflare/basaya-stt`) | App + student site | Checks the student's pronunciation with Whisper (Workers AI) |
 
-BaSaya uses a two-client, single-database architecture.
+```
+   Android app        Student site       Teacher site        Admin site
+        │                  │                  │                  │
+        └──────────────────┴────────┬─────────┴──────────────────┘
+                                    ▼
+                 Firebase: Auth · Firestore (+ rules) · FCM
+                                    │
+        notify-api (Vercel) · basaya-tts + basaya-stt (Cloudflare) · R2 audio
+```
 
-The Android app and web admin panel communicate directly with Firebase. There is currently no separate backend/API server between the clients and Firebase.
+The app and the websites talk to Firebase directly, and the Firestore rules decide what each user may read or write. The small servers exist only for jobs that need a secret or admin power. The app and the student site read and write the **same Firestore fields**, so a student can switch between them and the teacher's reports stay the same.
 
-             ┌─────────────────────┐
-             │   Student Android   │
-             │        App          │
-             └──────────┬──────────┘
-                        │
-                        │
-                        ▼
-              ┌───────────────────┐
-              │      Firebase     │
-              │                   │
-              │ Authentication    │
-              │ Cloud Firestore   │
-              └─────────┬─────────┘
-                        │
-                        │
-                        ▼
-             ┌─────────────────────┐
-             │    Admin Web Panel  │
-             │   (In Development) │
-             └─────────────────────┘
+## Logging in
 
-The Android app also uses Room as a local cache so downloaded lesson content can be accessed offline.
+Students sign in with email and password (Firebase Authentication) and then join their teacher's class with a class code. The app only accepts accounts with `role: "student"`. Teachers and admins use the websites.
 
- Student Login
+## A lesson
 
-Students sign in using their email and password.
+```
+Mga Aralin (Home) ──► open a lesson ──► lesson path
+                                          ├── 1. Lektura    (read, listen, read-along)
+                                          ├── 2. Laro       (crossword)       → Talasalitaan
+                                          ├── 3. Gawain     (3 lives a page)  → Pagkilala sa salita
+                                          ├── 4. Bigkas     (speak each word) → Pagbigkas
+                                          └── 5. Pagsusulit (quiz)            → Comprehension
+```
 
-Open BaSaya
-     │
-     ▼
-Enter email + password
-     │
-     ▼
-Firebase Authentication
-     │
-     ▼
-Credentials verified
-     │
-     ▼
-Student Dashboard
+- **Lektura** can be reopened any time. It has auto-play (it reads on and turns the pages) and a read-along highlight that follows the spoken word.
+- **Laro, Gawain, Bigkas and Pagsusulit** are scored. Once finished, a part shows its score and can't be redone. A part left halfway resumes where the student stopped.
+- **Schedules:** a teacher can set when a lesson opens and when it is due. The Firestore rules check the server's time, so changing the phone's date doesn't help.
+- **Practice lessons:** a teacher can add a lesson as *Practice*. It saves nothing, can be redone as often as the student likes, and is left out of reports.
+- **Skipped parts:** the admin can skip the game or the Gawain for a lesson. That stop is removed from the path (see *Skipped games* below).
+- **Home filters:** *Tapos na*, *Nasa progreso*, *Hindi pa nasisimulan*.
 
-Firebase Authentication handles the login and maintains the student's authenticated session.
+## Offline learning
 
-Student Learning Flow
+A downloaded lesson is saved in the app's local Room database (lecture, crossword levels, Gawain, Bigkas words, quiz and lecture audio), so it opens without internet.
 
-After logging in, students can see the lessons assigned to them.
+## Package name
 
-Student Dashboard
-       │
-       ▼
-Browse Assigned Lessons
-       │
-       ▼
-Open a Lesson
-       │
-       ├── Lektura
-       ├── Game
-       ├── Activity
-       └── Quiz
-              │
-              ▼
-        Complete Content
-              │
-              ▼
-      Save Result / Progress
-              │
-              ▼
-      Dashboard Updates
-
-Student progress is saved to Firestore, allowing the dashboard to reflect the student's current progress, completed content, scores, and locked/unlocked states.
-
-Content Rules
-Lektura can be revisited even after completion.
-Game, Activity, and Quiz become locked after completion.
-Completed Game, Activity, and Quiz content displays the student's final score.
-Offline Learning
-
-BaSaya supports downloading lessons for offline use.
-
-When a student downloads a lesson, the app preloads its content into the Android app's local Room database.
-
-Download Lesson
-      │
-      ▼
-┌─────────────────────┐
-│ Lektura             │
-│ Game / Crossword    │
-│ Activity            │
-│ Quiz                │
-└──────────┬──────────┘
-           │
-           ▼
-     Room Database
-           │
-           ▼
-    Available Offline
-
-This allows students to access downloaded lesson content even when they don't have an internet connection.
+The code lives in the package `ph.basaya.app` (`namespace` in `app/build.gradle.kts`). The **application id** is still `com.example.basaya`, because Firebase (`google-services.json`) and phones that already have the app know it by that id. Changing it means registering the new id in the Firebase console and replacing `google-services.json`.
 
 ## Diksiyonaryo (Tagalog dictionary)
 
@@ -134,7 +81,7 @@ Firestore dictionary/{key}                         ──┘   teacher words (ad
 
 BaSaya monitors each student on five skills, one per lesson activity. Skills are never averaged into a single lesson grade: a student can be strong in Talasalitaan and weak in Pagbigkas, and one number would hide that.
 
-The calculation lives in `app/src/main/java/com/example/basaya/data/progress/SkillScoring.kt` (pure Kotlin, unit-tested in `SkillScoringTest.kt`). The admin web panel should use the same rules so teachers and students see the same numbers.
+The calculation lives in `app/src/main/java/ph/basaya/app/data/progress/SkillScoring.kt` (pure Kotlin, unit-tested in `SkillScoringTest.kt`). The websites use the same rules (`BaSaya-web/js/scoring.js`), so teachers and students see the same numbers.
 
 ### 1. One score per skill per lesson: first-try accuracy
 
@@ -143,20 +90,20 @@ Getting an item right on the **first try** is the clearest sign of mastery; need
 | Skill | Activity | correct | attempts | items (weight) |
 |---|---|---|---|---|
 | Lektura (`pagUnawa`) | Lektura | not scored — lectures read | — | — |
-| Talasalitaan | Crossword game | words found | words found + wrong swipes | words found |
+| Talasalitaan | Crossword game | words found | words found | words found |
 | Pagkilala sa salita | Gawain (practice) | pages right on the first check | pages | pages |
 | Pagbigkas | Pronunciation | words right on the first scored try | words | words |
 | Comprehension (`pagsusulit`) | Quiz (Pagsusulit) | correct answers | questions | questions |
 
 Notes:
 - **Lektura:** lectures have no questions, so this row shows lectures read ("2/5", "Tapos na") until a comprehension check saves results in the same format.
-- **Talasalitaan:** a wrong swipe is a 2+ letter word that isn't in the level. Re-swiping a word already found and single-letter taps don't count. A lesson's levels are played separately, so the counts add up level by level.
+- **Talasalitaan:** there are no wrong answers. Each word found counts once, and wrong swipes are not counted or saved. A finished crossword is always 100%; only a missed deadline lowers it. A lesson's levels are played separately, so the counts add up level by level. Older records that counted wrong swipes are recounted this way when read.
 - **Pagkilala sa salita:** a page answered wrong and then fixed with *Subukan Muli* does not earn the point (it is counted in `retries`). `activityScore` uses the same rule.
 - **Pagbigkas:** "no speech heard" never counts as a try. Words missed at least once are saved in `hardWords` for the teacher.
 - A lesson the student hasn't done yet is **no data, not 0%**, until its deadline passes.
 - **Unfinished at the deadline = the rest is wrong:** once a lesson's deadline passes, each scored part left unfinished (game, Gawain, Bigkas, quiz) is scored over **all** its items (`LessonItems.kt`: crossword words, Gawain pages, Bigkas words, quiz questions). What the student got right so far counts, and every item they didn't reach is wrong. For example, 3 of 5 quiz questions answered with 2 right gives 2/5, and an untouched part gives 0%. "So far" comes from the saved place (`resume.activity.score`, `resume.pronunciation.firstTryCorrect`, `resume.quiz.score`) and, for the crossword, from the levels played. The result is dated at the deadline. Skipped parts, lessons without a deadline, and lessons that closed before the student joined don't count. See `SkillScoring.withMissed`; the web uses the same rule (`js/scoring.js`).
 - **Quiz resume:** an answer is final once *Susunod* is pressed and is saved in `resume.quiz` (`{ done, total, score, answered: [question index], missed: [question text] }`), so reopening the quiz continues with the questions not answered yet.
-- **Comprehension (Pagsusulit):** the quiz also saves `missedQuestions` (the text of each question answered wrong) for the teacher's "What to re-teach" item analysis in the web Class Report.
+- **Comprehension (Pagsusulit):** the quiz also saves `missedQuestions` (the text of each question answered wrong). No report shows it at the moment.
 
 Saved per lesson in Firestore:
 
@@ -164,7 +111,7 @@ Saved per lesson in Firestore:
 users/{uid}/assignedLessons/{lessonId}
   skills:
     pagbigkas: { correct: 7, attempts: 10, items: 10, completedAt, eventuallyCorrect: 9, hardWords: ["mataba", "bahay"] }
-    talasalitaan: { correct: 12, attempts: 15, items: 12, wrongTries: 3, levels: 3, completedAt }
+    talasalitaan: { correct: 12, attempts: 12, items: 12, levels: 3, completedAt }
     pagkilala:  { correct: 2, attempts: 3, items: 3, retries: 1, completedAt }
     pagsusulit: { correct: 8, attempts: 10, items: 10, completedAt, missedQuestions: ["Ano ang …?", "Sino si …?"] }
 ```
@@ -237,7 +184,7 @@ users/{uid}
 
 The student's **Progreso** screen computes the same summary from the lesson records and shows each skill's score, level and trend.
 
-### 6. Picture of a class (admin web panel)
+### 6. Picture of a class (teacher website)
 
 Computed by the teacher dashboard from the students' `skillSummary`:
 
@@ -248,7 +195,7 @@ Computed by the teacher dashboard from the students' `skillSummary`:
 
 ### Skipped games
 
-A teacher can tick **"Skip game for this lesson"** in the admin panel, which saves `lessons/{lessonId}/game/status = { completion: "skipped" }` and no game levels. A skipped game is treated as **not part of the lesson**:
+The admin can tick **"Skip game for this lesson"** on the admin website, which saves `lessons/{lessonId}/game/status = { completion: "skipped" }` and no game levels. A skipped game is treated as **not part of the lesson**:
 
 - **Lesson screen:** the Laro stop is removed from the path and the remaining stops are numbered 1–4.
 - **Lesson completion:** the game counts as done, so the lesson can still show *Tapos na*. Lesson progress is out of 3 parts instead of 4, and the skipped game never makes a lesson look "started".
@@ -269,69 +216,14 @@ All thresholds are constants in `SkillScoring.kt`:
 | `HELP_THRESHOLD` | 60% | Two lessons in a row below this flag the skill |
 | Level cut-offs | 85 / 70 / 50 | Mahusay / Umuunlad / Nagsisimula |
 
-Admin Web Panel
+## Main technologies
 
-The admin panel is currently in development.
+| Part | Built with |
+|---|---|
+| Android app | Kotlin, Android Views, Coroutines, Room, Firebase Auth / Firestore / Cloud Messaging, Gson |
+| Websites | Plain HTML, CSS and JavaScript modules (no build step), Firebase Web SDK |
+| Servers | notify-api: Node.js on Vercel (Firebase Admin SDK, Gmail SMTP). Cloudflare Workers: ElevenLabs TTS + R2, Workers AI Whisper STT |
 
-The planned workflow is:
+## Project goal
 
-Admin Login
-     │
-     ▼
-Admin Dashboard
-     │
-     ├── Create Lessons
-     ├── Edit Lessons
-     ├── Delete Lessons
-     ├── Manage Lektura
-     ├── Manage Games
-     ├── Manage Activities
-     └── Manage Quizzes
-
-Changes made through the admin panel are saved to Firestore, allowing the Android application to synchronize updated lesson content.
-
-Admin access is intended to be restricted to authorized staff through Firestore Security Rules rather than relying only on client-side checks.
-
- Overall Data Flow
-
-At a high level, the system works like this:
-
-       STUDENT APP                    ADMIN PANEL
-            │                             │
-            │                             │
-            └──────────────┬──────────────┘
-                           │
-                           ▼
-                 Firebase Backend
-                 ┌─────────────────┐
-                 │ Authentication  │
-                 │ Cloud Firestore │
-                 └────────┬────────┘
-                          │
-                          ▼
-                    Student Data
-                    & Lesson Data
-                          │
-                          ▼
-                    Room Database
-                  (Android Offline
-                       Cache)
-
-In simple terms: Firebase acts as the shared backend for BaSaya, while Room provides local storage for downloaded content on the Android app.
-
- Main Technologies
-Student Android App
-Kotlin
-Android
-Firebase Authentication
-Cloud Firestore
-Room Database
-Coroutines
-Admin Web Panel
-Web-based
-Firebase Authentication
-Cloud Firestore
-Currently in development
- Project Goal
-
-BaSaya aims to provide students with an accessible and interactive way to learn Filipino through a combination of lectures, games, activities, and quizzes, while also giving teachers and administrators a way to manage educational content.
+BaSaya gives students an accessible, playful way to build Filipino reading, vocabulary and pronunciation skills, and gives teachers a clear picture of each child's strengths and weaknesses, skill by skill.

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Si … ay sumali sa klase": a quiet centered line, not a bubble. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="12dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/tvJoin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:drawablePadding="6dp"
+        android:fontFamily="@font/be_vietnam_semi_bold"
+        android:gravity="center"
+        android:textColor="@color/ch_ink_soft"
+        android:textSize="13sp"
+        app:drawableStartCompat="@drawable/ch_ic_join"
+        tools:text="Si Juan Dela Cruz ay sumali sa klase · 9:41 AM" />
+</FrameLayout>

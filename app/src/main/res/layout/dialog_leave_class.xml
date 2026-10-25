@@ -11,7 +11,7 @@
     android:padding="24dp">
 
     <!-- The book buddy, looking a little worried -->
-    <com.example.basaya.ui.pronunciation.PronunciationBookView
+    <ph.basaya.app.ui.pronunciation.PronunciationBookView
         android:id="@+id/leaveBuddy"
         android:layout_width="86dp"
         android:layout_height="100dp"

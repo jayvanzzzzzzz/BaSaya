@@ -212,7 +212,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Confetti draws above everything and never takes touches -->
-    <com.example.basaya.ui.game.ConfettiView
+    <ph.basaya.app.ui.game.ConfettiView
         android:id="@+id/confettiView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

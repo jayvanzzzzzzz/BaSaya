@@ -18,6 +18,8 @@
     <string name="ch_sending">Ipinapadala…</string>
     <string name="ch_removed_teacher">Tinanggal ng guro ang mensaheng ito</string>
     <string name="ch_removed_self">Binura ang mensaheng ito</string>
+    <string name="ch_joined">Si %1$s ay sumali sa klase</string>
+    <string name="ch_joined_time">%1$s · %2$s</string>
     <string name="ch_empty_title">Wala pang mensahe</string>
     <string name="ch_empty_body">Bumati sa iyong guro at mga kaklase! 👋</string>
     <string name="ch_no_class_title">Wala ka pang klase</string>

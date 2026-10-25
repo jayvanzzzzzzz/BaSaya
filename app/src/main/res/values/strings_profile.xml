@@ -59,6 +59,8 @@
     <string name="pf_class_current">Kasalukuyang klase</string>
     <string name="pf_class_none">Wala ka pang klase</string>
     <string name="pf_class_none_sub">Sumali gamit ang class code sa Home.</string>
+    <string name="pf_join_class">Sumali sa klase</string>
+    <string name="pf_join_class_sub">Gamitin ang class code ng iyong guro</string>
     <string name="pf_leave_class">Umalis sa klase</string>
     <string name="pf_leave_class_sub">Kailangan ng pahintulot ng iyong guro</string>
     <string name="pf_leave_pending_title">Hinihintay ang iyong guro</string>

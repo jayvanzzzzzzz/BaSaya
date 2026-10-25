@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Person with a plus: the class chat's "… ay sumali sa klase" notice. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="15dp"
+    android:height="15dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M15,20v-1a4,4 0,0 0,-4 -4H6a4,4 0,0 0,-4 4v1M8.5,4.5a3.5,3.5 0,1 0,0 7a3.5,3.5 0,1 0,0 -7M19,8v6M22,11h-6"
+        android:strokeWidth="2"
+        android:strokeColor="@color/ch_ink_soft"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

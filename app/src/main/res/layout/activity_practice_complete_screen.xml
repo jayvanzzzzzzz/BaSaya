@@ -62,7 +62,7 @@
                     android:textSize="14sp"
                     tools:text="Hanapin ang Pangngalan" />
 
-                <com.example.basaya.ui.pronunciation.PronunciationBookView
+                <ph.basaya.app.ui.pronunciation.PronunciationBookView
                     android:id="@+id/buddy"
                     android:layout_width="150dp"
                     android:layout_height="176dp"
@@ -248,7 +248,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <com.example.basaya.ui.game.ConfettiView
+    <ph.basaya.app.ui.game.ConfettiView
         android:id="@+id/confettiView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

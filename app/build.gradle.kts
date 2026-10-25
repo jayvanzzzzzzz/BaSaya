@@ -13,10 +13,11 @@ val localProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.example.basaya"
+    namespace = "ph.basaya.app"
     compileSdk = 37
 
     defaultConfig {
+        // Kept as the old id: Firebase (google-services.json) and installed phones know the app by it.
         applicationId = "com.example.basaya"
         minSdk = 24
         targetSdk = 36

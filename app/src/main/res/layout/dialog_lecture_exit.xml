@@ -123,7 +123,7 @@
         android:tint="@color/lex_sparkle" />
 
     <!-- The book buddy, peeking over the top of the card -->
-    <com.example.basaya.ui.pronunciation.PronunciationBookView
+    <ph.basaya.app.ui.pronunciation.PronunciationBookView
         android:id="@+id/lexBuddy"
         android:layout_width="104dp"
         android:layout_height="118dp"

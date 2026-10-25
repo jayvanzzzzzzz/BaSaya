@@ -331,6 +331,42 @@
                     android:src="@drawable/ic_chevron_right"
                     app:tint="@color/pg_ink_soft" />
             </LinearLayout>
+
+            <!-- Join a class (only while the student has none) -->
+            <LinearLayout
+                android:id="@+id/rowJoinClass"
+                style="@style/Pf.Row"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone">
+
+                <ImageView
+                    style="@style/Pf.RowIcon"
+                    android:backgroundTint="@color/pg_pagkilala_tint"
+                    android:src="@drawable/ic_join_class"
+                    app:tint="@color/pg_pagkilala" />
+
+                <LinearLayout style="@style/Pf.RowTexts">
+
+                    <TextView
+                        style="@style/Pf.RowValue"
+                        android:layout_marginTop="0dp"
+                        android:text="@string/pf_join_class" />
+
+                    <TextView
+                        style="@style/Pf.RowLabel"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/pf_join_class_sub" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/pg_ink_soft" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- ═══ Appearance: System / Light / Dark ═══ -->

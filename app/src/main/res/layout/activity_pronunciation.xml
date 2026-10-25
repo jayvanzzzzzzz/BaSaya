@@ -100,7 +100,7 @@
         app:layout_constraintTop_toBottomOf="@id/btnClose" />
 
     <!-- ═══ Buddy ═══ -->
-    <com.example.basaya.ui.pronunciation.PronunciationBookView
+    <ph.basaya.app.ui.pronunciation.PronunciationBookView
         android:id="@+id/bookView"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -339,7 +339,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Confetti draws above everything and never takes touches -->
-    <com.example.basaya.ui.game.ConfettiView
+    <ph.basaya.app.ui.game.ConfettiView
         android:id="@+id/confettiView"
         android:layout_width="0dp"
         android:layout_height="0dp"

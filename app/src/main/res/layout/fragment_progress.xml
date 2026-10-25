@@ -57,7 +57,7 @@
             android:paddingEnd="16dp"
             android:paddingBottom="16dp">
 
-            <com.example.basaya.ui.pronunciation.PronunciationBookView
+            <ph.basaya.app.ui.pronunciation.PronunciationBookView
                 android:id="@+id/buddy"
                 android:layout_width="92dp"
                 android:layout_height="108dp"

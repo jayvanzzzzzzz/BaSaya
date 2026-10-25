@@ -1,0 +1,19 @@
+package ph.basaya.app.data.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import ph.basaya.app.data.entity.ActivityEntity
+
+@Dao
+interface ActivityDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(activity: ActivityEntity)
+
+    @Query("SELECT * FROM activities WHERE lessonId = :lessonId")
+    suspend fun getActivity(lessonId: String): ActivityEntity?
+
+    @Query("DELETE FROM activities WHERE lessonId = :lessonId")
+    suspend fun deleteByLessonId(lessonId: String)
+}
