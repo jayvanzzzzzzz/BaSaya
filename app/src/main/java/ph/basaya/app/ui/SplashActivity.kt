@@ -71,14 +71,25 @@ class SplashActivity : AppCompatActivity() {
         playIntro()
 
         val user = FirebaseAuth.getInstance().currentUser
-        val sync = user?.let { LessonPrefetch.start(this, it.uid) }
+        val pendingGoogleProfileUid = getSharedPreferences(
+            CompleteProfileActivity.PREFS_NAME,
+            MODE_PRIVATE
+        ).getString(CompleteProfileActivity.KEY_PENDING_GOOGLE_UID, null)
+        val needsProfileCompletion = user != null && pendingGoogleProfileUid == user.uid
+        val sync = user?.takeUnless { needsProfileCompletion }?.let {
+            LessonPrefetch.start(this, it.uid)
+        }
 
         lifecycleScope.launch {
             // Wait for the lessons, but never trap a child here on bad Wi-Fi: Home shows the
             // cached lessons and picks up the still-running sync.
             if (sync != null) withTimeoutOrNull(MAX_WAIT_MS - elapsed()) { sync.await() }
             delay(MIN_SHOW_MS - elapsed())
-            next = if (user == null) LogInActivity::class.java else MainActivity::class.java
+            next = when {
+                user == null -> LogInActivity::class.java
+                needsProfileCompletion -> CompleteProfileActivity::class.java
+                else -> MainActivity::class.java
+            }
             // If the app was sent to the background meanwhile, wait until it's visible again.
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) leave()
         }

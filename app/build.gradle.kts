@@ -63,6 +63,7 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
 
     implementation("com.google.firebase:firebase-firestore-ktx")
     // "New lesson" push notifications (FCM topic class_<classId>)

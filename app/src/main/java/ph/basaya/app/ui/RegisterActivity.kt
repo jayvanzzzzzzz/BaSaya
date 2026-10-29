@@ -80,7 +80,7 @@ class RegisterActivity : AppCompatActivity() {
         etLastName = findViewById(R.id.etLastName)
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
-
+        btnRegister = findViewById(R.id.btnRegister)
         btnRegister = findViewById(R.id.btnRegister)
         imgRegisterArrow = findViewById(R.id.imgRegisterArrow)
         progressRegister = findViewById(R.id.progressRegister)
@@ -108,7 +108,7 @@ class RegisterActivity : AppCompatActivity() {
                 false
             }
         }
-
+        btnRegister.setOnClickListener { submit() }
         btnRegister.setOnClickListener { submit() }
 
         // Login is already underneath us in the back stack; just return to it.

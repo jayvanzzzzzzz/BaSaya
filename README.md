@@ -31,7 +31,9 @@ The app and the websites talk to Firebase directly, and the Firestore rules deci
 
 ## Logging in
 
-Students sign in with email and password (Firebase Authentication) and then join their teacher's class with a class code. The app only accepts accounts with `role: "student"`. Teachers and admins use the websites.
+Students can sign in with email/password or Google (Firebase Authentication), then join their teacher's class with a class code. The app only accepts accounts with `role: "student"`. Teachers and admins use the websites.
+
+For Google registration, enable the **Google** provider in Firebase Authentication, add the Android app's SHA-1/SHA-256 fingerprints in Firebase project settings, and replace `app/google-services.json` with the updated file containing the Web OAuth client. First-time Google sign-ins complete the student's name on a profile setup screen before entering the app.
 
 ## A lesson
 

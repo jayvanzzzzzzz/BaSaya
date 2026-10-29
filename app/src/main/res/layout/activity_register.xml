@@ -390,6 +390,7 @@
                                 android:indeterminateTint="?attr/colorPrimary"
                                 android:visibility="gone" />
                         </FrameLayout>
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>

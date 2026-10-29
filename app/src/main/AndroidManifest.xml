@@ -90,6 +90,10 @@
             android:name=".ui.RegisterActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.CompleteProfileActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.LogInActivity"
             android:exported="false" />
         <activity

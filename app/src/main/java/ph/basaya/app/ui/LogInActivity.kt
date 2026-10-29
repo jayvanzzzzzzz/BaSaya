@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.ViewCompat
@@ -28,9 +29,14 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Patterns
 import androidx.appcompat.app.AlertDialog
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.GoogleAuthProvider
 
 class LogInActivity : AppCompatActivity() {
 
@@ -44,11 +50,36 @@ class LogInActivity : AppCompatActivity() {
 
     private lateinit var btnLogin : AppCompatButton
     private lateinit var tvRegister: TextView
+    private lateinit var btnGoogleLogin: View
 
     private lateinit var imgLoginArrow: ImageView
     private lateinit var progressLogin: ProgressBar
 
     private var arrowSpinAnimator: ObjectAnimator? = null
+
+    private val googleSignInLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != RESULT_OK) {
+                setLoading(false)
+                return@registerForActivityResult
+            }
+
+            try {
+                val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                    .getResult(ApiException::class.java)
+                val idToken = account.idToken
+                if (idToken.isNullOrBlank()) {
+                    setLoading(false)
+                    Toast.makeText(this, R.string.register_google_setup_error, Toast.LENGTH_LONG).show()
+                    return@registerForActivityResult
+                }
+                signInWithGoogleToken(idToken)
+            } catch (e: ApiException) {
+                Log.e("LOGIN_DEBUG", "Google account selection failed", e)
+                setLoading(false)
+                Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +105,7 @@ class LogInActivity : AppCompatActivity() {
         imgBgBookRight.startAnimation(floatingAnim)
 
         btnLogin = findViewById(R.id.btnLogin)
+        btnGoogleLogin = findViewById(R.id.btnGoogleLogin)
         imgLoginArrow = findViewById(R.id.imgLoginArrow)
         progressLogin = findViewById(R.id.progressLogin)
 
@@ -172,6 +204,8 @@ class LogInActivity : AppCompatActivity() {
             val intent = Intent(this@LogInActivity, RegisterActivity::class.java)
             startActivity(intent)
         }
+
+        btnGoogleLogin.setOnClickListener { startGoogleSignIn() }
 
         findViewById<View>(R.id.btnForgotPassword).setOnClickListener {
             showForgotPasswordDialog(authHelper)
@@ -272,9 +306,115 @@ class LogInActivity : AppCompatActivity() {
 
     private fun setLoading(isLoading: Boolean) {
         btnLogin.isEnabled = !isLoading
+        btnGoogleLogin.isEnabled = !isLoading
 
         imgLoginArrow.visibility = if (isLoading) View.GONE else View.VISIBLE
         progressLogin.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun startGoogleSignIn() {
+        val clientIdResource = resources.getIdentifier("default_web_client_id", "string", packageName)
+        val webClientId = clientIdResource.takeIf { it != 0 }?.let(::getString)
+        if (webClientId.isNullOrBlank()) {
+            Toast.makeText(this, R.string.register_google_setup_error, Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+        val googleSignInClient = GoogleSignIn.getClient(this, options)
+        setLoading(true)
+        googleSignInClient.signOut().addOnCompleteListener(this) { task ->
+            if (!task.isSuccessful) {
+                Log.e("LOGIN_DEBUG", "Could not reset Google account selection", task.exception)
+                setLoading(false)
+                Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
+                return@addOnCompleteListener
+            }
+            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+        }
+    }
+
+    private fun signInWithGoogleToken(idToken: String) {
+        FirebaseAuth.getInstance()
+            .signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
+            .addOnCompleteListener(this) { task ->
+                if (!task.isSuccessful) {
+                    Log.e("LOGIN_DEBUG", "Firebase Google sign-in failed", task.exception)
+                    setLoading(false)
+                    val errorCode = (task.exception as? FirebaseAuthException)?.errorCode.orEmpty()
+                    val message = when {
+                        errorCode.contains("OPERATION_NOT_ALLOWED") ->
+                            R.string.login_google_disabled
+                        errorCode.contains("ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL") ->
+                            R.string.register_google_email_exists
+                        else -> R.string.register_google_failed
+                    }
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                    return@addOnCompleteListener
+                }
+
+                val user = task.result.user
+                if (user == null) {
+                    setLoading(false)
+                    Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
+                    return@addOnCompleteListener
+                }
+
+                getSharedPreferences(CompleteProfileActivity.PREFS_NAME, MODE_PRIVATE)
+                    .edit()
+                    .putString(CompleteProfileActivity.KEY_PENDING_GOOGLE_UID, user.uid)
+                    .apply()
+
+                FirebaseFirestore.getInstance().collection("users").document(user.uid).get()
+                    .addOnSuccessListener { profile ->
+                        if (!profile.exists()) {
+                            setLoading(false)
+                            startActivity(Intent(this, CompleteProfileActivity::class.java))
+                            finish()
+                            return@addOnSuccessListener
+                        }
+
+                        clearPendingGoogleProfile()
+                        setLoading(false)
+                        if (!StudentOnly.isStudent(profile)) {
+                            FirebaseAuth.getInstance().signOut()
+                            Toast.makeText(
+                                this,
+                                R.string.register_google_wrong_portal,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            return@addOnSuccessListener
+                        }
+
+                        startActivity(
+                            Intent(this, MainActivity::class.java)
+                                .putExtra("uid", user.uid)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        )
+                        finish()
+                    }
+                    .addOnFailureListener { error ->
+                        Log.e("LOGIN_DEBUG", "Failed to verify Google account profile", error)
+                        FirebaseAuth.getInstance().signOut()
+                        clearPendingGoogleProfile()
+                        setLoading(false)
+                        Toast.makeText(
+                            this,
+                            R.string.register_google_profile_check_failed,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+            }
+    }
+
+    private fun clearPendingGoogleProfile() {
+        getSharedPreferences(CompleteProfileActivity.PREFS_NAME, MODE_PRIVATE)
+            .edit()
+            .remove(CompleteProfileActivity.KEY_PENDING_GOOGLE_UID)
+            .apply()
     }
 
     override fun onDestroy() {

@@ -131,8 +131,15 @@
     <string name="register_section_account">Ang iyong account</string>
     <string name="register_optional">Opsyonal</string>
     <string name="register_password_helper">8+ karakter, may maliit at malaking titik, at numero</string>
-    <string name="register_action">Gumawa ng account</string>
+    <string name="register_action">Gumawa ng account ngayon</string>
     <string name="register_in_progress">Ginagawa ang account…</string>
+    <string name="login_google_action">Magpatuloy gamit ang Google</string>
+    <string name="login_google_disabled">Hindi pa naka-enable ang Google sign-in sa Firebase. I-enable ang Google provider sa Firebase Authentication settings.</string>
+    <string name="register_google_setup_error">Hindi pa naka-set up ang Google sign-in. Paganahin ito sa Firebase at idagdag ang web OAuth client.</string>
+    <string name="register_google_failed">Hindi makakonekta sa Google account. Subukan muli.</string>
+    <string name="register_google_email_exists">May account na gamit ang email na ito. Mag-login muna gamit ang dati mong paraan.</string>
+    <string name="register_google_wrong_portal">Hindi ito student account. Gamitin ang tamang portal para mag-login.</string>
+    <string name="register_google_profile_check_failed">Hindi ma-verify ang iyong account. Suriin ang koneksyon at subukan muli.</string>
     <string name="register_have_account">May account na?</string>
     <string name="register_login_action">Mag-login</string>
     <string name="register_back">Bumalik</string>
@@ -143,6 +150,14 @@
     <string name="register_success">Matagumpay! Maaari ka nang mag-login.</string>
     <string name="register_failed">Hindi nagawa ang account. Subukan muli.</string>
     <string name="register_save_failed">Hindi na-save ang iyong impormasyon. Subukan muli.</string>
+    <string name="complete_profile_heading">Kumpletuhin ang iyong account</string>
+    <string name="complete_profile_subtitle">Ilagay ang iyong pangalan para masimulan ang paggamit ng BaSaya.</string>
+    <string name="complete_profile_email">Email ng Google account</string>
+    <string name="complete_profile_action">Tapusin ang account setup</string>
+    <string name="complete_profile_saving">Sine-save ang iyong impormasyon…</string>
+    <string name="complete_profile_back">Mag-sign out at bumalik sa login</string>
+    <string name="complete_profile_check_failed">Hindi ma-verify ang iyong account. Suriin ang koneksyon at subukan muli.</string>
+    <string name="complete_profile_wrong_account">Hindi ito student account. Mag-login gamit ang tamang account.</string>
 
     <!-- Lesson list card -->
     <string name="lesson_card_number">Aralin %1$d</string>

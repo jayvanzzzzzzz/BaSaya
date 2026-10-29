@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_login_screen"
+    android:theme="@style/ThemeOverlay.BaSaya.Login"
+    tools:context=".ui.CompleteProfileActivity">
+
+    <ImageView
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="-40dp"
+        android:alpha="0.22"
+        android:importantForAccessibility="no"
+        android:rotation="-15"
+        android:src="@drawable/book_1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.62"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:layout_width="105dp"
+        android:layout_height="105dp"
+        android:layout_marginEnd="-36dp"
+        android:alpha="0.22"
+        android:importantForAccessibility="no"
+        android:rotation="10"
+        android:src="@drawable/book_2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.12"
+        tools:ignore="ContentDescription" />
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="24dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="start"
+                android:layout_marginStart="-8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/complete_profile_back"
+                android:src="@drawable/ic_register_back"
+                app:tint="?attr/colorOnSurface" />
+
+            <ImageView
+                android:layout_width="68dp"
+                android:layout_height="68dp"
+                android:layout_marginTop="4dp"
+                android:contentDescription="@string/app_name"
+                android:padding="8dp"
+                android:src="@drawable/logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:accessibilityHeading="true"
+                android:gravity="center"
+                android:text="@string/complete_profile_heading"
+                android:textAppearance="@style/TextAppearance.BaSaya.Login.Brand"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="26sp"
+                tools:targetApi="p" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="20dp"
+                android:gravity="center"
+                android:maxWidth="320dp"
+                android:text="@string/complete_profile_subtitle"
+                android:textAppearance="@style/TextAppearance.BaSaya.Login.Body"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Material3.CardView.Elevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxWidth="480dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="20dp"
+                    android:paddingTop="22dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="22dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilFirstName"
+                        style="@style/Widget.BaSaya.Login.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/first_name"
+                        app:placeholderText="@string/ilagay_ang_iyong_first_name"
+                        app:startIconDrawable="@drawable/ic_user">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etFirstName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="personGivenName"
+                            android:imeOptions="actionNext"
+                            android:inputType="textPersonName|textCapWords"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilMiddleName"
+                        style="@style/Widget.BaSaya.Login.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/middle_name"
+                        app:helperText="@string/register_optional"
+                        app:placeholderText="@string/ilagay_ang_iyong_middle_name"
+                        app:startIconDrawable="@drawable/ic_user">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etMiddleName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="personMiddleName"
+                            android:imeOptions="actionNext"
+                            android:inputType="textPersonName|textCapWords"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilLastName"
+                        style="@style/Widget.BaSaya.Login.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/last_name"
+                        app:placeholderText="@string/ilagay_ang_iyong_last_name"
+                        app:startIconDrawable="@drawable/ic_user">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etLastName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="personFamilyName"
+                            android:imeOptions="actionNext"
+                            android:inputType="textPersonName|textCapWords"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.BaSaya.Login.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/complete_profile_email">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etEmail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="false"
+                            android:inputType="textEmailAddress"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="22dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCompleteProfile"
+                            style="@style/Widget.Material3.Button"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:minHeight="56dp"
+                            android:text="@string/complete_profile_action"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
+                            app:cornerRadius="16dp" />
+
+                        <ProgressBar
+                            android:id="@+id/progressCompleteProfile"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="18dp"
+                            android:contentDescription="@string/complete_profile_saving"
+                            android:indeterminateTint="?attr/colorPrimary"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/tvSignOut"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="48dp"
+                        android:text="@string/complete_profile_back"
+                        android:textAppearance="@style/TextAppearance.BaSaya.Login.Button" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
