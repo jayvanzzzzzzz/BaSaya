@@ -30,17 +30,18 @@ class ActivityRepository(private val context: Context) {
      * (called from the Download button flow) is allowed to persist locally.
      */
     suspend fun getActivity(lessonId: String): PracticeActivityData? {
+        LessonContentPrefetch.takeActivity(lessonId)?.let { return it }
+
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
-            // When online, refresh the downloaded copy so answer fixes made by the teacher in
-            // basaya-web reach the student. Offline, the saved copy is used as before.
-            val fresh = fetchFromFirestore(lessonId)
-            if (fresh != null) {
-                db.activityDao().insert(fresh.toEntity(lessonId))
-                return fresh
+            val saved = db.activityDao().getActivity(lessonId)?.toPracticeActivityData()
+            if (saved != null) {
+                DownloadedLessonRefresh.launch("activity:$lessonId") {
+                    fetchFromFirestore(lessonId)?.let { db.activityDao().insert(it.toEntity(lessonId)) }
+                }
+                return saved
             }
-            return db.activityDao().getActivity(lessonId)?.toPracticeActivityData()
         }
 
         return fetchFromFirestore(lessonId)

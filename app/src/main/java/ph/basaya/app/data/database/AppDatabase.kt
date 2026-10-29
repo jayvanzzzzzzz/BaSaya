@@ -14,6 +14,7 @@ import ph.basaya.app.data.dao.LectureDao
 import ph.basaya.app.data.dao.LessonDao
 import ph.basaya.app.data.dao.PronunciationDao
 import ph.basaya.app.data.dao.QuizDao
+import ph.basaya.app.data.dao.TeacherDictionaryDao
 import ph.basaya.app.data.entity.ActivityEntity
 import ph.basaya.app.data.entity.ClassNotificationEntity
 import ph.basaya.app.data.entity.CrosswordProgress
@@ -22,6 +23,7 @@ import ph.basaya.app.data.entity.LessonEntity
 import ph.basaya.app.data.entity.CrosswordLevelEntity
 import ph.basaya.app.data.entity.PronunciationEntity
 import ph.basaya.app.data.entity.QuizEntity
+import ph.basaya.app.data.entity.TeacherDictionaryEntity
 
 @Database(
     entities = [
@@ -32,9 +34,10 @@ import ph.basaya.app.data.entity.QuizEntity
         ActivityEntity::class,
         QuizEntity::class,
         PronunciationEntity::class,
-        ClassNotificationEntity::class
+        ClassNotificationEntity::class,
+        TeacherDictionaryEntity::class
     ],
-    version = 16
+    version = 17
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -46,6 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun quizDao(): QuizDao
     abstract fun pronunciationDao(): PronunciationDao
     abstract fun classNotificationDao(): ClassNotificationDao
+    abstract fun teacherDictionaryDao(): TeacherDictionaryDao
 
     companion object {
         /** v11: lessons.gameSkipped. Keeps downloaded lessons instead of wiping the database. */
@@ -97,6 +101,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v17: cached teacher/admin dictionary entries for offline lookup. */
+        private val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS teacher_dictionary (" +
+                        "`key` TEXT NOT NULL, word TEXT NOT NULL, accent TEXT NOT NULL, " +
+                        "sensesJson TEXT NOT NULL, synonymsJson TEXT NOT NULL, hidden INTEGER NOT NULL, " +
+                        "fixedSyllables TEXT NOT NULL, PRIMARY KEY(`key`))"
+                )
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -107,7 +123,11 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "game_database"
                 )
-                    .addMigrations(MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+                    .addMigrations(
+                        MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
+                        MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
+                        MIGRATION_16_17
+                    )
                     .fallbackToDestructiveMigration()
                     .build()
 

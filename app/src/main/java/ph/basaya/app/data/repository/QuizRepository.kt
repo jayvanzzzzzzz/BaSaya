@@ -26,17 +26,18 @@ class QuizRepository(private val context: Context) {
      * (called from the Download button flow) is allowed to persist locally.
      */
     suspend fun getQuiz(lessonId: String): Quiz? {
+        LessonContentPrefetch.takeQuiz(lessonId)?.let { return it }
+
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
-            // When online, refresh the downloaded copy so answer fixes made in basaya-web
-            // reach the student. Offline, the saved copy is used as before.
-            val fresh = fetchFromFirestore(lessonId)
-            if (fresh != null) {
-                db.quizDao().insert(fresh.toEntity(lessonId))
-                return fresh
+            val saved = db.quizDao().getQuiz(lessonId)?.toQuiz()
+            if (saved != null) {
+                DownloadedLessonRefresh.launch("quiz:$lessonId") {
+                    fetchFromFirestore(lessonId)?.let { db.quizDao().insert(it.toEntity(lessonId)) }
+                }
+                return saved
             }
-            return db.quizDao().getQuiz(lessonId)?.toQuiz()
         }
 
         return fetchFromFirestore(lessonId)

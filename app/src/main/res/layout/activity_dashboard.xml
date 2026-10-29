@@ -108,25 +108,29 @@
     </LinearLayout>
 
     <!-- ═══ Path ═══ -->
-    <ScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:scrollbars="none">
+        android:layout_weight="1">
 
-        <LinearLayout
-            android:id="@+id/dashboardContent"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipChildren="false"
+            android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingTop="20dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="24dp">
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/dashboardContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="vertical"
+                android:paddingStart="12dp"
+                android:paddingTop="20dp"
+                android:paddingEnd="18dp"
+                android:paddingBottom="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -552,6 +556,49 @@
                     </LinearLayout>
                 </FrameLayout>
             </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+            </LinearLayout>
+        </ScrollView>
+
+        <FrameLayout
+            android:id="@+id/contentLoadingOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#99000000"
+            android:clickable="true"
+            android:focusable="true"
+            android:importantForAccessibility="yes"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/pg_card"
+                android:elevation="8dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="28dp"
+                android:paddingTop="24dp"
+                android:paddingEnd="28dp"
+                android:paddingBottom="24dp">
+
+                <ProgressBar
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/pg_unawa" />
+
+                <TextView
+                    android:id="@+id/tvContentLoading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:fontFamily="@font/quicksand_medium"
+                    android:text="@string/lesson_dash_loading_content"
+                    android:textColor="@color/pg_ink"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
 </LinearLayout>

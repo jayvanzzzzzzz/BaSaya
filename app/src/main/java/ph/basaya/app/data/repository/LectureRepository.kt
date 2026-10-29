@@ -14,6 +14,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.Source
+import kotlinx.coroutines.CancellationException
 
 class LectureRepository(private val context: Context) {
 
@@ -26,14 +27,19 @@ class LectureRepository(private val context: Context) {
      * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
      */
     suspend fun getLecture(lessonId: String): Lecture? {
+        LessonContentPrefetch.takeLecture(lessonId)?.let { return it }
+
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
             val saved = savedLecture(lessonId)
-            // When online, refresh the downloaded copy so edits made in basaya-web reach the
-            // student (Gawain and quiz do the same). Offline, the saved copy is used as before.
-            val fresh = fetchFromFirestore(lessonId) ?: return saved
-            return if (refreshSaved(lessonId, fresh, saved)) fresh else saved
+            if (saved != null) {
+                DownloadedLessonRefresh.launch("lecture:$lessonId") {
+                    val fresh = fetchFromFirestore(lessonId) ?: return@launch
+                    refreshSaved(lessonId, fresh, saved)
+                }
+                return saved
+            }
         }
 
         return fetchFromFirestore(lessonId)
@@ -176,17 +182,24 @@ class LectureRepository(private val context: Context) {
             .addOnFailureListener { Log.w("LectureRepository", "Could not save lectureFinished", it) }
     }
 
-    suspend fun checkCompletion(userId: String, lessonId: String): Boolean {
+    suspend fun checkCompletion(userId: String, lessonId: String): Boolean? {
         // A Practice lesson saves nothing, so its quiz never waits for the lecture.
         if (PracticeLessons.isPractice(lessonId)) return true
-        val doc = firestore
-            .collection("users")
-            .document(userId)
-            .collection("assignedLessons")
-            .document(lessonId)
-            .get()
-            .await()
+        return try {
+            val doc = firestore
+                .collection("users")
+                .document(userId)
+                .collection("assignedLessons")
+                .document(lessonId)
+                .get()
+                .await()
 
-        return doc.getBoolean("lectureFinished") ?: false
+            doc.getBoolean("lectureFinished") ?: false
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("LectureRepository", "Could not check lecture completion for $lessonId", e)
+            null
+        }
     }
 }

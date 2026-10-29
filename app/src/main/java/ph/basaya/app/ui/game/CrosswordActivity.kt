@@ -56,6 +56,10 @@ import kotlin.math.sin
 
 class CrosswordActivity : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_CONTENT_READY = "CONTENT_READY"
+    }
+
     private var allGameLevels: List<CrosswordGameLevel> = emptyList()
     private lateinit var lessonId: String
 
@@ -548,7 +552,9 @@ class CrosswordActivity : AppCompatActivity() {
             }
             // Student's own progress state (not lesson content) — still fine
             // to persist locally regardless of download status.
-            repo.syncProgress(lessonId)
+            if (!intent.getBooleanExtra(EXTRA_CONTENT_READY, false)) {
+                repo.syncProgress(lessonId)
+            }
 
             if (allGameLevels.isEmpty()) {
                 // Offline, an empty list only means the levels couldn't be read, not that there are none.

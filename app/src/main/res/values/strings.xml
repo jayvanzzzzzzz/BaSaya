@@ -106,6 +106,8 @@
     <string name="lesson_dash_done">Tapos na</string>
     <string name="lesson_dash_locked_msg">Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
     <string name="lesson_dash_preparing">Inihahanda…</string>
+    <string name="lesson_dash_loading_content">Inihahanda ang nilalaman ng aralin…</string>
+    <string name="lesson_dash_content_load_failed">Hindi maihanda ang nilalaman ngayon. Suriin ang koneksyon at subukan muli.</string>
     <string name="lesson_dash_locked_cd">Naka-lock. Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
     <string name="lesson_dash_count_placeholder">…</string>
 

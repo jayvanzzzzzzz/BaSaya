@@ -8,6 +8,7 @@ import androidx.room.withTransaction
 import ph.basaya.app.data.progress.PracticeLessons
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
+import android.util.Log
 import kotlinx.coroutines.tasks.await
 import ph.basaya.app.data.entity.CrosswordProgress
 import com.google.firebase.auth.FirebaseAuth
@@ -32,13 +33,17 @@ class CrosswordRepository(private val context: Context) {
      * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
      */
     suspend fun getLevels(lessonId: String): List<CrosswordGameLevel> {
+        LessonContentPrefetch.takeGame(lessonId)?.let { return it }
+
         val isDownloaded = db.lessonDao().isLessonDownloaded(lessonId) ?: false
 
         if (isDownloaded) {
-            // When online, refresh the downloaded copy so level edits made in basaya-web reach
-            // the student (Gawain and quiz do the same). Offline, the saved copy is used as before.
-            fetchLevelEntities(lessonId)?.let { replaceSavedLevels(lessonId, it) }
-            return db.crosswordLevelDao().getLevelsForLesson(lessonId)
+            val saved = db.crosswordLevelDao().getLevelsForLesson(lessonId)
+            if (saved.isNotEmpty()) {
+                DownloadedLessonRefresh.launch("crossword:$lessonId") {
+                    fetchLevelEntities(lessonId)?.let { replaceSavedLevels(lessonId, it) }
+                }
+                return saved
                 .map { entity ->
                     CrosswordGameLevel(
                         id = entity.level,
@@ -46,6 +51,7 @@ class CrosswordRepository(private val context: Context) {
                         words = entity.words.split(",")
                     )
                 }
+            }
         }
 
         return fetchLevelsRemote(lessonId)
@@ -136,7 +142,12 @@ class CrosswordRepository(private val context: Context) {
      * it's kept separate from the download-only content caching rule above,
      * since gameplay can't function without somewhere to persist it.
      */
-    suspend fun syncProgress(lessonId: String) {
+    suspend fun syncProgress(
+        lessonId: String,
+        progressDocument: com.google.firebase.firestore.DocumentSnapshot? = null,
+        progressLoaded: Boolean = false,
+        cacheOnly: Boolean = false
+    ) {
 
         val existing = db.crosswordProgressDao().getProgress(lessonId)
         if (existing != null) return   // local progress already exists — don't touch it
@@ -144,15 +155,19 @@ class CrosswordRepository(private val context: Context) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         try {
-            val doc = firestore
-                .collection("users")
-                .document(uid)
-                .collection("assignedLessons")
-                .document(lessonId)
-                .get()
-                .await()
+            val doc = if (progressLoaded) {
+                progressDocument
+            } else {
+                firestore
+                    .collection("users")
+                    .document(uid)
+                    .collection("assignedLessons")
+                    .document(lessonId)
+                    .get(if (cacheOnly) Source.CACHE else Source.DEFAULT)
+                    .await()
+            }
 
-            if (doc.exists()) {
+            if (doc?.exists() == true) {
                 val currentLevel = doc.getLong("gameScore")?.toInt()?.plus(1) ?: 1
                 val completedLevel = doc.getLong("gameScore")?.toInt() ?: 0
 
@@ -164,7 +179,7 @@ class CrosswordRepository(private val context: Context) {
                         foundWords = ""
                     )
                 )
-            } else {
+            } else if (doc != null || !progressLoaded) {
                 db.crosswordProgressDao().saveProgress(
                     CrosswordProgress(
                         lessonId = lessonId,
@@ -175,7 +190,7 @@ class CrosswordRepository(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
-
+            Log.w("CrosswordRepository", "Could not load saved game progress for $lessonId", e)
         }
     }
 }

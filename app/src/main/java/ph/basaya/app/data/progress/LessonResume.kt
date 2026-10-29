@@ -4,8 +4,10 @@ import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Where the student stopped in the lecture, Gawain, Bigkas or quiz, so closing the screen or the
@@ -20,6 +22,9 @@ import kotlinx.coroutines.tasks.await
  */
 object LessonResume {
 
+    private data class PreloadedProgress(val snapshot: DocumentSnapshot?)
+    private val preloadedProgress = ConcurrentHashMap<String, PreloadedProgress>()
+
     const val LECTURE = "lecture"
     /** Crossword: { done: words found on the level being played, total, level }. */
     const val GAME = "game"
@@ -33,14 +38,33 @@ object LessonResume {
             .collection("assignedLessons").document(lessonId)
 
     /** The lesson's progress document, or null when it can't be read (offline with no cache). */
-    suspend fun loadProgress(uid: String, lessonId: String): DocumentSnapshot? =
+    suspend fun loadProgress(
+        uid: String,
+        lessonId: String,
+        cacheOnly: Boolean = false
+    ): DocumentSnapshot? =
         // A Practice lesson keeps no place: it always starts from the beginning.
         if (PracticeLessons.isPractice(lessonId)) null else try {
-            lessonDoc(uid, lessonId).get().await()
+            val preloaded = preloadedProgress.remove(progressKey(uid, lessonId))
+            if (preloaded != null) {
+                preloaded.snapshot
+            } else {
+                lessonDoc(uid, lessonId)
+                    .get(if (cacheOnly) Source.CACHE else Source.DEFAULT)
+                    .await()
+            }
         } catch (e: Exception) {
             Log.w("LessonResume", "Could not read progress for $lessonId", e)
             null
         }
+
+    fun preload(uid: String, lessonId: String, progress: DocumentSnapshot?) {
+        if (!PracticeLessons.isPractice(lessonId)) {
+            preloadedProgress[progressKey(uid, lessonId)] = PreloadedProgress(progress)
+        }
+    }
+
+    private fun progressKey(uid: String, lessonId: String) = "$uid:$lessonId"
 
     /** The saved place in one part, or null. A place saved for a different item count is ignored. */
     fun of(progress: DocumentSnapshot?, part: String, total: Int): Map<String, Any?>? {

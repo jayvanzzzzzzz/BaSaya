@@ -47,6 +47,7 @@ import ph.basaya.app.data.progress.PracticeLessons
 import ph.basaya.app.data.progress.Skill
 import ph.basaya.app.data.progress.SkillProgressRepository
 import ph.basaya.app.data.repository.PronunciationRepository
+import ph.basaya.app.data.repository.LessonContentPrefetch
 import ph.basaya.app.speech.PronunciationChecker
 import ph.basaya.app.speech.PronunciationScorer
 import ph.basaya.app.speech.VoiceRecorder
@@ -276,13 +277,25 @@ class PronunciationActivity : AppCompatActivity() {
             }
 
             syllables = wordList.map { Syllables.split(it.word) }.toMutableList()
-            entries = MutableList(wordList.size) { null }
-            wordList.forEachIndexed { index, item ->
-                launch {
-                    val entry = runCatching { Dictionary.lookup(this@PronunciationActivity, item.word) }.getOrNull()
-                    entries[index] = entry
+            val prefetchedEntries = LessonContentPrefetch.takePronunciationEntries(lessonId)
+            if (prefetchedEntries != null && prefetchedEntries.size == wordList.size) {
+                entries = prefetchedEntries.toMutableList()
+                entries.forEachIndexed { index, entry ->
                     entry?.fixedSyllables?.takeIf { it.isNotBlank() }?.let { syllables[index] = it }
-                    if (index == currentWordIndex && tvTargetWord.text.toString() == item.word) showSyllables()
+                }
+            } else {
+                entries = MutableList(wordList.size) { null }
+                wordList.forEachIndexed { index, item ->
+                    launch {
+                        val entry = runCatching {
+                            Dictionary.lookup(this@PronunciationActivity, item.word)
+                        }.getOrNull()
+                        entries[index] = entry
+                        entry?.fixedSyllables?.takeIf { it.isNotBlank() }?.let { syllables[index] = it }
+                        if (index == currentWordIndex && tvTargetWord.text.toString() == item.word) {
+                            showSyllables()
+                        }
+                    }
                 }
             }
 

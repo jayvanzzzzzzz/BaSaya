@@ -3,17 +3,15 @@ package ph.basaya.app.data.dictionary
 import android.content.Context
 import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldPath
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import ph.basaya.app.data.database.AppDatabase
+import ph.basaya.app.data.entity.TeacherDictionaryEntity
 import java.text.Collator
 import java.util.Locale
 
@@ -68,18 +66,17 @@ object Dictionary {
     /** Every match; the list's page nav splits them (like the website's MAX_RESULTS). */
     private const val MAX_RESULTS = 2000
 
+    internal val gson = Gson()
     private val collator: Collator = Collator.getInstance(Locale("fil"))
     private val seedLock = Mutex()
     private var seed: List<Entry>? = null
     private var seedByKey: Map<String, Entry> = emptyMap()
 
-    private fun words() = FirebaseFirestore.getInstance().collection("dictionary")
-
     /** The Wiktionary words, read from the app once. */
     suspend fun loadSeed(context: Context): List<Entry> = seedLock.withLock {
         seed ?: withContext(Dispatchers.IO) {
             val json = context.applicationContext.assets.open(SEED_ASSET).bufferedReader().use { it.readText() }
-            Gson().fromJson(json, Array<SeedEntry>::class.java)
+            gson.fromJson(json, Array<SeedEntry>::class.java)
                 .mapNotNull { row ->
                     val word = row.word ?: return@mapNotNull null
                     Entry(
@@ -100,62 +97,56 @@ object Dictionary {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun fromDoc(doc: DocumentSnapshot): Entry {
-        val senses = (doc.get("senses") as? List<Map<String, Any?>>).orEmpty().map { sense ->
+    internal fun sensesFromDocument(doc: DocumentSnapshot): List<Sense> =
+        (doc.get("senses") as? List<Map<String, Any?>>).orEmpty().map { sense ->
             Sense(
                 pos = sense["pos"] as? String ?: "",
                 definitions = (sense["definitions"] as? List<*>).orEmpty().filterIsInstance<String>(),
                 examples = (sense["examples"] as? List<*>).orEmpty().filterIsInstance<String>(),
             )
         }
+
+    private fun fromEntity(entity: TeacherDictionaryEntity): Entry {
+        val sensesType = object : TypeToken<List<Sense>>() {}.type
+        val synonymsType = object : TypeToken<List<String>>() {}.type
         return Entry(
-            word = doc.getString("word") ?: doc.id,
-            key = doc.id,
-            accent = doc.getString("accent").orEmpty(),
-            senses = senses,
-            synonyms = (doc.get("synonyms") as? List<*>).orEmpty().filterIsInstance<String>(),
+            word = entity.word,
+            key = entity.key,
+            accent = entity.accent,
+            senses = gson.fromJson(entity.sensesJson, sensesType) ?: emptyList(),
+            synonyms = gson.fromJson(entity.synonymsJson, synonymsType) ?: emptyList(),
             fromTeacher = true,
-            hidden = doc.getBoolean("hidden") == true,
-            fixedSyllables = doc.getString("syllables").orEmpty(),
+            hidden = entity.hidden,
+            fixedSyllables = entity.fixedSyllables
         )
     }
 
-    /**
-     * Teacher words are extra: offline, or before the dictionary rules are deployed,
-     * the Wiktionary words still work.
-     */
-    private suspend fun <T> orNull(block: suspend () -> T): T? =
+    private suspend fun cachedTeacherEntry(context: Context, key: String): Entry? =
         try {
-            block()
+            AppDatabase.getDatabase(context).teacherDictionaryDao().getByKey(key)?.let(::fromEntity)
         } catch (e: Exception) {
-            Log.w(TAG, "Teacher words unavailable", e)
+            Log.w(TAG, "Could not read cached dictionary entry $key", e)
             null
         }
 
-    private suspend fun teacherWordsStartingWith(prefix: String): List<Entry> =
-        orNull {
-            words()
-                .whereGreaterThanOrEqualTo("key", prefix)
-                .whereLessThanOrEqualTo("key", prefix + "")
-                .orderBy("key")
-                .limit(MAX_RESULTS.toLong())
-                .get()
-                .await()
-                .documents
-                .map(::fromDoc)
-        }.orEmpty()
+    private suspend fun cachedTeacherEntries(context: Context): List<Entry> =
+        try {
+            AppDatabase.getDatabase(context).teacherDictionaryDao().getAll().map(::fromEntity)
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not read cached teacher dictionary", e)
+            emptyList()
+        }
 
     /** Words starting with [text], the exact match first. Teacher words replace seed words. */
-    suspend fun search(context: Context, text: String): List<Entry> = coroutineScope {
+    suspend fun search(context: Context, text: String): List<Entry> {
         val prefix = DictionaryWords.normalize(text)
-        if (prefix.isEmpty()) return@coroutineScope emptyList()
-        val teacher = async { teacherWordsStartingWith(prefix) }
+        if (prefix.isEmpty()) return emptyList()
         val found = LinkedHashMap<String, Entry>()
         loadSeed(context).filter { it.key.startsWith(prefix) }.forEach { found[it.key] = it }
-        teacher.await().forEach { entry ->
+        cachedTeacherEntries(context).filter { it.key.startsWith(prefix) }.forEach { entry ->
             if (entry.hidden) found.remove(entry.key) else found[entry.key] = entry
         }
-        found.values
+        return found.values
             .sortedWith(compareBy<Entry> { it.key != prefix }.thenComparator { a, b -> collator.compare(a.key, b.key) })
             .take(MAX_RESULTS)
     }
@@ -165,8 +156,7 @@ object Dictionary {
         val key = DictionaryWords.normalize(text)
         if (key.isEmpty() || '/' in key) return null
         loadSeed(context)
-        val doc = orNull { words().document(key).get().await() }
-        if (doc != null && doc.exists()) return fromDoc(doc).takeUnless { it.hidden }
+        cachedTeacherEntry(context, key)?.let { return it.takeUnless { entry -> entry.hidden } }
         return seedByKey[key]
     }
 
@@ -175,9 +165,7 @@ object Dictionary {
         val roots = DictionaryWords.guessRoots(text).filter { '/' !in it }
         if (roots.isEmpty()) return emptyList()
         loadSeed(context)
-        val teacher = orNull {
-            words().whereIn(FieldPath.documentId(), roots.take(10)).get().await().documents.map(::fromDoc)
-        }.orEmpty().associateBy { it.key }
+        val teacher = cachedTeacherEntries(context).filter { it.key in roots }.associateBy { it.key }
         return roots
             .mapNotNull { teacher[it] ?: seedByKey[it] }
             .filterNot { it.hidden }
@@ -185,13 +173,13 @@ object Dictionary {
     }
 
     /**
-     * Every word, A to Z ("Lahat"): the seed with all teacher words laid over it, deleted
-     * ones left out. Reads every teacher doc once; offline it is just the seed.
+     * Every word, A to Z ("Lahat"): the seed with cached teacher words laid over it, deleted
+     * ones left out. The teacher dictionary is synchronized to Room while online.
      */
     suspend fun allWords(context: Context): List<Entry> {
         val found = LinkedHashMap<String, Entry>()
         loadSeed(context).forEach { found[it.key] = it }
-        orNull { words().get().await().documents.map(::fromDoc) }.orEmpty().forEach { entry ->
+        cachedTeacherEntries(context).forEach { entry ->
             if (entry.hidden) found.remove(entry.key) else found[entry.key] = entry
         }
         return found.values.sortedWith { a, b -> collator.compare(a.key, b.key) }
