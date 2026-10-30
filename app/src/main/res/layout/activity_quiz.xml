@@ -49,7 +49,7 @@
                     android:letterSpacing="0.12"
                     android:text="@string/qz_label"
                     android:textAllCaps="true"
-                    android:textColor="@color/qz_gold"
+                    android:textColor="@color/qz_label"
                     android:textSize="12sp" />
 
                 <TextView

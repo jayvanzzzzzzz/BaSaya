@@ -142,7 +142,7 @@
             android:fontFamily="@font/lexend"
             android:gravity="center"
             android:textColor="@color/pr_ink"
-            android:textSize="34sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             tools:text="Bahay" />
 

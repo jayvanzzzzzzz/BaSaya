@@ -18,6 +18,7 @@
     <color name="qz_c_lip">#A35E05</color>
     <color name="qz_d">#2FA84F</color>
     <color name="qz_d_lip">#1A6E31</color>
+    <color name="qz_label">@color/qz_gold</color>
     <color name="qz_gold">@color/ns_gold</color>
     <color name="qz_gold_lip">@color/ns_gold_lip</color>
     <color name="qz_disabled">#4DFFFFFF</color>

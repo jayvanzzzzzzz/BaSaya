@@ -97,8 +97,8 @@ class QuizActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        // Light status bar icons on the dark space background
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+        // Match status bar icons to the quiz background.
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) != android.content.res.Configuration.UI_MODE_NIGHT_YES
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
