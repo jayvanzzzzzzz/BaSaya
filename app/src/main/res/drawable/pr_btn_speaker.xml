@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The small coral speaker beside the Kahulugan pill: a 40dp circle with a 2dp lip, inset
-     4dp on every side so the button itself stays 48dp for an easy tap. -->
+<!-- The small coral speaker beside the Kahulugan pill: a 40dp circle with a 2dp lip, inset 4dp on every side so the button itself stays 48dp for an easy tap. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:bottom="4dp"

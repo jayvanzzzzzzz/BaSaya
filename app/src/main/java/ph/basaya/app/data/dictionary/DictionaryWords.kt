@@ -45,7 +45,7 @@ object DictionaryWords {
         return out.map { it.removePrefix("-") }.filter { it.length >= 3 && VOWEL.containsMatchIn(it) }
     }
 
-    /** Possible root words of an inflected word, closest first. Only a guess. */
+    /** Suggest root words, closest first; the caller checks which ones exist in the dictionary. */
     fun guessRoots(value: String, depth: Int = 3): List<String> {
         val start = normalize(value)
         val seen = mutableSetOf(start)

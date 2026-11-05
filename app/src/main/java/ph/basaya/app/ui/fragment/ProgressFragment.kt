@@ -43,10 +43,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/**
- * The student's own progress: five separate skill cards (never one combined score).
- * Scores come from [SkillScoring]; see README.md ("Paano kinukwenta ang progreso").
- */
+/** The student's own progress: five separate skill cards (never one combined score). Scores come from [SkillScoring]; see README.md ("Paano kinukwenta ang progreso"). */
 class ProgressFragment : Fragment() {
 
     /** How each skill looks on its card. */
@@ -153,8 +150,7 @@ class ProgressFragment : Fragment() {
             }
             val docs = LessonCompletion.classDocs(allDocs, classLessons)
 
-            // When the student joined this class (classes/{classId}/students/{uid}.joinedAt):
-            // lessons that closed before then don't count toward their totals.
+            // When the student joined this class (classes/{classId}/students/{uid}.joinedAt): lessons that closed before then don't count toward their totals.
             val joinedAt = classLessons.firstOrNull()?.classId?.takeIf { it.isNotBlank() }?.let { classId ->
                 try {
                     firestore.collection("classes").document(classId)
@@ -191,7 +187,7 @@ class ProgressFragment : Fragment() {
         }
     }
 
-    // ───────────────────────────── Hero ─────────────────────────────
+    // Hero
 
     private fun showHero(name: String?, docs: List<DocumentSnapshot>, summary: StudentSummary) {
         val firstName = name?.trim()?.split(" ")?.firstOrNull()?.takeIf { it.isNotBlank() }
@@ -230,7 +226,7 @@ class ProgressFragment : Fragment() {
         }, 300)
     }
 
-    // ───────────────────────────── Skill cards ─────────────────────────────
+    // Skill cards
 
     private fun showSkills(docs: List<DocumentSnapshot>, summary: StudentSummary) {
         skillsContainer.removeAllViews()
@@ -290,8 +286,7 @@ class ProgressFragment : Fragment() {
 
     /** Pag-unawa has no score until lectures have comprehension questions: show completion. */
     private fun lectureCompletionState(docs: List<DocumentSnapshot>): CardState {
-        // Out of the class's lessons (minus those closed before joining), not the number of
-        // progress documents
+        // Out of the class's lessons (minus those closed before joining), not the number of progress documents
         val ids = countedLessons.map { it.id }.toSet()
         val total = countedLessons.size
         val finished = docs.count { it.id in ids && it.getBoolean("lectureFinished") == true }
@@ -424,7 +419,7 @@ class ProgressFragment : Fragment() {
         }
     }
 
-    // ───────────────────────────── Words to practice ─────────────────────────────
+    // Words to practice
 
     /** Pronunciation words the student missed at least once, most recent lessons first. */
     private fun showHardWords(docs: List<DocumentSnapshot>) {

@@ -44,8 +44,7 @@ class LessonMessagingService : FirebaseMessagingService() {
         runBlocking {
             withTimeoutOrNull(15_000L) {
                 AppDatabase.getDatabase(context).classNotificationDao().upsertAll(listOf(item))
-                // Fetch the new lesson or the new deadline (and the real time) first, so the
-                // lesson and its deadline reminders are up to date.
+                // Fetch the new lesson or the new deadline (and the real time) first, so the lesson and its deadline reminders are up to date.
                 FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
                     runCatching { LessonRepository(context).syncLessons(uid) }
                 }

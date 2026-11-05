@@ -1,5 +1,7 @@
 package ph.basaya.app.data.repository
 
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.content.Context
 import android.util.Log
 import ph.basaya.app.data.audio.PronunciationAudioStore
@@ -20,10 +22,7 @@ class PronunciationRepository(private val context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val gson = Gson()
 
-    /**
-     * Room-first, Firestore-fallback for DISPLAY purposes only.
-     * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
-     */
+    /** Read from Room first, then Firestore for display only; only explicit downloads save lesson content to Room. */
     suspend fun getActivity(lessonId: String): PronunciationActivityData? {
         LessonContentPrefetch.takePronunciation(lessonId)?.let { return it }
 
@@ -57,8 +56,9 @@ class PronunciationRepository(private val context: Context) {
         onAudioFile: (done: Int, total: Int) -> Unit = { _, _ -> }
     ): Boolean {
         val fetched = fetchFromFirestore(lessonId) ?: return false
-        db.pronunciationDao().insert(fetched.toEntity(lessonId))
+        if (fetched.words.isEmpty()) return false
         PronunciationAudioStore.download(context, lessonId, fetched.audioRefs, onAudioFile)
+        db.pronunciationDao().insert(fetched.toEntity(lessonId))
         return true
     }
 
@@ -101,29 +101,7 @@ class PronunciationRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Saves without waiting: offline, Firestore keeps the write on the phone and sends it
-     * once the phone is back online, so the activity can close right away.
-     */
-    fun markActivityFinished(userId: String, lessonId: String, score: Int, total: Int) {
-        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
-        firestore
-            .collection("users")
-            .document(userId)
-            .collection("assignedLessons")
-            .document(lessonId)
-            .update(
-                mapOf(
-                    "pronunciationFinished" to true,
-                    "pronunciationScore" to score,
-                    "pronunciationTotal" to total,
-                    "pronunciationCompletedAt" to FieldValue.serverTimestamp()
-                )
-            )
-            .addOnFailureListener { Log.w("PronunciationRepository", "Could not save the pronunciation result", it) }
-    }
-
-    // --- Cloudflare audio ---
+    // Cloudflare audio
 
     /**
      * basaya-web writes `cloudAudio: [{ audioUrl, storageKey, text } | null]`, either on the
@@ -146,7 +124,7 @@ class PronunciationRepository(private val context: Context) {
         return (entry?.get("audioUrl") as? String)?.takeIf { it.startsWith("https://") }
     }
 
-    // --- Mapping helpers ---
+    // Mapping helpers
 
     private fun PronunciationEntity.toPronunciationActivityData(): PronunciationActivityData {
         val listType = object : TypeToken<List<String>>() {}.type

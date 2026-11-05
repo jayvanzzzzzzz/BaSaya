@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Applied to the login root so Material 3 components pick up the BaSaya blue
-         palette in both light and dark mode without changing the app-wide theme. -->
+    <!-- Applied to the login root so Material 3 components pick up the BaSaya blue palette in both light and dark mode without changing the app-wide theme. -->
     <style name="ThemeOverlay.BaSaya.Login" parent="ThemeOverlay.Material3">
         <item name="colorPrimary">@color/login_primary</item>
         <item name="colorOnPrimary">@color/login_on_primary</item>

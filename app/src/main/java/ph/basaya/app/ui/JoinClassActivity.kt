@@ -17,12 +17,16 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import ph.basaya.app.R
 import ph.basaya.app.data.auth.AuthHelper
-import ph.basaya.app.data.chat.ClassChat
-import ph.basaya.app.ui.game.ConfettiView
+import ph.basaya.app.data.membership.ClassMembership
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Source
 import ph.basaya.app.ui.pronunciation.PronunciationBookView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 class JoinClassActivity : AppCompatActivity() {
@@ -33,6 +37,9 @@ class JoinClassActivity : AppCompatActivity() {
     private lateinit var buddy: PronunciationBookView
     private lateinit var btnJoin: TextView
     private lateinit var tilClassCode: TextInputLayout
+    private var profileListener: ListenerRegistration? = null
+    private var pending = false
+    private var submitting = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +80,12 @@ class JoinClassActivity : AppCompatActivity() {
 
         loadSignedInAccount(tvFullName, tvEmail, tvAvatar)
 
-        val submit = {
+        btnJoin.setText(R.string.jc_request_send)
+        findViewById<TextView>(R.id.tvInstruction).setText(R.string.jc_request_instruction)
+
+        val submit = submit@{
+            if (submitting) return@submit
+            if (pending) { refreshStatus(); return@submit }
             val code = etClassCode.text?.toString()?.trim()?.uppercase().orEmpty()
 
             if (code.isEmpty()) {
@@ -114,74 +126,68 @@ class JoinClassActivity : AppCompatActivity() {
             }
     }
 
-    private fun joinClass(code: String) {
-        val uid = authHelper.getCurrentUser()?.uid
-        if (uid == null) {
-            Toast.makeText(this, getString(R.string.jc_need_login), Toast.LENGTH_SHORT).show()
+    override fun onStart() {
+        super.onStart()
+        val uid = authHelper.getCurrentUser()?.uid ?: return
+        profileListener = db.collection("users").document(uid).addSnapshotListener { profile, error ->
+            if (profile != null && error == null && !isFinishing) showMembership(profile)
+        }
+    }
+
+    override fun onStop() {
+        profileListener?.remove()
+        profileListener = null
+        super.onStop()
+    }
+
+    private fun showMembership(profile: DocumentSnapshot) {
+        if (!profile.getString("classId").isNullOrBlank()) {
+            setResult(RESULT_OK)
+            Toast.makeText(this, R.string.jc_request_approved, Toast.LENGTH_LONG).show()
+            finish()
             return
         }
+        pending = profile.getString("joinRequest.status") == "pending"
+        val className = profile.getString("joinRequest.className").orEmpty()
+        findViewById<View>(R.id.codeCard).visibility = if (pending) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.tvInstruction).text = when {
+            pending -> getString(R.string.jc_request_pending, className)
+            profile.getString("joinRequest.status") == "declined" -> getString(R.string.jc_request_declined, className)
+            else -> getString(R.string.jc_request_instruction)
+        }
+        if (!submitting) btnJoin.setText(if (pending) R.string.jc_request_check else R.string.jc_request_send)
+    }
 
+    private fun refreshStatus() {
+        val uid = authHelper.getCurrentUser()?.uid ?: return
         setJoining(true)
+        db.collection("users").document(uid).get(Source.SERVER)
+            .addOnSuccessListener { if (!isFinishing) { setJoining(false); showMembership(it) } }
+            .addOnFailureListener { if (!isFinishing) { setJoining(false); Toast.makeText(this, R.string.jc_connection, Toast.LENGTH_SHORT).show() } }
+    }
 
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { userDoc ->
-                val firstName = userDoc.getString("firstName") ?: ""
-                val lastName = userDoc.getString("lastName") ?: ""
-
-                val fullName = "$lastName, $firstName"
-
-                db.collection("classes")
-                    .whereEqualTo("classCode", code)
-                    .limit(1)
-                    .get()
-                    .addOnSuccessListener { snapshot ->
-                        if (snapshot.isEmpty) {
-                            setJoining(false)
-                            showCodeError(getString(R.string.jc_error_not_found))
-                            return@addOnSuccessListener
-                        }
-
-                        val classDoc = snapshot.documents[0]
-                        val classId = classDoc.id
-                        val className = classDoc.getString("className") ?: ""
-
-                        val studentRef = db.collection("classes").document(classId)
-                            .collection("students").document(uid)
-                        val userRef = db.collection("users").document(uid)
-
-                        val batch = db.batch()
-                        batch.set(studentRef, mapOf(
-                            "fullName" to fullName,
-                            "joinedAt" to FieldValue.serverTimestamp()
-                        ))
-                        batch.update(userRef, mapOf(
-                            "classId" to classId,
-                            "className" to className
-                        ))
-                        // "Si … ay sumali sa klase" in the class chat, in the same batch (the rules require it).
-                        ClassChat.addJoinNotice(batch, classId, uid, fullName)
-
-                        batch.commit()
-                            .addOnSuccessListener {
-                                celebrateAndClose(className)
-                            }
-                            .addOnFailureListener {
-                                setJoining(false)
-                                buddy.setMood(PronunciationBookView.Mood.CHEER)
-                                Toast.makeText(this, getString(R.string.jc_save_failed), Toast.LENGTH_SHORT).show()
-                            }
-                    }
-                    .addOnFailureListener {
-                        setJoining(false)
-                        buddy.setMood(PronunciationBookView.Mood.CHEER)
-                        Toast.makeText(this, getString(R.string.jc_connection), Toast.LENGTH_SHORT).show()
-                    }
-            }
-            .addOnFailureListener {
+    private fun joinClass(code: String) {
+        if (authHelper.getCurrentUser() == null) {
+            Toast.makeText(this, R.string.jc_need_login, Toast.LENGTH_SHORT).show()
+            return
+        }
+        setJoining(true)
+        lifecycleScope.launch {
+            try {
+                val className = ClassMembership.requestJoin(code)
+                pending = true
+                findViewById<View>(R.id.codeCard).visibility = View.GONE
+                findViewById<TextView>(R.id.tvInstruction).text = getString(R.string.jc_request_pending, className)
+                buddy.setMood(PronunciationBookView.Mood.HAPPY)
+                setResult(RESULT_OK)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                showCodeError(error.message ?: getString(R.string.jc_connection))
+            } finally {
                 setJoining(false)
-                buddy.setMood(PronunciationBookView.Mood.CHEER)
-                Toast.makeText(this, getString(R.string.jc_connection), Toast.LENGTH_SHORT).show()
             }
+        }
     }
 
     /** Wrong or empty code: the box shakes and the buddy cheers the child on. */
@@ -195,21 +201,10 @@ class JoinClassActivity : AppCompatActivity() {
         }
     }
 
-    /** Joined: buddy jumps, confetti falls, then the screen closes. */
-    private fun celebrateAndClose(className: String) {
-        btnJoin.isEnabled = true
-        btnJoin.isClickable = false
-        btnJoin.text = getString(R.string.jc_success, className)
-        buddy.setMood(PronunciationBookView.Mood.HAPPY)
-        findViewById<ConfettiView>(R.id.confettiView).rain(120)
-        Toast.makeText(this, getString(R.string.jc_success, className), Toast.LENGTH_SHORT).show()
-        setResult(RESULT_OK)
-        btnJoin.postDelayed({ if (!isFinishing) finish() }, 1600)
-    }
-
     private fun setJoining(isJoining: Boolean) {
+        submitting = isJoining
         btnJoin.isEnabled = !isJoining
-        btnJoin.text = if (isJoining) getString(R.string.jc_joining) else getString(R.string.join)
+        btnJoin.setText(if (isJoining) R.string.jc_request_sending else if (pending) R.string.jc_request_check else R.string.jc_request_send)
         if (isJoining) buddy.setMood(PronunciationBookView.Mood.THINKING)
     }
 

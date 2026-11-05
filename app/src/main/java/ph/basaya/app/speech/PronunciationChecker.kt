@@ -16,6 +16,7 @@ import android.speech.ModelDownloadListener
 
 class PronunciationChecker(private val context: Context) {
 
+    private var released = false
     private var speechRecognizer: SpeechRecognizer? = null
     private var currentLocaleAttempt = LOCALE_FIL
     private var targetWord: String = ""
@@ -38,10 +39,7 @@ class PronunciationChecker(private val context: Context) {
         /** Called if speech recognition isn't available on this device at all. */
         fun onUnavailable()
 
-        /**
-         * Called when the language pack isn't downloaded yet (Android 13+ only).
-         * The system download prompt has already been triggered — tell the user to wait/retry.
-         */
+        /** Called when the language pack isn't downloaded yet (Android 13+ only). The system download prompt has already been triggered — tell the user to wait/retry. */
         fun onLanguageDownloadTriggered()
 
         /** Live loudness of the child's voice, 0..1, for listening animations. */
@@ -49,6 +47,7 @@ class PronunciationChecker(private val context: Context) {
     }
 
     fun startListening(targetWord: String, listener: PronunciationResultListener) {
+        released = false
         this.targetWord = targetWord
         this.listener = listener
 
@@ -94,8 +93,7 @@ class PronunciationChecker(private val context: Context) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                                 triggerDownloadForLocale(locale, intent)
                             } else {
-                                // API 33 only: no locale-targeted download trigger exists.
-                                // Just attempt recognition directly; OS may use network as fallback.
+                                // API 33 only: no locale-targeted download trigger exists. Just attempt recognition directly; OS may use network as fallback.
                                 beginRecognition(locale)
                             }
                         }
@@ -133,8 +131,7 @@ class PronunciationChecker(private val context: Context) {
                 }
 
                 override fun onScheduled() {
-                    // Download queued but can't be satisfied immediately example no wifi.
-                    // No further updates will come on this listener.
+                    // Download queued but can't be satisfied immediately example no wifi. No further updates will come on this listener.
                     listener?.onLanguageDownloadTriggered()
                 }
 
@@ -149,7 +146,13 @@ class PronunciationChecker(private val context: Context) {
         )
     }
 
+    fun stopListening() {
+        released = true
+        speechRecognizer?.stopListening()
+    }
+
     private fun beginRecognition(locale: String) {
+        if (released) { listener?.onError("Walang recording. Pindutin muli ang mic."); return }
         speechRecognizer?.destroy()
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
         speechRecognizer?.setRecognitionListener(createRecognitionListener())
@@ -185,7 +188,7 @@ class PronunciationChecker(private val context: Context) {
             }
 
             override fun onError(error: Int) {
-                if (currentLocaleAttempt == LOCALE_FIL && isRetryableError(error)) {
+                if (!released && currentLocaleAttempt == LOCALE_FIL && isRetryableError(error)) {
                     currentLocaleAttempt = LOCALE_TL
                     beginRecognition(LOCALE_TL)
                 } else {
@@ -233,6 +236,8 @@ class PronunciationChecker(private val context: Context) {
     }
 
     fun destroy() {
+        released = true
+        listener = null
         speechRecognizer?.destroy()
         speechRecognizer = null
     }

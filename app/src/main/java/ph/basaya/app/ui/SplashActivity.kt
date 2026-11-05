@@ -35,6 +35,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import ph.basaya.app.R
+import ph.basaya.app.data.auth.awaitInitialUser
 import ph.basaya.app.data.repository.LessonPrefetch
 import ph.basaya.app.ui.theme.isNightTheme
 import ph.basaya.app.ui.theme.useDarkStatusBarIconsInLightTheme
@@ -70,19 +71,18 @@ class SplashActivity : AppCompatActivity() {
         buildLetterBlocks()
         playIntro()
 
-        val user = FirebaseAuth.getInstance().currentUser
-        val pendingGoogleProfileUid = getSharedPreferences(
-            CompleteProfileActivity.PREFS_NAME,
-            MODE_PRIVATE
-        ).getString(CompleteProfileActivity.KEY_PENDING_GOOGLE_UID, null)
-        val needsProfileCompletion = user != null && pendingGoogleProfileUid == user.uid
-        val sync = user?.takeUnless { needsProfileCompletion }?.let {
-            LessonPrefetch.start(this, it.uid)
-        }
-
         lifecycleScope.launch {
-            // Wait for the lessons, but never trap a child here on bad Wi-Fi: Home shows the
-            // cached lessons and picks up the still-running sync.
+            val user = FirebaseAuth.getInstance().awaitInitialUser()
+            val pendingGoogleProfileUid = getSharedPreferences(
+                CompleteProfileActivity.PREFS_NAME,
+                MODE_PRIVATE
+            ).getString(CompleteProfileActivity.KEY_PENDING_GOOGLE_UID, null)
+            val needsProfileCompletion = user != null && pendingGoogleProfileUid == user.uid
+            val sync = user?.takeUnless { needsProfileCompletion }?.let {
+                LessonPrefetch.start(this@SplashActivity, it.uid)
+            }
+
+            // Wait for the lessons, but never trap a child here on bad Wi-Fi: Home shows the cached lessons and picks up the still-running sync.
             if (sync != null) withTimeoutOrNull(MAX_WAIT_MS - elapsed()) { sync.await() }
             delay(MIN_SHOW_MS - elapsed())
             next = when {
@@ -238,7 +238,11 @@ class SplashActivity : AppCompatActivity() {
             .scaleX(1.12f).scaleY(1.12f).alpha(0f)
             .setDuration(260).setInterpolator(AccelerateInterpolator())
             .withEndAction {
-                startActivity(Intent(this, next), options.toBundle())
+                val destination = Intent(this, next)
+                if (next == MainActivity::class.java) {
+                    intent.extras?.let { destination.putExtras(it) }
+                }
+                startActivity(destination, options.toBundle())
                 finish()
             }
             .start()

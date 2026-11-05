@@ -11,17 +11,7 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.WriteBatch
 import kotlinx.coroutines.tasks.await
 
-/**
- * Class chat: one group chat per class (classes/{classId}/messages), shared with the
- * teacher's web app. The Firestore rules ("Class chat" in BaSaya-web/firestore.rules)
- * enforce what the app also checks here: up to [MAX_LENGTH] characters, one message every
- * [COOLDOWN_MS], only while the teacher keeps the chat open, and deleting your own
- * message only within [DELETE_WINDOW_MS].
- *
- * Reads are kept low: only the latest [PAGE] messages are live, older ones load on
- * request, Firestore's offline cache keeps what was already downloaded, and the unread
- * dot comes from chat/state (one small doc).
- */
+/** Shared class chat: live updates for recent messages, older messages on request, and unread counts in chat/state. */
 object ClassChat {
 
     const val PAGE = 30L
@@ -182,10 +172,7 @@ object ClassChat {
         classRef(classId).collection("students").document(uid).get().await()
             .getString("fullName").orEmpty()
 
-    /**
-     * Sends with one batch: the message, this student's last-send time (for the 5-second
-     * limit) and the class's last-message summary. Throws if the rules refuse it.
-     */
+    /** Sends with one batch: the message, this student's last-send time (for the 5-second limit) and the class's last-message summary. Throws if the rules refuse it. */
     suspend fun send(classId: String, uid: String, name: String, text: String) {
         val body = text.trim()
         require(body.isNotEmpty() && body.length <= MAX_LENGTH)
@@ -274,7 +261,7 @@ object ClassChat {
         batch.commit().await()
     }
 
-    // ---------- Members (the (i) button in the chat header) ----------
+    // Members (the (i) button in the chat header)
 
     data class Member(val id: String, val name: String)
 
@@ -311,7 +298,7 @@ object ClassChat {
         return Members(teacher, students)
     }
 
-    // ---------- Read state: kept on the phone (free) ----------
+    // Read state: kept on the phone (free)
 
     private const val PREFS = "class_chat"
 
@@ -330,7 +317,7 @@ object ClassChat {
         state.lastAt > lastRead(context, classId) &&
             (state.lastIsTeacher || state.lastSenderName != myName)
 
-    // ---------- Is the chat on screen? (skip push notifications while it is) ----------
+    // Is the chat on screen? (skip push notifications while it is)
 
     @Volatile
     var visibleClassId: String? = null

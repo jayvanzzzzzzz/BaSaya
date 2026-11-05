@@ -102,12 +102,6 @@ class QuizCompleteScreen : AppCompatActivity() {
                     finish()
                 }
             }
-        } else if (!Network.isOnline(this)) {
-            // Offline: the score was saved on the phone and is sent once online.
-            findViewById<TextView>(R.id.tvPracticeNote).apply {
-                setText(R.string.saved_offline_note)
-                visibility = View.VISIBLE
-            }
         }
 
         playEntrance(score, total, percent, starCount)

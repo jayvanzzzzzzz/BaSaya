@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recent_accounts_title">Recent accounts</string>
+    <string name="recent_accounts_hint">Choose your profile to sign in.</string>
+    <string name="recent_accounts_another">Log into another account</string>
+    <string name="recent_accounts_note">Accounts are remembered on this device. Your password is always required for email sign-in.</string>
+    <string name="recent_accounts_password">Enter password to sign in</string>
+    <string name="recent_accounts_google">Continue with Google</string>
+    <string name="recent_accounts_back">← Recent accounts</string>
+    <string name="recent_accounts_welcome">Welcome back</string>
+    <string name="recent_accounts_choose_cd">Sign in as %1$s</string>
+    <string name="recent_accounts_remove_cd">Remove %1$s from this device</string>
+    <string name="recent_accounts_remove_failed">Could not remove this saved profile. Please try again.</string>
+</resources>

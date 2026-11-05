@@ -2,16 +2,17 @@ package ph.basaya.app.ui
 
 import android.animation.ObjectAnimator
 import android.content.Intent
-import android.view.ViewGroup
+import android.content.res.Configuration
 import android.view.animation.DecelerateInterpolator
-import androidx.core.view.updateLayoutParams
 import java.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.PopupMenu
+import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
@@ -89,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     private var notStudent = false
 
     private var isProfileMenuActive = false
+    private var accountMenu: PopupWindow? = null
 
     // Class-level now — needed by animateChevron(), and by the avatar click listener below.
     private lateinit var ivProfileChevron: ImageView
@@ -102,6 +104,7 @@ class MainActivity : AppCompatActivity() {
     private val chatFragment by lazy { restoredTab("chat") ?: ChatFragment() }
     private val profileFragment by lazy { restoredTab("profile") ?: ProfileFragment() }
     private var selectedTab = 0
+    private var renderedNightMode = Configuration.UI_MODE_NIGHT_UNDEFINED
     private var savedFirstName: String? = null
 
     private inline fun <reified T : Fragment> restoredTab(tag: String): T? =
@@ -138,11 +141,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        renderedNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        ThemeReveal.prepareWindow(this)
 
         auth = FirebaseAuth.getInstance()
 
         if (auth.currentUser == null) {
-            startActivity(Intent(this, LogInActivity::class.java))
+            // A restored activity must also wait for the initial auth state on a cold start.
+            startActivity(Intent(this, SplashActivity::class.java).apply {
+                intent.getStringArrayExtra(EXTRA_HIGHLIGHT_LESSONS)?.let {
+                    putExtra(EXTRA_HIGHLIGHT_LESSONS, it)
+                }
+                putExtra(EXTRA_OPEN_CHAT, intent.getBooleanExtra(EXTRA_OPEN_CHAT, false))
+            })
             finish()
             return
         }
@@ -157,16 +168,14 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) askNotificationPermission()
 
         val appBar = findViewById<View>(R.id.appBarLayout)
-        val bottomNav = findViewById<View>(R.id.bottomNavCard)
-        val navBaseMargin = (bottomNav.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        val bottomNavContent = findViewById<View>(R.id.bottomNavContent)
 
-        // The top bar's gradient extends behind the status bar; the bottom nav floats above
-        // the system navigation bar.
+        // Extend both bars to the screen edges while keeping controls clear of system navigation.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             appBar.setPadding(appBar.paddingLeft, statusBarHeight, appBar.paddingRight, appBar.paddingBottom)
-            val navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            bottomNav.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = navBaseMargin + navBarHeight }
+            val navInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            bottomNavContent.setPadding(navInsets.left, 0, navInsets.right, navInsets.bottom)
             insets
         }
 
@@ -186,10 +195,9 @@ class MainActivity : AppCompatActivity() {
 
         ivProfileChevron = findViewById(R.id.ivProfileChevron)
 
-        findViewById<View>(R.id.tvAvatarInitial).setOnClickListener { view ->
-            isProfileMenuActive = !isProfileMenuActive
-            animateChevron(isProfileMenuActive)
-            showToolbarMenu(view)
+        findViewById<View>(R.id.tvAvatarInitial).apply {
+            contentDescription = getString(R.string.account_menu_open)
+            setOnClickListener { view -> showToolbarMenu(view) }
         }
 
         // White status bar icons on the gradient top bar
@@ -233,6 +241,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         auth.addAuthStateListener(authStateListener)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val nightMode = newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        if (nightMode != renderedNightMode && !isFinishing && !isDestroyed) {
+            renderedNightMode = nightMode
+            // A client-side recreate preserves the current window surface. Letting the system
+            // relaunch this activity for uiMode can discard it before the reveal can be drawn.
+            recreate()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -292,7 +311,7 @@ class MainActivity : AppCompatActivity() {
         auth.signOut()
     }
 
-    // ---------- Chat tab unread dot ----------
+    // Chat tab unread dot
 
     /** Follows the student's class (it can change: joined, left) and that class's chat/state. */
     private fun watchChatDot() {
@@ -418,6 +437,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        accountMenu?.dismiss()
         super.onDestroy()
         if (::authStateListener.isInitialized) {
             auth.removeAuthStateListener(authStateListener)
@@ -519,31 +539,59 @@ class MainActivity : AppCompatActivity() {
         }
     }*/
 
-    // Shared popup logic — called from both the avatar and the 3-dot button.
+    // Account details and sign-out, anchored to the avatar.
     private fun showToolbarMenu(anchor: View) {
-        val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.toolbar_menu, popup.menu)
+        if (accountMenu?.isShowing == true) {
+            accountMenu?.dismiss()
+            return
+        }
+        if (isFinishing || isDestroyed) return
 
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.menu_logout -> {
-                    auth.signOut()
-                    true
-                }
-                else -> false
+        val content = layoutInflater.inflate(R.layout.popup_account_menu, null)
+        val user = auth.currentUser
+        val name = findViewById<TextView>(R.id.tvFirstName).text.toString().trim()
+            .takeIf { it.isNotBlank() && it != "..." }
+            ?: user?.displayName?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.pf_student)
+        content.findViewById<TextView>(R.id.accountMenuName).text = name
+        content.findViewById<TextView>(R.id.accountMenuInitial).text = name.take(1).uppercase()
+        content.findViewById<TextView>(R.id.accountMenuEmail).apply {
+            text = user?.email.orEmpty()
+            visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
+        }
+
+        val density = resources.displayMetrics.density
+        val popup = PopupWindow(
+            content,
+            minOf((304 * density).toInt(), resources.displayMetrics.widthPixels - (32 * density).toInt()),
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply {
+            setBackgroundDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_account_menu))
+            elevation = 16 * density
+            isOutsideTouchable = true
+        }
+        accountMenu = popup
+        content.findViewById<View>(R.id.accountMenuLogout).setOnClickListener {
+            popup.dismiss()
+            LogoutDialog.show(this) {
+                ph.basaya.app.data.auth.RecentAccounts.remember(this, auth.currentUser)
+                auth.signOut()
             }
         }
 
-        // Reset the chevron if this menu was opened via the avatar and the
-        // user dismisses it without picking anything.
+        // Reset the chevron if this menu was opened via the avatar and the user dismisses it without picking anything.
         popup.setOnDismissListener {
+            if (accountMenu === popup) accountMenu = null
             if (isProfileMenuActive) {
                 isProfileMenuActive = false
                 animateChevron(false)
             }
         }
 
-        popup.show()
+        isProfileMenuActive = true
+        animateChevron(true)
+        popup.showAsDropDown(anchor, 0, (8 * density).toInt(), Gravity.START)
     }
 
     private fun switchTo(fragment: Fragment) {

@@ -64,7 +64,7 @@ object LessonResume {
         }
     }
 
-    private fun progressKey(uid: String, lessonId: String) = "$uid:$lessonId"
+    private fun progressKey(uid: String, lessonId: String) = "$uid:" + ProgressSession.gameKey(lessonId)
 
     /** The saved place in one part, or null. A place saved for a different item count is ignored. */
     fun of(progress: DocumentSnapshot?, part: String, total: Int): Map<String, Any?>? {
@@ -76,10 +76,7 @@ object LessonResume {
         return state + ("done" to done.coerceAtMost(total))
     }
 
-    /**
-     * The page the lecture opens on: the next unread page (the last page stays readable before
-     * finishing), or page 1 when rereading a finished lecture.
-     */
+    /** The page the lecture opens on: the next unread page (the last page stays readable before finishing), or page 1 when rereading a finished lecture. */
     fun lectureStartPage(progress: DocumentSnapshot?, pageCount: Int): Int {
         if (pageCount == 0 || progress?.getBoolean("lectureFinished") == true) return 0
         val done = of(progress, LECTURE, pageCount)?.get("done") as? Int ?: 0
@@ -112,15 +109,12 @@ object LessonResume {
         return (state?.get("total") as? Number)?.toInt()
     }
 
-    /**
-     * Saves the place without waiting: offline, Firestore keeps the write and sends it later,
-     * and losing one save only costs a few steps.
-     */
+    /** Saves the place without waiting: offline, Firestore keeps the write and sends it later, and losing one save only costs a few steps. */
     fun save(uid: String, lessonId: String, part: String, state: Map<String, Any>) {
         if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         lessonDoc(uid, lessonId)
             .set(
-                mapOf("resume" to mapOf(part to state + ("updatedAt" to FieldValue.serverTimestamp()))),
+                ProgressSession.stamp(uid, mapOf("resume" to mapOf(part to state + ("updatedAt" to FieldValue.serverTimestamp())))),
                 SetOptions.merge()
             )
             .addOnFailureListener { Log.w("LessonResume", "Could not save the $part place", it) }
@@ -130,7 +124,7 @@ object LessonResume {
     fun clear(uid: String, lessonId: String, part: String) {
         if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
         lessonDoc(uid, lessonId)
-            .set(mapOf("resume" to mapOf(part to FieldValue.delete())), SetOptions.merge())
+            .set(ProgressSession.stamp(uid, mapOf("resume" to mapOf(part to FieldValue.delete()))), SetOptions.merge())
             .addOnFailureListener { Log.w("LessonResume", "Could not clear the $part place", it) }
     }
 }

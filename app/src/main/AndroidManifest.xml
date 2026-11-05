@@ -10,7 +10,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Deadline reminders are alarms, which a restart clears: set them again after boot. -->
+    <!-- Restore deadline reminders after a device restart. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -95,9 +95,11 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.LogInActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.MainActivity"
+            android:configChanges="uiMode"
             android:exported="true" />
         <activity
             android:name=".ui.SplashActivity"

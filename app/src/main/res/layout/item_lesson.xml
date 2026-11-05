@@ -18,7 +18,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:gravity="top"
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingTop="14dp"
@@ -30,6 +30,17 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvContinueLesson"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:fontFamily="@font/be_vietnam_semi_bold"
+                android:text="@string/home_continue"
+                android:textColor="@color/home_accent"
+                android:textSize="11sp"
+                android:visibility="gone" />
 
             <!-- A. Title -->
             <TextView
@@ -44,7 +55,7 @@
                 android:textStyle="bold"
                 tools:text="Mga Pangngalan sa Ating Paligid" />
 
-            <!-- B. Meta: Aralin N · mode · ● difficulty (colors set in LessonAdapter) -->
+            <!-- B. Short metadata; practice remains explicitly labeled. -->
             <TextView
                 android:id="@+id/tvMeta"
                 android:layout_width="match_parent"
@@ -54,8 +65,8 @@
                 android:fontFamily="@font/public_sans"
                 android:maxLines="1"
                 android:textColor="@color/lesson_card_body"
-                android:textSize="13sp"
-                tools:text="Aralin 3 · Pagtataya · ● Beginner" />
+                android:textSize="12sp"
+                tools:text="Aralin 3 · Madali" />
 
             <!-- C. Teacher's schedule: opens on / deadline / closed. Hidden when there is none. -->
             <TextView
@@ -83,7 +94,7 @@
 
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="6dp"
+                    android:layout_height="4dp"
                     android:layout_weight="1"
                     android:importantForAccessibility="noHideDescendants"
                     android:orientation="horizontal">
@@ -134,25 +145,22 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- E. Offline download: outline arrow → percent ring → outline check (tap to remove).
-             The icon is small, but the tap target stays 48dp. -->
+        <!-- Download status is separate from the 48dp options target. -->
         <FrameLayout
-            android:id="@+id/downloadButton"
-            android:layout_width="48dp"
+            android:id="@+id/downloadStatus"
+            android:layout_width="22dp"
             android:layout_height="48dp"
             android:layout_marginStart="4dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:contentDescription="@string/lesson_card_download_cd"
-            android:focusable="true">
+            android:importantForAccessibility="yes"
+            android:visibility="gone">
 
             <ImageView
                 android:id="@+id/ibDownload"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:importantForAccessibility="no"
-                android:src="@drawable/ic_download" />
+                android:src="@drawable/ic_lesson_downloaded" />
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/pbDownload"
@@ -168,6 +176,23 @@
                 app:trackColor="@color/lesson_card_track"
                 app:trackCornerRadius="2dp"
                 app:trackThickness="2.5dp" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/downloadButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/lesson_card_download_options_cd"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_lesson_more" />
         </FrameLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

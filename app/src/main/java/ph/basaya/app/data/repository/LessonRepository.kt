@@ -1,5 +1,7 @@
 package ph.basaya.app.data.repository
 
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.content.Context
 import android.util.Log
 import ph.basaya.app.data.audio.LectureAudioStore
@@ -16,6 +18,9 @@ import ph.basaya.app.data.progress.PracticeLessons
 import ph.basaya.app.data.schedule.TrustedClock
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -45,6 +50,7 @@ class LessonRepository(private val context: Context) {
 
         // 1. Find the student's class — no class, no lessons.
         val userDoc = firestore.collection("users").document(userId).get().await()
+        ProgressSession.bind(userId, userDoc)
         val classId = userDoc.getString("classId")
         Log.d(TAG, "syncLessons uid=$userId classId=$classId")
         NotificationReadState.mergeRemote(
@@ -129,23 +135,23 @@ class LessonRepository(private val context: Context) {
             return
         }
 
-        // 3b. Fetch the actual lesson content docs by those IDs.
-        // whereIn supports up to 30 values per query — fine for a class-sized lesson list.
-        // If a class ever exceeds 30 lessons, this needs to be chunked into multiple queries.
-        val lessonsSnapshot = firestore
-            .collection("lessons")
-            .whereIn(com.google.firebase.firestore.FieldPath.documentId(), lessonIds)
-            .get()
-            .await()
-        Log.d(TAG, "lessons whereIn -> ${lessonsSnapshot.size()} docs")
-        val lessonDocs = lessonsSnapshot.documents.associateBy { it.id }
+        // 3b. Fetch in batches: Firestore allows at most 30 IDs per whereIn query.
+        // Await every batch before replacing local lessons, so a failed batch keeps the old list.
+        val lessonDocs = coroutineScope {
+            lessonIds.chunked(30).map { ids ->
+                async {
+                    firestore.collection("lessons")
+                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), ids)
+                        .get()
+                        .await()
+                        .documents
+                }
+            }.awaitAll().flatten().associateBy { it.id }
+        }
+        Log.d(TAG, "lessons whereIn -> ${lessonDocs.size} docs")
 
-        // preserve isDownloaded flags already stored locally
+        // Keep previous skip settings when the server cannot supply them.
         val existingLessons = db.lessonDao().getLessonsForUser(userId)
-        val existingDownloadedIds = existingLessons
-            .filter { it.isDownloaded }
-            .map { it.id }
-            .toSet()
 
         // Which lessons the teacher set to "Skip game" (read in parallel; offline keeps the last known value)
         val skippedGames = coroutineScope {
@@ -162,8 +168,7 @@ class LessonRepository(private val context: Context) {
             skippedActivities[lessonId] ?: previousSkippedActivities[lessonId] ?: false
         }
 
-        // When the student joined the class. A lesson whose deadline passed before then (and
-        // that they never finished) is left out: they could never have done it.
+        // When the student joined the class. A lesson whose deadline passed before then (and that they never finished) is left out: they could never have done it.
         val joinedAt = try {
             firestore.collection("classes").document(classId)
                 .collection("students").document(userId).get().await()
@@ -200,7 +205,8 @@ class LessonRepository(private val context: Context) {
                 gameFinished = progress?.gameFinished ?: false,
                 activityFinished = progress?.activityFinished ?: false,
                 quizFinished = progress?.quizFinished ?: false,
-                isDownloaded = existingDownloadedIds.contains(link.entryId),
+                // The DAO merges the latest local download state atomically when saving.
+                isDownloaded = false,
                 gameSkipped = gameSkipped(link.lessonId),
                 activitySkipped = activitySkipped(link.lessonId),
                 openAt = link.openAt,
@@ -211,8 +217,7 @@ class LessonRepository(private val context: Context) {
             )
         }
 
-        db.lessonDao().deleteLessonsForUser(userId)
-        db.lessonDao().insertAll(lessons)
+        db.lessonDao().replaceLessonsForUser(userId, lessons)
         PracticeLessons.set(links.filter { it.practice }.map { it.entryId })
 
         // Finishing a crossword level always saves gameScore, so a phone past level 1 with no
@@ -223,7 +228,7 @@ class LessonRepository(private val context: Context) {
             .map { it.id }
             .toSet()
         val resetGames = lessons.map { it.id }.filter { it !in gameScored }
-        if (resetGames.isNotEmpty()) db.crosswordProgressDao().deleteAdvancedProgress(resetGames)
+        if (resetGames.isNotEmpty()) db.crosswordProgressDao().deleteAdvancedProgress(resetGames.map { ProgressSession.gameKey(it) })
     }
 
     /** The class's "new lesson" notifications (classes/{classId}/notifications) into Room. */
@@ -294,8 +299,10 @@ class LessonRepository(private val context: Context) {
      * pronunciation steps get the biggest share and move per file; the text steps are 5% each.
      */
     suspend fun downloadLesson(lessonId: String, onProgress: (Int) -> Unit = {}): Boolean {
+        val downloadContext = currentCoroutineContext()
         var reported = 0
         fun report(percent: Int) {
+            downloadContext.ensureActive()
             if (percent > reported) {
                 reported = percent
                 onProgress(percent)
@@ -306,28 +313,45 @@ class LessonRepository(private val context: Context) {
         }
 
         return try {
+            val lesson = db.lessonDao().getLesson(lessonId)
+                ?: error("Lesson assignment is no longer available")
             val lectureRepo = LectureRepository(context)
             val crosswordRepo = CrosswordRepository(context)
             val activityRepo = ActivityRepository(context)
             val quizRepo = QuizRepository(context)
             val pronunciationRepo = PronunciationRepository(context)
 
-            lectureRepo.downloadLecture(lessonId, audioShare(0, 50))
+            check(lectureRepo.downloadLecture(lessonId, audioShare(0, 50))?.pages?.isNotEmpty() == true) {
+                "Lecture download did not complete"
+            }
             report(50)
-            crosswordRepo.syncLevels(lessonId)
+            if (!lesson.gameSkipped) {
+                check(crosswordRepo.syncLevels(lessonId)) { "Game download did not complete" }
+            }
             report(55)
             crosswordRepo.syncProgress(lessonId)
             report(60)
-            activityRepo.downloadActivity(lessonId)
+            if (!lesson.activitySkipped) {
+                check(activityRepo.downloadActivity(lessonId)) { "Activity download did not complete" }
+            }
             report(65)
-            quizRepo.downloadQuiz(lessonId)
+            check(quizRepo.downloadQuiz(lessonId)) { "Quiz download did not complete" }
             report(70)
-            pronunciationRepo.downloadPronunciation(lessonId, audioShare(70, 100))
+            // Reserve 100% for the successful database commit.
+            check(pronunciationRepo.downloadPronunciation(lessonId, audioShare(70, 99))) {
+                "Pronunciation download did not complete"
+            }
 
-            db.lessonDao().updateDownloaded(lessonId, true)
+            downloadContext.ensureActive()
+            check(db.lessonDao().completeDownload(lessonId, lesson.userId, lesson.classId)) {
+                "Lesson assignment changed before the download finished"
+            }
             report(100)
             true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
+            Log.w(TAG, "Lesson download failed: $lessonId", e)
             false
         }
     }

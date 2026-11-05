@@ -16,7 +16,7 @@
         android:clipToPadding="false"
         android:orientation="vertical">
 
-        <!-- ═══ Header ═══ -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -145,7 +145,7 @@
             tools:text="Pumili ng 2 salita"
             tools:visibility="visible" />
 
-        <!-- ═══ Worksheet ═══ -->
+        <!-- Worksheet -->
         <ScrollView
             android:id="@+id/worksheetScroll"
             android:layout_width="match_parent"
@@ -224,7 +224,7 @@
             </LinearLayout>
         </ScrollView>
 
-        <!-- ═══ Action button ═══ -->
+        <!-- Action button -->
         <TextView
             android:id="@+id/btnAction"
             android:layout_width="match_parent"

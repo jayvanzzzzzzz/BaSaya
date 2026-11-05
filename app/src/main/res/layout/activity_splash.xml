@@ -157,8 +157,7 @@
         app:tint="@color/splash_star_gold"
         tools:ignore="ContentDescription" />
 
-    <!-- Night Sky only: tiny extra twinkles. Kept after the stars above so the light theme's
-         pop-in timing stays the same. -->
+    <!-- Night Sky only: tiny extra twinkles. Kept after the stars above so the light theme's pop-in timing stays the same. -->
     <ImageView
         android:id="@+id/splashSparkleA"
         android:layout_width="14dp"

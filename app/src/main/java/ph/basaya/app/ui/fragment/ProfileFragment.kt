@@ -16,16 +16,17 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import ph.basaya.app.R
+import ph.basaya.app.data.auth.RecentAccounts
 import ph.basaya.app.data.auth.AuthHelper
 import ph.basaya.app.data.auth.PasswordRule
 import ph.basaya.app.ui.JoinClassActivity
 import ph.basaya.app.ui.LogInActivity
+import ph.basaya.app.ui.LogoutDialog
 import ph.basaya.app.ui.theme.ThemeMode
 import ph.basaya.app.ui.theme.ThemeReveal
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -52,10 +53,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
-/**
- * The student's account: who they are (editable name, gender, birthday; email is read-only),
- * password change, and logout.
- */
+/** The student's account: who they are (editable name, gender, birthday; email is read-only), password change, and logout. */
 class ProfileFragment : Fragment() {
 
     /** What's stored on users/{uid}. */
@@ -73,6 +71,10 @@ class ProfileFragment : Fragment() {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private var profile = Profile()
+    private var joinStatus = ""
+    private var requestedClass = ""
+    private var membershipListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private var membershipSignature: List<String?>? = null
 
     private lateinit var pfAvatar: TextView
     private lateinit var pfName: TextView
@@ -123,6 +125,10 @@ class ProfileFragment : Fragment() {
             joinClassLauncher.launch(Intent(requireContext(), JoinClassActivity::class.java))
         }
         btnLeaveStatusAction.setOnClickListener {
+            if (profile.classId.isBlank() && joinStatus.isNotBlank()) {
+                joinClassLauncher.launch(Intent(requireContext(), JoinClassActivity::class.java))
+                return@setOnClickListener
+            }
             if (leaveState == LeaveState.PENDING) showLeaveDialog(cancelling = true) else dismissDeclined()
         }
         showClassSection()
@@ -139,13 +145,15 @@ class ProfileFragment : Fragment() {
         return view
     }
 
-    // ───────────────────────────── Load & show ─────────────────────────────
+    // Load & show
 
     private fun loadProfile() {
         val uid = AuthHelper().getCurrentUser()?.uid ?: return
         firestore.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 if (!isAdded) return@addOnSuccessListener
+                joinStatus = doc.getString("joinRequest.status").orEmpty()
+                requestedClass = doc.getString("joinRequest.className").orEmpty()
                 profile = Profile(
                     firstName = doc.getString("firstName").orEmpty(),
                     middleName = doc.getString("middleName").orEmpty(),
@@ -174,14 +182,30 @@ class ProfileFragment : Fragment() {
         setValue(pfInfoBirthday, formatBirthday(profile.dob))
     }
 
-    // The bottom nav hides/shows fragments instead of recreating them: refresh when shown,
-    // e.g. after the teacher approved leaving the class.
+    // The bottom nav hides/shows fragments instead of recreating them: refresh when shown, e.g. after the teacher approved leaving the class.
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden && isAdded) loadProfile()
     }
 
-    // ───────────────────────────── My class / leaving ─────────────────────────────
+    override fun onStart() {
+        super.onStart()
+        val uid = AuthHelper().getCurrentUser()?.uid ?: return
+        membershipListener = firestore.collection("users").document(uid).addSnapshotListener { doc, _ ->
+            if (!isAdded || view == null || doc == null) return@addSnapshotListener
+            val signature = listOf(doc.getString("classId"), doc.getString("joinRequest.status"), doc.getString("joinRequest.requestId"))
+            if (membershipSignature != null && membershipSignature != signature) loadProfile()
+            membershipSignature = signature
+        }
+    }
+
+    override fun onStop() {
+        membershipListener?.remove()
+        membershipListener = null
+        super.onStop()
+    }
+
+    // My class / leaving
 
     private fun rosterRef() = AuthHelper().getCurrentUser()?.uid?.let { uid ->
         profile.classId.takeIf { it.isNotBlank() }?.let { classId ->
@@ -219,7 +243,18 @@ class ProfileFragment : Fragment() {
     private fun showClassSection() {
         val hasClass = profile.classId.isNotBlank()
         setValue(pfClassName, if (hasClass) profile.className.ifBlank { profile.classId } else "")
-        if (!hasClass) pfClassName.text = getString(R.string.pf_class_none)
+        if (!hasClass) pfClassName.text = requestedClass.ifBlank { getString(R.string.pf_class_none) }
+        if (!hasClass && joinStatus in listOf("pending", "declined")) {
+            pfLeaveStatus.setBackgroundResource(if (joinStatus == "pending") R.drawable.pf_status_pending else R.drawable.pf_status_declined)
+            pfLeaveStatusTitle.setText(if (joinStatus == "pending") R.string.jc_request_pending_title else R.string.jc_request_declined_title)
+            pfLeaveStatusText.text = getString(if (joinStatus == "pending") R.string.jc_request_pending else R.string.jc_request_declined, requestedClass)
+            btnLeaveStatusAction.setText(if (joinStatus == "pending") R.string.jc_request_check else R.string.jc_request_send)
+            pfLeaveStatus.visibility = View.VISIBLE
+            pfLeaveDivider.visibility = View.GONE
+            rowLeaveClass.visibility = View.GONE
+            rowJoinClass.visibility = View.GONE
+            return
+        }
 
         when (leaveState) {
             LeaveState.PENDING -> {
@@ -349,7 +384,7 @@ class ProfileFragment : Fragment() {
         view.setTextColor(ContextCompat.getColor(requireContext(), if (empty) R.color.pg_ink_soft else R.color.pg_ink))
     }
 
-    // ───────────────────────────── Edit account ─────────────────────────────
+    // Edit account
 
     private fun showEditSheet() {
         val sheet = BottomSheetDialog(requireContext())
@@ -470,7 +505,7 @@ class ProfileFragment : Fragment() {
         else -> ""
     }
 
-    // ───────────────────────────── Birthday ─────────────────────────────
+    // Birthday
 
     private fun showBirthdayPicker(current: String, onPicked: (String) -> Unit) {
         val selection = parseDob(current)
@@ -502,7 +537,7 @@ class ProfileFragment : Fragment() {
         return "$month ${calendar.get(Calendar.DAY_OF_MONTH)}, ${calendar.get(Calendar.YEAR)}"
     }
 
-    // ───────────────────────────── Password ─────────────────────────────
+    // Password
 
     private fun showPasswordSheet() {
         val sheet = BottomSheetDialog(requireContext())
@@ -576,12 +611,9 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    // ───────────────────────────── Theme ─────────────────────────────
+    // Theme
 
-    /**
-     * System / Light / Dark. Picking one re-themes the app right away: the screen is recreated
-     * and the new colors grow out of the tapped button (see [ThemeReveal]).
-     */
+    /** System / Light / Dark. Picking one re-themes the app right away: the screen is recreated and the new colors grow out of the tapped button (see [ThemeReveal]). */
     private fun setupThemePicker(group: MaterialButtonToggleGroup) {
         val buttons = mapOf(
             ThemeMode.SYSTEM to R.id.pfThemeSystem,
@@ -596,7 +628,9 @@ class ProfileFragment : Fragment() {
             // Let the segment show as picked for a moment before the screen is recreated.
             val tapped = group.findViewById<View>(checkedId)
             group.postDelayed({
-                if (isAdded) ThemeReveal.switchTo(requireActivity(), mode, tapped)
+                if (isAdded && group.checkedButtonId == checkedId) {
+                    ThemeReveal.switchTo(requireActivity(), mode, tapped)
+                }
             }, 120)
         }
     }
@@ -627,21 +661,18 @@ class ProfileFragment : Fragment() {
         if (scrollY > 0) view.doOnLayout { view.scrollTo(0, scrollY) }
     }
 
-    // ───────────────────────────── Logout & version ─────────────────────────────
+    // Logout & version
 
     private fun confirmLogout() {
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.pf_logout)
-            .setMessage(R.string.pf_logout_confirm)
-            .setPositiveButton(R.string.pf_yes) { _, _ ->
-                FirebaseAuth.getInstance().signOut()
-                val intent = Intent(requireContext(), LogInActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                requireActivity().finish()
-            }
-            .setNegativeButton(R.string.pf_no, null)
-            .show()
+        LogoutDialog.show(requireContext()) {
+            RecentAccounts.remember(requireContext(), FirebaseAuth.getInstance().currentUser,
+                mapOf("displayName" to profile.fullName))
+            FirebaseAuth.getInstance().signOut()
+            val intent = Intent(requireContext(), LogInActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            requireActivity().finish()
+        }
     }
 
     private fun setupAppVersion(tvVersion: TextView) {

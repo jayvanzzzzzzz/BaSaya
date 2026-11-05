@@ -21,7 +21,7 @@
         android:paddingEnd="20dp"
         android:paddingBottom="32dp">
 
-        <!-- ═══ Header ═══ -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,7 +82,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ═══ My info ═══ -->
+        <!-- My info -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -198,7 +198,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ═══ My class: leaving needs the teacher's approval ═══ -->
+        <!-- My class: leaving needs the teacher's approval -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -369,7 +369,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ═══ Appearance: System / Light / Dark ═══ -->
+        <!-- Appearance: System / Light / Dark -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -443,7 +443,7 @@
             </com.google.android.material.button.MaterialButtonToggleGroup>
         </LinearLayout>
 
-        <!-- ═══ Security ═══ -->
+        <!-- Security -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -497,7 +497,7 @@
                 app:tint="@color/pg_ink_soft" />
         </LinearLayout>
 
-        <!-- ═══ Logout ═══ -->
+        <!-- Logout -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogout"
             style="@style/Widget.Material3.Button.OutlinedButton"

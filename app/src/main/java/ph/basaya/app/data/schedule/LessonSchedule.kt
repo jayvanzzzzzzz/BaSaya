@@ -6,11 +6,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * The teacher's optional open date and deadline (classes/{classId}/classLessons/{lessonId}),
- * checked against [TrustedClock] so changing the phone's date doesn't unlock anything.
- * Firestore rules check the same dates with server time when progress is saved.
- */
+/** Check lesson dates with TrustedClock; Firestore also checks server time when progress is saved. */
 object LessonSchedule {
 
     enum class Availability {
@@ -30,8 +26,7 @@ object LessonSchedule {
         if (lesson.openAt != null && (known == null || known < lesson.openAt)) {
             return if (now != null) Availability.NOT_YET_OPEN else Availability.NEEDS_INTERNET
         }
-        // Without an exact clock, the deadline counts only once it has surely passed;
-        // the server still rejects late progress when it syncs.
+        // Without an exact clock, the deadline counts only once it has surely passed; the server still rejects late progress when it syncs.
         if (lesson.dueAt != null && known != null && known > lesson.dueAt) {
             return Availability.CLOSED
         }

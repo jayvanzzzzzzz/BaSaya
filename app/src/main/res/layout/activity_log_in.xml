@@ -41,6 +41,7 @@
         tools:ignore="ContentDescription" />
 
     <ScrollView
+        android:id="@+id/loginScroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -114,8 +115,11 @@
                     android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
+                <include layout="@layout/view_recent_accounts" />
+
                 <!-- Form surface -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/loginFormCard"
                     style="@style/Widget.Material3.CardView.Elevated"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -132,7 +136,13 @@
                         android:paddingEnd="24dp"
                         android:paddingBottom="24dp">
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBackToAccounts" style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_gravity="start" android:text="@string/recent_accounts_back" android:visibility="gone" />
+                        <include layout="@layout/view_selected_account" />
                         <TextView
+                            android:id="@+id/loginHeading"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:accessibilityHeading="true"
@@ -146,6 +156,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:layout_marginBottom="24dp"
+                            android:id="@+id/loginInstruction"
                             android:text="@string/login_instruction"
                             android:textAppearance="@style/TextAppearance.BaSaya.Login.Body"
                             android:textColor="?attr/colorOnSurfaceVariant" />
@@ -156,7 +167,6 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="@string/email"
-                            app:placeholderText="@string/ilagay_ang_iyong_email"
                             app:startIconDrawable="@drawable/ic_email">
 
                             <com.google.android.material.textfield.TextInputEditText
@@ -167,7 +177,10 @@
                                 android:imeOptions="actionNext"
                                 android:inputType="textEmailAddress"
                                 android:maxLines="1"
+                                android:minHeight="48dp"
                                 android:nextFocusDown="@id/etPassword"
+                                android:paddingTop="12dp"
+                                android:paddingBottom="12dp"
                                 android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
                         </com.google.android.material.textfield.TextInputLayout>
 
@@ -180,7 +193,6 @@
                             android:hint="@string/password"
                             app:endIconMode="password_toggle"
                             app:errorIconDrawable="@null"
-                            app:placeholderText="@string/ilagay_ang_iyong_password"
                             app:startIconDrawable="@drawable/ic_lock">
 
                             <com.google.android.material.textfield.TextInputEditText
@@ -191,6 +203,9 @@
                                 android:imeOptions="actionDone"
                                 android:inputType="textPassword"
                                 android:maxLines="1"
+                                android:minHeight="48dp"
+                                android:paddingTop="12dp"
+                                android:paddingBottom="12dp"
                                 android:textAppearance="@style/TextAppearance.BaSaya.Login.Tagline" />
                         </com.google.android.material.textfield.TextInputLayout>
 
@@ -209,9 +224,9 @@
                             android:textAppearance="@style/TextAppearance.BaSaya.Login.Button"
                             android:textSize="14sp" />
 
-                        <!-- Primary action. imgLoginArrow / progressLogin overlay the button and are
-                             swapped by LogInActivity.setLoading(). -->
+                        <!-- Primary action. imgLoginArrow / progressLogin overlay the button and are swapped by LogInActivity.setLoading(). -->
                         <FrameLayout
+                            android:id="@+id/loginPrimaryAction"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp">

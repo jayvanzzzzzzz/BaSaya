@@ -1,5 +1,8 @@
 package ph.basaya.app.ui.activity
 
+import ph.basaya.app.data.assessment.*
+import ph.basaya.app.ui.AssessmentUi
+
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.graphics.drawable.Drawable
@@ -44,6 +47,10 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class PracticeActivity : AppCompatActivity() {
+    private var assessment: AssessmentSession? = null
+    private var acceptedRight: Boolean? = null
+    private var submitting = false
+
 
     private lateinit var lessonId: String
     private lateinit var activityRepository: ActivityRepository
@@ -131,14 +138,19 @@ class PracticeActivity : AppCompatActivity() {
 
         activityRepository = ActivityRepository(this)
 
-        lifecycleScope.launch {
+        AssessmentUi.run(this) {
+            if (!ph.basaya.app.data.progress.PracticeLessons.refresh(this@PracticeActivity, lessonId) || ph.basaya.app.utils.Network.isOnline(this@PracticeActivity))
+                assessment = AssessmentSession.open(this@PracticeActivity, lessonId)
             val fetched = activityRepository.getActivity(lessonId)
 
             if (fetched == null || fetched.pages.isEmpty()) {
                 Toast.makeText(this@PracticeActivity, getString(R.string.ac_not_found), Toast.LENGTH_SHORT).show()
                 finish()
-                return@launch
+                return@run
             }
+
+            if (assessment == null && fetched.pages.any { it.pickCount != null })
+                throw AssessmentFailure(0, "Kumonekta upang masuri ang mga sagot sa pagsasanay.")
 
             practiceData = fetched
             tvActivityTitle.text = practiceData.title
@@ -146,20 +158,22 @@ class PracticeActivity : AppCompatActivity() {
 
             // Continue where the child closed the Gawain (here or on the website).
             val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val confirmed = assessment?.progress()
             val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
-            if (progress?.getBoolean("activityFinished") == true) {
+            if (confirmed?.flag("activityFinished") == true) {
                 finish()
-                return@launch
+                return@run
             }
-            LessonResume.of(progress, LessonResume.ACTIVITY, practiceData.pages.size)?.let { resume ->
-                currentPageIndex = (resume["done"] as Int).coerceAtMost(practiceData.pages.lastIndex)
+            confirmed?.getAsJsonObject("resume")?.getAsJsonObject("activity")?.let { saved ->
+                val resume = com.google.gson.Gson().fromJson(saved, Map::class.java)
+                currentPageIndex = ((resume["done"] as Number).toInt()).coerceAtMost(practiceData.pages.lastIndex)
                 score = (resume["score"] as? Number)?.toInt() ?: 0
                 retries = (resume["retries"] as? Number)?.toInt() ?: 0
                 // Places saved before lives existed only know whether the page was tried.
                 lives = ((resume["lives"] as? Number)?.toInt()
                     ?: if (resume["tried"] == true) MAX_LIVES - 1 else MAX_LIVES)
                     .coerceIn(1, MAX_LIVES)
-                allAnswered = (resume["done"] as Int) >= practiceData.pages.size
+                allAnswered = ((resume["done"] as Number).toInt()) >= practiceData.pages.size
             }
 
             setupProgressTrack()
@@ -169,13 +183,28 @@ class PracticeActivity : AppCompatActivity() {
             // Every page was answered before closing: only the result is left to save.
             if (allAnswered) {
                 finishActivity()
-                return@launch
+                return@run
             }
 
             btnAction.setOnClickListener {
                 pressBounce(btnAction)
+                if (submitting) return@setOnClickListener
                 if (!hasChecked) {
-                    checkAnswer()
+                    if (assessment == null) checkAnswer() else {
+                        submitting = true
+                        btnAction.isEnabled = false
+                        val selection = selectedIndices.toList()
+                        AssessmentUi.run(this@PracticeActivity) {
+                            val result = assessment!!.request("answer", "activity", fields("index" to currentPageIndex, "selected" to selection))
+                            acceptedRight = result.flag("right")
+                            val indices = result.getAsJsonArray("correctIndices")?.map { it.asInt }.orEmpty()
+                            val pages = practiceData.pages.toMutableList()
+                            pages[currentPageIndex] = pages[currentPageIndex].copy(correctIndices = indices, explanation = result.text("explanation"))
+                            practiceData = practiceData.copy(pages = pages)
+                            submitting = false
+                            checkAnswer()
+                        }
+                    }
                 } else {
                     goToNext()
                 }
@@ -183,7 +212,7 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Progress ─────────────────────────────
+    // Progress
 
     private fun setupProgressTrack() {
         llProgressBars.removeAllViews()
@@ -220,7 +249,7 @@ class PracticeActivity : AppCompatActivity() {
         updateLives()
     }
 
-    // ───────────────────────────── Lives ─────────────────────────────
+    // Lives
 
     private fun setupLives() {
         llLives.removeAllViews()
@@ -247,13 +276,14 @@ class PracticeActivity : AppCompatActivity() {
         llLives.contentDescription = getString(R.string.ac_lives_cd, lives, MAX_LIVES)
     }
 
-    // ───────────────────────────── Page & tiles ─────────────────────────────
+    // Page & tiles
 
     private fun showPage(index: Int, animateIn: Boolean = true) {
         val page = practiceData.pages[index]
 
         // Tell the child how many words to pick (pages can have more than one answer)
-        val pickCount = page.correctIndices.distinct().size
+        acceptedRight = null
+        val pickCount = page.pickCount ?: page.correctIndices.distinct().size
         tvPickCount.visibility = if (pickCount > 0) View.VISIBLE else View.GONE
         tvPickCount.text = getString(R.string.ac_pick_count, pickCount)
 
@@ -287,7 +317,7 @@ class PracticeActivity : AppCompatActivity() {
                 }
 
                 setOnClickListener {
-                    if (hasChecked) return@setOnClickListener
+                    if (hasChecked || submitting) return@setOnClickListener
 
                     if (selectedIndices.contains(wordIndex)) {
                         selectedIndices.remove(wordIndex)
@@ -362,7 +392,7 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Checking ─────────────────────────────
+    // Checking
 
     /**
      * A page is right when the child picked exactly the correct words. A page saved in
@@ -373,7 +403,7 @@ class PracticeActivity : AppCompatActivity() {
         return correctSet.isEmpty() || selectedIndices == correctSet
     }
 
-    private fun isCurrentAnswerCorrect(): Boolean = isPageCorrect(practiceData.pages[currentPageIndex])
+    private fun isCurrentAnswerCorrect(): Boolean = acceptedRight ?: isPageCorrect(practiceData.pages[currentPageIndex])
 
     /** The page is over once it's right or its lives ran out. */
     private fun isPageOver(): Boolean = hasChecked && (isCurrentAnswerCorrect() || lives == 0)
@@ -381,7 +411,7 @@ class PracticeActivity : AppCompatActivity() {
     private fun checkAnswer() {
         val page = practiceData.pages[currentPageIndex]
         val correctSet = page.correctIndices.toSet()
-        val isCorrect = isPageCorrect(page)
+        val isCorrect = acceptedRight ?: isPageCorrect(page)
         // Every pick is right, but some correct words are still missing
         val isIncomplete = !isCorrect && selectedIndices.isNotEmpty() && correctSet.containsAll(selectedIndices)
         val explanation = page.explanation ?: practiceData.explanation
@@ -422,10 +452,10 @@ class PracticeActivity : AppCompatActivity() {
         }
 
         hasChecked = true
+        btnAction.isEnabled = true
         updateProgressTrack()
 
-        // A page right within its lives earns the point; wrong checks are counted as retries
-        // so they still show up in the student's progress.
+        // A page right within its lives earns the point; wrong checks are counted as retries so they still show up in the student's progress.
         if (isCorrect) score++
         savePlace(if (isPageOver()) currentPageIndex + 1 else currentPageIndex)
         val lastPage = currentPageIndex == practiceData.pages.lastIndex
@@ -453,19 +483,7 @@ class PracticeActivity : AppCompatActivity() {
     }
 
     /** Saves the place: `done` pages finished, and the lives left on page `done`. */
-    private fun savePlace(done: Int) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        LessonResume.save(
-            uid, lessonId, LessonResume.ACTIVITY,
-            mapOf(
-                "done" to done,
-                "total" to practiceData.pages.size,
-                "score" to score,
-                "retries" to retries,
-                "lives" to (if (done == currentPageIndex) lives else MAX_LIVES)
-            )
-        )
-    }
+    private fun savePlace(done: Int) { /* Server receipts own assessed progress. */ }
 
     private fun goToNext() {
         if (!isPageOver()) {
@@ -487,31 +505,11 @@ class PracticeActivity : AppCompatActivity() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         btnAction.isEnabled = false
 
-        lifecycleScope.launch {
-            if (uid != null) {
-                try {
-                    activityRepository.markActivityFinished(uid, lessonId, score, total)
-                } catch (e: Exception) {
-                    Log.e("PracticeActivity", "Failed to save activity result", e)
-                }
-                LessonResume.clear(uid, lessonId, LessonResume.ACTIVITY)
-
-                // Pagkilala sa salita skill
-                try {
-                    SkillProgressRepository().recordResult(
-                        uid, lessonId, Skill.PAGKILALA,
-                        correct = score, attempts = total, items = total,
-                        extras = mapOf("retries" to retries)
-                    )
-                    SkillProgressRepository.refreshInBackground(uid)
-                } catch (e: Exception) {
-                    Log.e("PracticeActivity", "Failed to save word recognition progress", e)
-                }
-            }
-
+        AssessmentUi.run(this) {
+            val accepted = assessment?.takeUnless { it.practice }?.finish("activity")
             val intent = Intent(this@PracticeActivity, PracticeCompleteScreen::class.java).apply {
-                putExtra("SCORE", score)
-                putExtra("TOTAL", total)
+                putExtra("SCORE", accepted?.number("score", score) ?: score)
+                putExtra("TOTAL", accepted?.number("total", total) ?: total)
                 putExtra("ACTIVITY_TITLE", practiceData.title)
                 putExtra("LESSON_ID", lessonId)
             }
@@ -520,7 +518,7 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Feedback ─────────────────────────────
+    // Feedback
 
     private fun showFeedback(good: Boolean, text: String) {
         feedbackContainer.setBackgroundResource(if (good) R.drawable.ac_feedback_good else R.drawable.ac_feedback_retry)
@@ -568,7 +566,7 @@ class PracticeActivity : AppCompatActivity() {
         )
     }
 
-    // ───────────────────────────── Motion helpers ─────────────────────────────
+    // Motion helpers
 
     private fun pop(view: View, peak: Float) {
         view.animate().cancel()

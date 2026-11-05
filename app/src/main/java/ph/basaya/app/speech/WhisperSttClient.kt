@@ -8,10 +8,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Sends a recorded word to the basaya-stt Cloudflare Worker (Whisper, Tagalog).
- * See cloudflare/basaya-stt/README.md for deployment and local.properties setup.
- */
+/** Sends a recorded word to the basaya-stt Cloudflare Worker (Whisper, Tagalog). See cloudflare/basaya-stt/README.md for deployment and local.properties setup. */
 class WhisperSttClient(
     private val workerUrl: String = BuildConfig.STT_WORKER_URL,
     private val appKey: String = BuildConfig.STT_APP_KEY

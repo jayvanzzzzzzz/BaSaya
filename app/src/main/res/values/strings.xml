@@ -168,7 +168,7 @@
     <string name="lesson_card_download_cd">I-download ang aralin</string>
     <string name="lesson_card_downloading_cd">Dina-download ang aralin</string>
     <string name="lesson_card_downloading_percent_cd">Dina-download ang aralin, %1$d%%</string>
-    <string name="lesson_card_downloaded_cd">Na-download na. I-tap para alisin ang download.</string>
+    <string name="lesson_card_downloaded_cd">Na-download na ang aralin.</string>
     <string name="cw_back">Bumalik</string>
     <string name="cw_shuffle">Haluin ang mga titik</string>
     <string name="cw_level">Antas %1$d</string>
@@ -183,11 +183,11 @@
     <string name="pr_word_info">Ano ang ibig sabihin ng salita?</string>
     <string name="pr_word_info_chip">Kahulugan</string>
     <string name="pr_word_info_close">Isara</string>
-    <string name="pr_record">Bigkasin ang salita</string>
+    <string name="pr_record">Hawakan upang magsalita, bitawan upang suriin</string>
     <string name="pr_lives_cd">%1$d buhay</string>
-    <string name="pr_mic_hint_idle">Pindutin ang mic at sabihin ang salita</string>
-    <string name="pr_mic_hint_listening">Nakikinig ako… sabihin mo na!</string>
-    <string name="pr_mic_hint_thinking">Sandali lang…</string>
+    <string name="pr_mic_hint_idle">Hawakan ang mic habang nagsasalita</string>
+    <string name="pr_mic_hint_listening">Bitawan upang suriin</string>
+    <string name="pr_mic_hint_thinking">Sinusuri ang pagbigkas…</string>
     <string name="pr_great">Ang galing mo!</string>
     <string name="pr_okay">Malapit na, tama!</string>
     <string name="pr_try_again">Kaya mo \'yan! Subukan ulit.</string>
@@ -254,4 +254,16 @@
     <string name="ac_out_of_lives">Naubos ang iyong buhay. Ito ang tamang sagot.</string>
     <string name="ac_lives_cd">%1$d sa %2$d buhay</string>
     <string name="ac_no_answer_set">Walang nakatakdang sagot ang pahinang ito. Tuloy tayo!</string>
+    <string name="lesson_card_download_options_cd">Mga opsyon sa download</string>
+    <string name="lesson_card_update_download">I-update ang download</string>
+    <string name="lesson_card_remove_download">Alisin ang download</string>
+    <string name="lesson_card_downloaded_ribbon">Naka-download</string>
+    <string name="lesson_download_all">I-download lahat</string>
+    <string name="lesson_download_all_progress">Aralin %1$d/%2$d · %3$d%%</string>
+    <string name="lesson_download_all_result">%1$d na-download · %2$d hindi natapos</string>
+    <string name="lesson_download_all_stopped">Natigil ang pila. Pindutin muli para ituloy.</string>
+    <string name="lesson_download_cancel_cd">Itigil ang pag-download</string>
+    <string name="lesson_download_cancelled">Itinigil ang pag-download. Naka-save ang mga natapos na aralin.</string>
+    <string name="lesson_tab_downloaded">Na-download (%1$d)</string>
+    <string name="empty_no_downloaded_lessons">Walang na-download na aralin. Gamitin ang menu ng aralin o I-download lahat.</string>
 </resources>

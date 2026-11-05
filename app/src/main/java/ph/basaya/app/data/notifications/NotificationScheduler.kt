@@ -29,10 +29,7 @@ object NotificationScheduler {
     // The alarm, a push and a lesson sync can run at the same time; one at a time avoids duplicates.
     private val mutex = Mutex()
 
-    /**
-     * Call after lessons sync, when a push arrives, and when the alarm fires.
-     * [forcePostKey]: an item that just arrived by push is shown even if it is old.
-     */
+    /** Call after lessons sync, when a push arrives, and when the alarm fires. [forcePostKey]: an item that just arrived by push is shown even if it is old. */
     suspend fun run(context: Context, forcePostKey: String? = null) = mutex.withLock {
         runLocked(context, forcePostKey)
     }
@@ -57,8 +54,7 @@ object NotificationScheduler {
             item.key !in delivered && nowFor(item.kind)?.let { item.time <= it } == true
         }
 
-        // Several reminders of one lesson may be due at once (e.g. after being offline):
-        // only the newest one pops up.
+        // Several reminders of one lesson may be due at once (e.g. after being offline): only the newest one pops up.
         val newestPerLesson = due.filter { it.kind != Kind.NEW_LESSON }
             .groupBy { it.lessonIds.first() }
             .mapValues { (_, items) -> items.maxBy { it.time }.key }

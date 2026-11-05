@@ -28,8 +28,7 @@ object PronunciationScorer {
         var bestIndex = -1
 
         candidates.forEachIndexed { index, candidate ->
-            // The recognizer may hear extra words ("ang bahay") or split one ("ba hay"),
-            // so compare the target against each word, neighbouring pairs, and the whole phrase.
+            // The recognizer may hear extra words ("ang bahay") or split one ("ba hay"), so compare the target against each word, neighbouring pairs, and the whole phrase.
             val distance = candidateVariants(candidate).minOfOrNull { variant ->
                 levenshteinDistance(loose(normalizedTarget), loose(variant))
             } ?: Int.MAX_VALUE
@@ -67,10 +66,7 @@ object PronunciationScorer {
 
     private data class Tolerance(val great: Int, val okay: Int)
 
-    /**
-     * Shorter words get stricter tolerance since a small typo/mishear
-     * represents a proportionally bigger error.
-     */
+    /** Shorter words get stricter tolerance since a small typo/mishear represents a proportionally bigger error. */
     private fun toleranceForLength(length: Int): Tolerance {
         // One wrong letter usually makes a different (or non-)word, e.g. "mataba" vs "matabak",
         // so short words must match exactly. Only long words allow a single slip, as OKAY.
@@ -99,10 +95,7 @@ object PronunciationScorer {
         return (words + pairs + words.joinToString("")).distinct()
     }
 
-    /**
-     * Tagalog speakers (and recognizers) freely swap o/u and e/i ("puno"/"punu",
-     * "babae"/"babai"), so treat those vowels as the same sound when comparing.
-     */
+    /** Tagalog speakers (and recognizers) freely swap o/u and e/i ("puno"/"punu", "babae"/"babai"), so treat those vowels as the same sound when comparing. */
     private fun loose(text: String): String =
         text.replace('o', 'u').replace('e', 'i')
 

@@ -35,23 +35,23 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var imgRegisterArrow: ImageView
     private lateinit var progressRegister: ProgressBar
 
-    //userInfos
+    // userInfos
     private lateinit var tilFirstName: TextInputLayout
     private lateinit var tilLastName: TextInputLayout
     private lateinit var etFirstName: EditText
     private lateinit var etMiddleName: EditText
     private lateinit var etLastName: EditText
 
-    //login credentials
+    // login credentials
     private lateinit var tilEmail: TextInputLayout
     private lateinit var tilPassword: TextInputLayout
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
 
-    //helper
+    // helper
     private lateinit var authHelper: AuthHelper
 
-    //firebase
+    // firebase
     private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +67,7 @@ class RegisterActivity : AppCompatActivity() {
         // Firebase
         db = FirebaseFirestore.getInstance()
 
-        //helper
+        // helper
         authHelper = AuthHelper()
 
         // Views
@@ -186,13 +186,12 @@ class RegisterActivity : AppCompatActivity() {
                 createdAt = System.currentTimeMillis()
             )
 
-            //register to firebase
+            // register to firebase
             db.collection("users")
                 .document(uid)
                 .set(userData)
                 .addOnSuccessListener {
-                    // Lessons come from the class the student joins (classes/{classId}/classLessons);
-                    // nothing is assigned at registration.
+                    // Lessons come from the class the student joins (classes/{classId}/classLessons); nothing is assigned at registration.
                     setLoading(false)
 
                     Toast.makeText(

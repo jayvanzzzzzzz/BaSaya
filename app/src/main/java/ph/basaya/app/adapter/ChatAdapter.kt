@@ -58,8 +58,7 @@ class ChatAdapter(
         private const val TYPE_REMOVED = 4
         private const val TYPE_JOIN = 5
 
-        // Classmates' avatars: one steady color per person.
-        // Also used by the class members sheet (ChatFragment), so each person keeps their color.
+        // Classmates' avatars: one steady color per person. Also used by the class members sheet (ChatFragment), so each person keeps their color.
         val AVATAR_COLORS = intArrayOf(
             0xFF4F8BFF.toInt(), 0xFF24994A.toInt(), 0xFFF2784B.toInt(), 0xFFE0509A.toInt(),
             0xFF1BA3A3.toInt(), 0xFFD9A21B.toInt(), 0xFF5C6BC0.toInt(), 0xFFB5651D.toInt()
@@ -171,8 +170,7 @@ class ChatAdapter(
         topPadding(view, row.first)
 
         view.findViewById<View>(R.id.nameRow).visibility = if (row.first) View.VISIBLE else View.GONE
-        // Teachers show as "Ma'am Reyes · GURO" when they picked a title, else "Dela Cruz, Juan · GURO"
-        // like the students' "Last, First".
+        // Teachers show as "Ma'am Reyes · GURO" when they picked a title, else "Dela Cruz, Juan · GURO" like the students' "Last, First".
         val title = teacher?.takeIf { it.id == m.senderId }?.title
         val name = if (m.isTeacher) ClassChat.teacherName(m.senderName, title) else m.senderName
         view.findViewById<TextView>(R.id.tvName).text = name

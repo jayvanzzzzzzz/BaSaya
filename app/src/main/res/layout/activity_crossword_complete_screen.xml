@@ -137,8 +137,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/progressBar" />
 
-    <!-- Practice lesson, last level: nothing was saved, and the game can be played again.
-         Offline, it says the level was saved on the phone instead. -->
+    <!-- Practice lesson, last level: nothing was saved, and the game can be played again. Offline, it says the level was saved on the phone instead. -->
     <TextView
         android:id="@+id/tvPracticeNote"
         android:layout_width="0dp"

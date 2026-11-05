@@ -29,14 +29,11 @@ enum class ThemeMode(val nightMode: Int, private val systemNightMode: Int) {
         /** Saves the choice and re-themes every open screen. */
         fun choose(context: Context, mode: ThemeMode) {
             prefs(context).edit().putString(KEY, mode.name).apply()
-            tellSystem(context, mode)
-            AppCompatDelegate.setDefaultNightMode(mode.nightMode)
+            apply(context, mode)
         }
 
         fun applySaved(context: Context) {
-            val mode = saved(context)
-            tellSystem(context, mode)
-            AppCompatDelegate.setDefaultNightMode(mode.nightMode)
+            apply(context, saved(context))
         }
 
         /**
@@ -44,9 +41,15 @@ enum class ThemeMode(val nightMode: Int, private val systemNightMode: Int) {
          * night mode it has on file for the app. Keeping that in step means a child who picked Dark on
          * a light phone (or the reverse) doesn't see a flash of the other theme at launch.
          */
-        private fun tellSystem(context: Context, mode: ThemeMode) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-            context.getSystemService(UiModeManager::class.java)?.setApplicationNightMode(mode.systemNightMode)
+        private fun apply(context: Context, mode: ThemeMode) {
+            // Use one configuration-change owner. Calling both APIs can relaunch the activity
+            // twice, destroying the screenshot overlay during the theme handoff.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                context.getSystemService(UiModeManager::class.java)
+                    .setApplicationNightMode(mode.systemNightMode)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(mode.nightMode)
+            }
         }
 
         private fun prefs(context: Context) =

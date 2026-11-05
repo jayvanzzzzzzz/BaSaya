@@ -1,5 +1,10 @@
 package ph.basaya.app.ui.game
 
+import ph.basaya.app.data.assessment.*
+import ph.basaya.app.ui.AssessmentUi
+
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
@@ -55,6 +60,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class CrosswordActivity : AppCompatActivity() {
+    private var assessment: AssessmentSession? = null
+    private var gameAttemptId = ""
+    private var submitting = false
+
 
     companion object {
         const val EXTRA_CONTENT_READY = "CONTENT_READY"
@@ -62,6 +71,12 @@ class CrosswordActivity : AppCompatActivity() {
 
     private var allGameLevels: List<CrosswordGameLevel> = emptyList()
     private lateinit var lessonId: String
+    private lateinit var progressOwner: String
+    private lateinit var progressKey: String
+
+    private fun ownsProgress(): Boolean =
+        FirebaseAuth.getInstance().currentUser?.uid == progressOwner &&
+            ProgressSession.gameKey(lessonId, progressOwner) == progressKey
 
     private val db by lazy {
         AppDatabase.getDatabase(this@CrosswordActivity)
@@ -111,7 +126,7 @@ class CrosswordActivity : AppCompatActivity() {
     private fun isWordFound(word: String): Boolean =
         findWord.any { normalize(it) == normalize(word) }
 
-    // ───────────────────────────── Board ─────────────────────────────
+    // Board
 
     private fun renderCrosswordGrid(words: List<String>, foundWords: List<String>) {
         val grid = CrosswordGridBuilder.build(words)
@@ -196,7 +211,7 @@ class CrosswordActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Wheel ─────────────────────────────
+    // Wheel
 
     /** Every letter needed to spell every word (max count per letter across words). */
     private fun wheelLetters(words: List<String>): List<String> {
@@ -320,7 +335,7 @@ class CrosswordActivity : AppCompatActivity() {
         }
     }
 
-    // ─────────────────────────── Preview pill ───────────────────────────
+    // Preview pill
 
     private fun showPreview(text: String) {
         tempTv.animate().cancel()
@@ -411,7 +426,7 @@ class CrosswordActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Progress ─────────────────────────────
+    // Progress
 
     private fun updateProgress(animate: Boolean) {
         val words = currentLevelWords.orEmpty()
@@ -474,7 +489,7 @@ class CrosswordActivity : AppCompatActivity() {
         }
     }
 
-    // ─────────────────────────── Ambient sky ───────────────────────────
+    // Ambient sky
 
     private fun startAmbientAnimations() {
         val sun = findViewById<ImageView>(R.id.cwSun)
@@ -507,7 +522,7 @@ class CrosswordActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    // ───────────────────────────── Lifecycle ─────────────────────────────
+    // Lifecycle
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -537,8 +552,14 @@ class CrosswordActivity : AppCompatActivity() {
         startAmbientAnimations()
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
+        val owner = FirebaseAuth.getInstance().currentUser?.uid
+        if (owner == null) { finish(); return }
+        progressOwner = owner
+        progressKey = ProgressSession.gameKey(lessonId, owner)
 
-        lifecycleScope.launch {
+        AssessmentUi.run(this) {
+            if (!PracticeLessons.refresh(this@CrosswordActivity, lessonId))
+                assessment = AssessmentSession.open(this@CrosswordActivity, lessonId)
             val repo = CrosswordRepository(this@CrosswordActivity)
 
             // Room-only read first — this lesson may already be downloaded.
@@ -550,8 +571,7 @@ class CrosswordActivity : AppCompatActivity() {
                 // button (LessonRepository.downloadLesson -> syncLevels) does.
                 allGameLevels = repo.fetchLevelsRemote(lessonId)
             }
-            // Student's own progress state (not lesson content) — still fine
-            // to persist locally regardless of download status.
+            // Student's own progress state (not lesson content) — still fine to persist locally regardless of download status.
             if (!intent.getBooleanExtra(EXTRA_CONTENT_READY, false)) {
                 repo.syncProgress(lessonId)
             }
@@ -565,11 +585,15 @@ class CrosswordActivity : AppCompatActivity() {
                     Toast.makeText(this@CrosswordActivity, "Walang laro para sa araling ito.", Toast.LENGTH_SHORT).show()
                 }
                 finish()
-                return@launch
+                return@run
             }
 
-            val progress = db.crosswordProgressDao().getProgress(lessonId)
-            var currentLevelNumber = progress?.currentLevel ?: 1
+            if (!ownsProgress()) { finish(); return@run }
+            val progress = db.crosswordProgressDao().getProgress(progressKey)
+            val begin = assessment?.request("begin", "game")
+            if (begin?.flag("finished") == true) { finish(); return@run }
+            var currentLevelNumber = begin?.number("level") ?: progress?.currentLevel ?: 1
+            gameAttemptId = begin?.text("attemptId").orEmpty()
 
             val maxLevel = allGameLevels.maxOf { it.level }
             if (currentLevelNumber > maxLevel) {
@@ -584,7 +608,7 @@ class CrosswordActivity : AppCompatActivity() {
                 Log.e("CrosswordActivity", "No matching level entity for level=$currentLevelNumber among ${allGameLevels.map { it.level }}")
                 Toast.makeText(this@CrosswordActivity, "May problema sa pag-load ng laro.", Toast.LENGTH_SHORT).show()
                 finish()
-                return@launch
+                return@run
             }
 
             val words = currentLevelWords.orEmpty()
@@ -592,11 +616,11 @@ class CrosswordActivity : AppCompatActivity() {
                 Log.e("CrosswordActivity", "Level ${currentLevel?.level} has no usable words")
                 Toast.makeText(this@CrosswordActivity, "May problema sa mga salita ng laro.", Toast.LENGTH_SHORT).show()
                 finish()
-                return@launch
+                return@run
             }
 
             // Saved words may differ in case from the level data; map them back to the originals.
-            val savedFoundWords = progress?.foundWords ?: ""
+            val savedFoundWords = if (begin != null) begin.getAsJsonObject("resume")?.getAsJsonArray("foundWords")?.joinToString(",") { it.asString }.orEmpty() else progress?.foundWords ?: ""
             if (savedFoundWords.isNotEmpty()) {
                 savedFoundWords.split(",")
                     .mapNotNull { saved -> words.firstOrNull { normalize(it) == normalize(saved) } }
@@ -615,7 +639,7 @@ class CrosswordActivity : AppCompatActivity() {
             letterContainer.post { buildWheel(letters) }
         }
 
-        //touch controls
+        // touch controls
         letterContainer.setOnTouchListener { _, event ->
 
             if (!::lineView.isInitialized || isShuffling || levelCompleted) return@setOnTouchListener false
@@ -706,110 +730,39 @@ class CrosswordActivity : AppCompatActivity() {
     }
 
     private fun onWordFound(wordIndex: Int) {
+        if (!ownsProgress() || submitting) return
         val word = currentLevelWords?.getOrNull(wordIndex) ?: return
-
-        findWord.add(word)
-        previewSuccess()
-        burstFrom(tempTv, count = 24)
-        revealWord(wordIndex)
-        updateProgress(animate = true)
-
-        // save newly found word
-        lifecycleScope.launch {
-            val progress = db.crosswordProgressDao().getProgress(lessonId)
-            val currentFound = progress?.foundWords ?: ""
-            val foundList = if (currentFound.isEmpty()) mutableListOf()
-            else currentFound.split(",").toMutableList()
-
-            if (foundList.none { normalize(it) == normalize(word) }) {
-                foundList.add(word)
-            }
-
-            db.crosswordProgressDao().saveProgress(
-                CrosswordProgress(
-                    lessonId = lessonId,
-                    currentLevel = progress?.currentLevel ?: 1,
-                    completedLevel = progress?.completedLevel ?: 0,
-                    foundWords = foundList.joinToString(",")
-                )
-            )
-
-            // check completion AFTER this word is saved
-            val completed = currentLevelWords.orEmpty().all { isWordFound(it) }
-
-            // Words found so far also go online: they count if the deadline passes mid-level.
-            val uidNow = FirebaseAuth.getInstance().currentUser?.uid
-            if (!completed && uidNow != null) {
-                val levelWords = currentLevelWords.orEmpty()
-                LessonResume.save(
-                    uidNow, lessonId, LessonResume.GAME,
-                    mapOf(
-                        "done" to levelWords.count { isWordFound(it) },
-                        "total" to levelWords.size,
-                        "level" to (progress?.currentLevel ?: 1)
-                    )
-                )
-            }
-
+        val words = (findWord + word).distinct()
+        val completed = currentLevelWords.orEmpty().all { target -> words.any { normalize(it) == normalize(target) } }
+        submitting = true
+        AssessmentUi.run(this) {
+            val result = if (completed) assessment?.request("finish", "game", fields(
+                "level" to currentLevel!!.level, "attemptId" to gameAttemptId, "words" to words))
+            else assessment?.request("answer", "game", fields("level" to currentLevel!!.level,
+                "attemptId" to gameAttemptId, "word" to word))
+            if (!ownsProgress()) { finish(); return@run }
+            if (completed && result != null && !result.has("finished")) throw AssessmentFailure(0, "Hindi pa nakumpirma ang antas.")
+            findWord = words.toMutableList()
+            previewSuccess()
+            revealWord(wordIndex)
+            updateProgress(animate = true)
+            val levelNumber = currentLevel!!.level
+            val nextLevel = allGameLevels.firstOrNull { it.level > levelNumber }?.level ?: (levelNumber + 1)
+            db.crosswordProgressDao().saveProgress(CrosswordProgress(
+                lessonId = progressKey,
+                currentLevel = if (completed && assessment == null && currentLevel == allGameLevels.lastOrNull()) allGameLevels.first().level else if (completed) nextLevel else levelNumber,
+                completedLevel = if (completed) result?.number("score", 1) ?: 1 else 0,
+                foundWords = if (completed) "" else findWord.joinToString(",")
+            ))
+            submitting = false
             if (completed && !levelCompleted) {
                 levelCompleted = true
                 celebrateLevel()
-
-                val currentLevelNumber = progress?.currentLevel ?: 1
-                val nextLevel = currentLevelNumber + 1
-                val totalLevels = allGameLevels.size
-                // Practice saves nothing: after its last level the game starts over at level 1.
-                val practice = PracticeLessons.isPractice(lessonId)
-
-                db.crosswordProgressDao().saveProgress(
-                    CrosswordProgress(
-                        lessonId = lessonId,
-                        currentLevel = if (practice && currentLevelNumber >= totalLevels) 1 else nextLevel,
-                        completedLevel = 1,
-                        foundWords = ""
-                    )
-                )
-
-                val uid = FirebaseAuth.getInstance().currentUser?.uid
-                if (uid != null && !practice) {
-                    // Not awaited: offline, Firestore keeps the write and sends it once online.
-                    FirebaseFirestore.getInstance()
-                        .collection("users")
-                        .document(uid)
-                        .collection("assignedLessons")
-                        .document(lessonId)
-                        .set(
-                            mapOf(
-                                "gameScore" to currentLevelNumber,
-                                "gameTotal" to totalLevels,
-                                "gameFinished" to (currentLevelNumber >= totalLevels),
-                                "gameCompletedAt" to FieldValue.serverTimestamp(),
-                                "resume" to mapOf(LessonResume.GAME to FieldValue.delete())
-                            ),
-                            com.google.firebase.firestore.SetOptions.merge()
-                        )
-                        .addOnFailureListener { Log.e("CrosswordActivity", "Failed to sync game progress", it) }
-
-                    // Talasalitaan skill: each word of this level counts once
-                    try {
-                        SkillProgressRepository().addCrosswordLevel(
-                            uid, lessonId,
-                            wordsFound = currentLevelWords.orEmpty().size
-                        )
-                        SkillProgressRepository.refreshInBackground(uid)
-                    } catch (e: Exception) {
-                        Log.e("CrosswordActivity", "Failed to save vocabulary progress", e)
-                    }
-                }
-
                 delay(2000)
-                val intent = Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
-                    putExtra("NEXT_LEVEL", currentLevelNumber)
+                startActivity(Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
+                    putExtra("NEXT_LEVEL", allGameLevels.indexOf(currentLevel) + 1)
                     putExtra("LESSON_ID", lessonId)
-                }
-                val options =
-                    ActivityOptions.makeCustomAnimation(this@CrosswordActivity, 0, 0)
-                startActivity(intent, options.toBundle())
+                })
                 finish()
             }
         }

@@ -12,6 +12,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -23,6 +24,7 @@ import android.view.animation.PathInterpolator
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.drawToBitmap
+import ph.basaya.app.R
 import kotlin.math.hypot
 import kotlin.math.max
 
@@ -44,14 +46,26 @@ object ThemeReveal {
     private var centerX = 0f
     private var centerY = 0f
     private var takenAt = 0L
+    private var switching = false
+    private val handler = Handler(Looper.getMainLooper())
 
     /** Picks [mode]; animates from [from] when the colors actually change. */
     fun switchTo(activity: Activity, mode: ThemeMode, from: View) {
+        if (switching || activity.isFinishing || activity.isDestroyed) return
         if (activity.isNightTheme() == willBeNight(activity, mode)) {
             ThemeMode.choose(activity, mode) // same colors: nothing is recreated, nothing to animate
             return
         }
+        switching = true
         capture(activity, from) { ThemeMode.choose(activity, mode) }
+    }
+
+    /** Keep the old screen as the window background until the replacement can draw. */
+    fun prepareWindow(activity: Activity) {
+        val picture = snapshot ?: return
+        if (SystemClock.uptimeMillis() - takenAt <= MAX_AGE_MS) {
+            activity.window.setBackgroundDrawable(BitmapDrawable(activity.resources, picture))
+        }
     }
 
     /** Call right after setContentView() on the screen that hosts the theme picker. */
@@ -59,7 +73,8 @@ object ThemeReveal {
         val picture = snapshot ?: return
         snapshot = null
         if (SystemClock.uptimeMillis() - takenAt > MAX_AGE_MS) {
-            picture.recycle()
+            switching = false
+            activity.window.setBackgroundDrawableResource(R.color.tb_page_bg)
             return
         }
 
@@ -67,20 +82,36 @@ object ThemeReveal {
         val overlay = RevealOverlay(activity, picture, centerX, centerY)
         root.addView(overlay, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
+        var animator: ValueAnimator? = null
+        var finished = false
+        fun finish() {
+            if (finished) return
+            finished = true
+            animator?.cancel()
+            root.removeView(overlay)
+            activity.window.setBackgroundDrawableResource(R.color.tb_page_bg)
+            switching = false
+            // The old window or RenderThread may still reference this bitmap. Let GC release it.
+        }
+        overlay.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) = Unit
+            override fun onViewDetachedFromWindow(v: View) = finish()
+        })
+
         root.doOnPreDraw {
+            if (finished) return@doOnPreDraw
+            // The cover now owns the old pixels; the revealed area must show the new background.
+            activity.window.setBackgroundDrawableResource(R.color.tb_page_bg)
             val endRadius = max(
                 max(hypot(centerX, centerY), hypot(root.width - centerX, centerY)),
                 max(hypot(centerX, root.height - centerY), hypot(root.width - centerX, root.height - centerY))
             )
-            ValueAnimator.ofFloat(0f, endRadius).apply {
+            animator = ValueAnimator.ofFloat(0f, endRadius).apply {
                 duration = DURATION_MS
                 startDelay = START_DELAY_MS
                 interpolator = PathInterpolator(0.4f, 0f, 0.2f, 1f)
                 addUpdateListener { overlay.radius = it.animatedValue as Float }
-                doOnEnd {
-                    root.removeView(overlay)
-                    picture.recycle()
-                }
+                doOnEnd { finish() }
                 start()
             }
         }
@@ -89,7 +120,10 @@ object ThemeReveal {
     /** Takes the picture, then runs [then] (which switches the theme) either way. */
     private fun capture(activity: Activity, from: View, then: () -> Unit) {
         val decor = activity.window.decorView
-        if (!decor.isLaidOut || decor.width == 0 || decor.height == 0) return then()
+        if (!decor.isLaidOut || decor.width == 0 || decor.height == 0) {
+            switching = false
+            return then()
+        }
 
         val inWindow = IntArray(2)
         from.getLocationInWindow(inWindow)
@@ -97,11 +131,29 @@ object ThemeReveal {
         val y = inWindow[1] + from.height / 2f
 
         fun keep(picture: Bitmap?) {
-            snapshot?.recycle()
+            if (activity.isFinishing || activity.isDestroyed) {
+                picture?.recycle()
+                switching = false
+                return
+            }
             snapshot = picture
             centerX = x
             centerY = y
             takenAt = SystemClock.uptimeMillis()
+            if (picture != null) {
+                prepareWindow(activity)
+                handler.postDelayed({
+                    if (snapshot === picture) {
+                        snapshot = null
+                        switching = false
+                        if (!activity.isDestroyed) {
+                            activity.window.setBackgroundDrawableResource(R.color.tb_page_bg)
+                        }
+                    }
+                }, MAX_AGE_MS)
+            } else {
+                switching = false
+            }
             then()
         }
 
@@ -114,7 +166,7 @@ object ThemeReveal {
                         keep(picture)
                     } else {
                         picture.recycle()
-                        keep(null)
+                        keep(runCatching { decor.drawToBitmap() }.getOrNull())
                     }
                 }, Handler(Looper.getMainLooper()))
             }
@@ -130,8 +182,7 @@ object ThemeReveal {
     private fun willBeNight(context: Context, mode: ThemeMode): Boolean = when (mode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
-        // The phone's own Dark theme switch first: on Android 12+ the app's current choice (sent to
-        // the system by ThemeMode) can mask it in the configuration below.
+        // The phone's own Dark theme switch first: on Android 12+ the app's current choice (sent to the system by ThemeMode) can mask it in the configuration below.
         ThemeMode.SYSTEM -> when (context.getSystemService(UiModeManager::class.java)?.nightMode) {
             UiModeManager.MODE_NIGHT_YES -> true
             UiModeManager.MODE_NIGHT_NO -> false

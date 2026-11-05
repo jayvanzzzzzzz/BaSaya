@@ -1,5 +1,23 @@
 package ph.basaya.app.data.auth
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+
+/** Wait for Firebase's initial auth state before deciding whether to show login. */
+internal suspend fun FirebaseAuth.awaitInitialUser(): FirebaseUser? =
+    suspendCancellableCoroutine { continuation ->
+        val listener = object : FirebaseAuth.AuthStateListener {
+            override fun onAuthStateChanged(auth: FirebaseAuth) {
+                auth.removeAuthStateListener(this)
+                if (continuation.isActive) continuation.resume(auth.currentUser)
+            }
+        }
+        addAuthStateListener(listener)
+        continuation.invokeOnCancellation { removeAuthStateListener(listener) }
+    }
+
 class AuthHelper {
 
     private val auth = com.google.firebase.auth.FirebaseAuth.getInstance()

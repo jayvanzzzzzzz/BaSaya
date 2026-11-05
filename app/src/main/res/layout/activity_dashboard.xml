@@ -14,7 +14,7 @@
     android:orientation="vertical"
     tools:context=".ui.DashboardActivity">
 
-    <!-- ═══ Header (status-bar inset added in code) ═══ -->
+    <!-- Header (status-bar inset added in code) -->
     <LinearLayout
         android:id="@+id/dashboardHeader"
         android:layout_width="match_parent"
@@ -107,7 +107,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- ═══ Path ═══ -->
+    <!-- Path -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"

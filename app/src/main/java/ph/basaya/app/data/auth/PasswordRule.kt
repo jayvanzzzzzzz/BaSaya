@@ -32,10 +32,7 @@ object PasswordRule {
         else -> null
     }
 
-    /**
-     * Ticks each line of the checklist [rules] (an included view_password_rules.xml)
-     * as soon as what's typed in [input] meets it.
-     */
+    /** Ticks each line of the checklist [rules] (an included view_password_rules.xml) as soon as what's typed in [input] meets it. */
     fun watch(input: EditText, rules: View) {
         val lines = listOf<Pair<TextView, (String) -> Boolean>>(
             rules.findViewById<TextView>(R.id.ruleLength) to ::hasLength,

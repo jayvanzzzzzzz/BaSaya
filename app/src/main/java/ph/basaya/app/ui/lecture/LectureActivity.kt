@@ -1,5 +1,8 @@
 package ph.basaya.app.ui
 
+import ph.basaya.app.data.assessment.*
+import ph.basaya.app.ui.AssessmentUi
+
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -48,6 +51,9 @@ import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback
 
 class LectureActivity : AppCompatActivity() {
+    private var assessment: AssessmentSession? = null
+    private var submitting = false
+
 
     companion object {
         /** Open with the speaker off. */
@@ -194,24 +200,24 @@ class LectureActivity : AppCompatActivity() {
 
         lectureRepository = LectureRepository(this)
 
-        lifecycleScope.launch {
+        AssessmentUi.run(this) {
+            if (!PracticeLessons.refresh(this@LectureActivity, lessonId)) assessment = AssessmentSession.open(this@LectureActivity, lessonId)
             val fetchedLecture = lectureRepository.getLecture(lessonId)
 
             if (fetchedLecture == null || fetchedLecture.pages.isEmpty()) {
                 Toast.makeText(this@LectureActivity, "Walang lektura para sa araling ito.", Toast.LENGTH_SHORT).show()
                 finish()
-                return@launch
+                return@run
             }
 
             lecture = fetchedLecture
             tvLectureTitle.text = lecture.title.ifBlank { getString(R.string.lecture_default_title) }
 
-            // Continue on the next unread page (here or from the website). Rereading a finished
-            // lecture always starts at page 1 and saves nothing.
+            // Continue on the next unread page (here or from the website). Rereading a finished lecture always starts at page 1 and saves nothing.
             val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
-            tracking = uid != null && progress?.getBoolean("lectureFinished") != true
-            currentPageIndex = LessonResume.lectureStartPage(progress, lecture.pages.size)
+            val confirmed = assessment?.progress()
+            tracking = assessment != null && confirmed?.flag("lectureFinished") != true
+            currentPageIndex = if (tracking) confirmed?.getAsJsonObject("resume")?.getAsJsonObject("lecture")?.number("done")?.coerceAtMost(lecture.pages.lastIndex) ?: 0 else 0
             // Fetch every page's audio now, so the pages keep their sound if the connection drops.
             LectureAudioCache.prepareAll(this@LectureActivity, lessonId, lecture.pages, currentPageIndex)
 
@@ -320,10 +326,7 @@ class LectureActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Adds the sentence as the new "being read" line: it gets the highlighter, the
-     * previous line fades back to normal, and the new one slides up into place.
-     */
+    /** Adds the sentence as the new "being read" line: it gets the highlighter, the previous line fades back to normal, and the new one slides up into place. */
     private fun addSentenceView(sentence: String) {
         val density = resources.displayMetrics.density
 
@@ -417,28 +420,24 @@ class LectureActivity : AppCompatActivity() {
     }
 
     private fun goToNextPage() {
-        if (currentPageIndex < lecture.pages.lastIndex) {
-            currentPageIndex++
-            FirebaseAuth.getInstance().currentUser?.uid?.takeIf { tracking }?.let { uid ->
-                LessonResume.save(
-                    uid, lessonId, LessonResume.LECTURE,
-                    mapOf("done" to currentPageIndex, "total" to lecture.pages.size)
-                )
+        if (submitting) return
+        submitting = true
+        cancelAutoNext()
+        var pageAccepted = false
+        AssessmentUi.run(this) {
+            if (tracking && !pageAccepted) {
+                assessment!!.request("resume", "lecture", fields("done" to currentPageIndex + 1))
+                pageAccepted = true
             }
-            showPage(currentPageIndex)
-        } else {
-            stopAudio()
-
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
-            if (uid != null) {
-                lectureRepository.markLectureFinished(uid, lessonId)
-                if (tracking) LessonResume.clear(uid, lessonId, LessonResume.LECTURE)
-                // Offline: the lecture was saved on the phone and is sent once online.
-                if (tracking && !PracticeLessons.isPractice(lessonId) && !Network.isOnline(this)) {
-                    Toast.makeText(this, R.string.saved_offline_note, Toast.LENGTH_LONG).show()
-                }
+            if (currentPageIndex < lecture.pages.lastIndex) {
+                currentPageIndex++
+                submitting = false
+                showPage(currentPageIndex)
+            } else {
+                stopAudio()
+                if (tracking) assessment!!.finish("lecture")
+                finish()
             }
-            finish()
         }
     }
 
@@ -468,10 +467,7 @@ class LectureActivity : AppCompatActivity() {
         if (mediaPlayer == null) onFailed()
     }
 
-    /**
-     * Starts the bubble on the sentence being played: saved word timings when the audio has
-     * them, otherwise timings estimated from its length.
-     */
+    /** Starts the bubble on the sentence being played: saved word timings when the audio has them, otherwise timings estimated from its length. */
     private fun startReadAlong(player: MediaPlayer, page: LecturePage, sentenceIndex: Int) {
         val view = sentenceContainer.getChildAt(sentenceIndex) as? ReadAlongTextView ?: return
         val words = view.words

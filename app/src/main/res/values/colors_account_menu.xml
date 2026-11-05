@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="account_menu_surface">#FFFFFF</color>
+    <color name="account_menu_border">#E2E8F0</color>
+    <color name="account_menu_title">#1E293B</color>
+    <color name="account_menu_body">#64748B</color>
+    <color name="account_menu_accent">#315EAE</color>
+    <color name="account_menu_avatar">#EAF1FC</color>
+    <color name="account_menu_ripple">#DCE7F7</color>
+</resources>

@@ -10,9 +10,7 @@ object PronunciationUtils {
 
     const val RECORD_AUDIO_PERMISSION_CODE = 1001
 
-    /**
-     * Checks if RECORD_AUDIO permission has already been granted.
-     */
+    /** Checks whether RECORD_AUDIO permission has already been granted. */
     fun hasRecordAudioPermission(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -20,10 +18,7 @@ object PronunciationUtils {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    /**
-     * Checks if speech recognition is available on this device at all.
-     * Some devices (e.g. certain Android TV boxes, stripped custom ROMs) don't have it.
-     */
+    /** Checks whether speech recognition is available on this device at all. Some devices (e.g. certain Android TV boxes, stripped custom ROMs) don't have it. */
     fun isSpeechRecognitionAvailable(context: Context): Boolean {
         return SpeechRecognizer.isRecognitionAvailable(context)
     }

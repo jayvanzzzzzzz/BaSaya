@@ -16,10 +16,7 @@ import ph.basaya.app.data.notifications.LessonInbox.Kind
 import ph.basaya.app.ui.MainActivity
 import com.google.firebase.messaging.FirebaseMessaging
 
-/**
- * Phone notifications. "New lesson" items come from the teacher's web app (notify-api on
- * Vercel → FCM topic "class_<classId>"); deadline reminders are made on the phone.
- */
+/** Phone notifications. "New lesson" items come from the teacher's web app (notify-api on Vercel → FCM topic "class_<classId>"); deadline reminders are made on the phone. */
 object ClassNotifications {
 
     const val CHANNEL_NEW_LESSONS = "new_lessons"
@@ -59,10 +56,7 @@ object ClassNotifications {
     /** The class this phone gets notifications for, or null. */
     fun subscribedClass(context: Context): String? = prefs(context).getString(KEY_CLASS, null)
 
-    /**
-     * Keeps this phone subscribed to [classId] only; null unsubscribes (left class / logged out).
-     * FCM queues topic changes made offline and applies them once online.
-     */
+    /** Keeps this phone subscribed to [classId] only; null unsubscribes (left class / logged out). FCM queues topic changes made offline and applies them once online. */
     fun syncTopic(context: Context, classId: String?) {
         val current = subscribedClass(context)
         val wanted = classId?.takeIf { it.isNotBlank() }
@@ -115,10 +109,7 @@ object ClassNotifications {
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
-    /**
-     * A teacher's chat message; tapping it opens the Chat tab. One notification per class,
-     * so a new message replaces the previous one instead of piling up.
-     */
+    /** A teacher's chat message; tapping it opens the Chat tab. One notification per class, so a new message replaces the previous one instead of piling up. */
     fun showChat(context: Context, classId: String, title: String, body: String, time: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)

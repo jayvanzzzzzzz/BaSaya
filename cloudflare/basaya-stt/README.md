@@ -9,7 +9,7 @@ Free speech-to-text for the pronunciation activity, using Cloudflare Workers AI
 cd cloudflare/basaya-stt
 npx wrangler login          # once
 npx wrangler deploy         # prints https://basaya-stt.<your-subdomain>.workers.dev
-npx wrangler secret put APP_KEY   # optional, any random string
+npx wrangler secret put APP_KEY   # required for Android app-key access; use a random secret
 ```
 
 ## Connect the app
@@ -18,8 +18,11 @@ Add to `local.properties` in the project root (not committed):
 
 ```
 stt.workerUrl=https://basaya-stt.<your-subdomain>.workers.dev
-stt.appKey=<the APP_KEY value, or leave empty>
+stt.appKey=<the APP_KEY value>
 ```
+
+Missing or empty `APP_KEY` disables app-key access; it never permits anonymous requests.
+Firebase-token authentication remains available without `APP_KEY`.
 
 Rebuild the app. With no `stt.workerUrl` the app uses Android speech recognition only.
 
@@ -42,6 +45,12 @@ falls back to Android speech recognition until the next day.
 ## Test
 
 ```sh
-curl -X POST --data-binary @word.wav -H "Content-Type: audio/wav" \
+curl -X POST --data-binary @word.wav -H "X-App-Key: $APP_KEY" -H "Content-Type: audio/wav" \
   https://basaya-stt.<your-subdomain>.workers.dev/transcribe
+```
+
+Run the local authentication regression tests (Firestore and AI are stubbed):
+
+```sh
+node --test tests/auth.test.mjs
 ```

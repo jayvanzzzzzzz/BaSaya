@@ -1,5 +1,7 @@
 package ph.basaya.app
 
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.app.Application
 import ph.basaya.app.data.dictionary.TeacherDictionarySync
 import ph.basaya.app.ui.theme.ThemeMode
@@ -8,7 +10,8 @@ class BaSayaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Before any screen opens, so the first frame already has the right theme.
+        // Apply the theme before the first screen appears.
+        ProgressSession.initialize(this)
         ThemeMode.applySaved(this)
         TeacherDictionarySync.initialize(this)
     }

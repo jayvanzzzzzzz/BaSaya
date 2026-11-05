@@ -824,14 +824,11 @@ class DashboardActivity : AppCompatActivity() {
         return false
     }
 
-    // ───────────── Lecture: opens only once its first page's audio is ready ─────────────
+    // Lecture: opens only once its first page's audio is ready
 
     private enum class AudioWait { READY, SLOW, FAILED }
 
-    /**
-     * Downloads the audio of the page the lecture opens on (downloaded lessons already have
-     * it). Gives up waiting after 10 s; the download keeps going for "Subukan muli".
-     */
+    /** Downloads the audio of the page the lecture opens on (downloaded lessons already have it). Gives up waiting after 10 s; the download keeps going for "Subukan muli". */
     private suspend fun waitForLectureAudio(
         lecture: ph.basaya.app.data.model.Lecture,
         progress: DocumentSnapshot?
@@ -866,10 +863,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private var lectureCountBeforePreparing: CharSequence? = null
 
-    /**
-     * The teacher's schedule: nothing opens before the open date, and after the deadline only
-     * finished parts can be reviewed. Shows why and returns true when blocked.
-     */
+    /** The teacher's schedule: nothing opens before the open date, and after the deadline only finished parts can be reviewed. Shows why and returns true when blocked. */
     private fun showLectureAudioDialog(wait: AudioWait, reviewing: Boolean) {
         showLessonDialog(
             iconRes = R.drawable.ic_speaker_mute,
@@ -905,10 +899,7 @@ class DashboardActivity : AppCompatActivity() {
         return true
     }
 
-    /**
-     * When the teacher chose "Skip game" or "Skip Gawain for this lesson" in basaya-web, that
-     * stop is removed from the path and the remaining stops are renumbered.
-     */
+    /** When the teacher chose "Skip game" or "Skip Gawain for this lesson" in basaya-web, that stop is removed from the path and the remaining stops are renumbered. */
     private fun hideSkippedParts() {
         if (lessonId.isBlank()) return
         lifecycleScope.launch {

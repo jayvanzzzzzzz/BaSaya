@@ -15,6 +15,9 @@
     <string name="pf_change_password_sub">Kailangan ang kasalukuyang password</string>
 
     <string name="pf_logout">Mag-logout</string>
+    <string name="pf_logout_title">Paalam muna, kaibigan!</string>
+    <string name="pf_logout_message">Mag-logout muna? Balik ka para sa bagong kuwento at saya sa pagbabasa!</string>
+    <string name="pf_logout_stay">Dito muna ako</string>
     <string name="pf_logout_confirm">Sigurado ka bang gusto mong mag-logout?</string>
     <string name="pf_yes">Oo</string>
     <string name="pf_no">Hindi</string>
@@ -71,7 +74,7 @@
     <string name="pf_leave_declined_none">Mananatili ka sa klase.</string>
     <string name="pf_leave_declined_ok">Sige</string>
     <string name="pf_leave_dialog_title">Aalis ka ba sa klase?</string>
-    <string name="pf_leave_dialog_message">Kapag pumayag ang iyong guro, aalis ka sa %1$s at mabubura ang iyong progreso sa klaseng ito.</string>
+    <string name="pf_leave_dialog_message">Kapag pumayag ang iyong guro, aalis ka sa %1$s. Itatabi ang iyong progreso. Maaari itong ibalik kapag inaprubahan ng guro ang muli mong pagsali sa parehong klase.</string>
     <string name="pf_leave_dialog_reason">Dahilan (hindi kailangan)</string>
     <string name="pf_leave_dialog_confirm">Humiling na umalis</string>
     <string name="pf_leave_dialog_stay">Manatili sa klase</string>

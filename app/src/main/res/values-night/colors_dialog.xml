@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Dialogs and sheets (dark, "Night Sky"). -->
 <resources>
+    <color name="logout_button_text">@color/ns_on_accent</color>
     <color name="dlg_paper">@color/ns_surface</color>
     <color name="dlg_stroke">@color/ns_stroke</color>
     <color name="dlg_ink">@color/ns_ink</color>

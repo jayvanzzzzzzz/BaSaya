@@ -172,10 +172,7 @@ object Dictionary {
             .take(3)
     }
 
-    /**
-     * Every word, A to Z ("Lahat"): the seed with cached teacher words laid over it, deleted
-     * ones left out. The teacher dictionary is synchronized to Room while online.
-     */
+    /** Every word, A to Z ("Lahat"): the seed with cached teacher words laid over it, deleted ones left out. The teacher dictionary is synchronized to Room while online. */
     suspend fun allWords(context: Context): List<Entry> {
         val found = LinkedHashMap<String, Entry>()
         loadSeed(context).forEach { found[it.key] = it }

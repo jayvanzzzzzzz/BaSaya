@@ -82,10 +82,7 @@ data class StudentSummary(
     val needsHelp: List<Skill>
 )
 
-/**
- * Combines a student's per-lesson results into one score per skill.
- * The method is documented in README.md ("Paano kinukwenta ang progreso").
- */
+/** Combines a student's per-lesson results into one score per skill. The method is documented in README.md ("Paano kinukwenta ang progreso"). */
 object SkillScoring {
 
     /** Each older lesson counts 15% less than the one after it. */
@@ -147,8 +144,7 @@ object SkillScoring {
                 val at = list.indexOfFirst { it.lessonId == lesson.lessonId }
                 val saved = (done.correctSoFar[skill] ?: 0).coerceAtLeast(0)
                 if (at >= 0) {
-                    // Only a half-played crossword has a record before it's finished: the words
-                    // found on the level being played count, and the rest are added as wrong.
+                    // Only a half-played crossword has a record before it's finished: the words found on the level being played count, and the rest are added as wrong.
                     val result = list[at]
                     val rest = items - result.items
                     if (rest > 0) list[at] = result.copy(

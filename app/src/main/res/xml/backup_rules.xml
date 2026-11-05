@@ -1,13 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
--->
+﻿<?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <!-- Firebase auth depends on a device-bound Android Keystore key.
+         Exclude the session and keyset together so reinstall/transfer can create fresh keys.
+         Regenerate these paths if the Firebase application ID changes. -->
+    <exclude domain="sharedpref" path="com.google.firebase.auth.api.Store.W0RFRkFVTFRd+MToxNjc0NDU1ODY3NTphbmRyb2lkOjcyYjZkYjdhMzJiMzZlOTllZjE2YTY.xml" />
+    <exclude domain="sharedpref" path="com.google.firebase.auth.api.crypto.W0RFRkFVTFRd+MToxNjc0NDU1ODY3NTphbmRyb2lkOjcyYjZkYjdhMzJiMzZlOTllZjE2YTY.xml" />
+    <exclude domain="sharedpref" path="recent_accounts.xml" />
 </full-backup-content>

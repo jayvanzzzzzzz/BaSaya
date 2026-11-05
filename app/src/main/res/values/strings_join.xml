@@ -10,4 +10,13 @@
     <string name="jc_need_login">Kailangan mong mag-log in muli.</string>
     <string name="jc_save_failed">Hindi na-save. Subukan muli.</string>
     <string name="jc_connection">May problema sa koneksyon. Subukan muli.</string>
+    <string name="jc_request_instruction">Ilagay ang class code. Kailangan munang aprubahan ng guro ang iyong kahilingan.</string>
+    <string name="jc_request_send">Ipadala ang kahilingan</string>
+    <string name="jc_request_sending">Ipinapadala…</string>
+    <string name="jc_request_check">Tingnan ang katayuan</string>
+    <string name="jc_request_pending_title">Hinihintay ang pag-apruba ng guro</string>
+    <string name="jc_request_declined_title">Hindi inaprubahan ang kahilingan</string>
+    <string name="jc_request_pending">Naipadala ang kahilingan sa %1$s. Mabubuksan ang mga aralin at class chat kapag inaprubahan ka ng guro.</string>
+    <string name="jc_request_declined">Hindi inaprubahan ang iyong kahilingan sa %1$s. Kausapin ang guro o magpadala ng bagong kahilingan gamit ang tamang class code.</string>
+    <string name="jc_request_approved">Inaprubahan ka na! Maaari mo nang buksan ang iyong klase.</string>
 </resources>

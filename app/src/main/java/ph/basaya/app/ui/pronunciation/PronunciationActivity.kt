@@ -1,6 +1,12 @@
 package ph.basaya.app.ui.pronunciation
 
+import ph.basaya.app.data.assessment.*
+import ph.basaya.app.ui.AssessmentUi
+
 import android.Manifest
+import android.annotation.SuppressLint
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
@@ -62,6 +68,9 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class PronunciationActivity : AppCompatActivity() {
+    private var assessment: AssessmentSession? = null
+    private var submitting = false
+
 
     companion object {
         const val EXTRA_LESSON_ID = "LESSON_ID"
@@ -98,6 +107,7 @@ class PronunciationActivity : AppCompatActivity() {
     private lateinit var tvResultBand: TextView
     private lateinit var tvRecognizedWord: TextView
     private lateinit var btnMic: ImageButton
+    private lateinit var micWaveform: MicWaveformView
     private lateinit var pulseRing1: View
     private lateinit var pulseRing2: View
     private lateinit var micProcessingSpinner: ProgressBar
@@ -135,6 +145,8 @@ class PronunciationActivity : AppCompatActivity() {
     /** Set once Whisper is unavailable (e.g. free daily limit reached) so we stop retrying it. */
     private var useAndroidRecognizer = false
     private var listenJob: Job? = null
+    @Volatile private var micHeld = false
+    private var pendingAndroidResult: (() -> Unit)? = null
 
     private var ringAnimator: ValueAnimator? = null
     @Volatile private var voiceLevel = 0f
@@ -146,8 +158,12 @@ class PronunciationActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            beginListening()
+            // Permission dialogs break the original gesture. Require a fresh hold.
+            micHeld = false
+            tvMicHint.setText(R.string.pr_mic_hint_idle)
+            prepareMicrophone()
         } else {
+            micHeld = false
             showInfo(getString(R.string.pr_mic_permission))
         }
     }
@@ -212,6 +228,7 @@ class PronunciationActivity : AppCompatActivity() {
         tvResultBand = findViewById(R.id.tvResultBand)
         tvRecognizedWord = findViewById(R.id.tvRecognizedWord)
         btnMic = findViewById(R.id.btnMic)
+        micWaveform = findViewById(R.id.micWaveform)
         pulseRing1 = findViewById(R.id.pulseRing1)
         pulseRing2 = findViewById(R.id.pulseRing2)
         micProcessingSpinner = findViewById(R.id.micProcessingSpinner)
@@ -221,6 +238,7 @@ class PronunciationActivity : AppCompatActivity() {
         setButtonsEnabled(false)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupClickListeners() {
         btnClose.setOnClickListener { finish() }
 
@@ -229,16 +247,65 @@ class PronunciationActivity : AppCompatActivity() {
             speakCurrentWord()
         }
 
-        btnMic.setOnClickListener {
-            if (isProcessing) return@setOnClickListener
-            bounce(btnMic)
-            stopPlayback()
-            if (!isOnline()) {
-                showOffline()
-                return@setOnClickListener
+        btnMic.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (!isProcessing && view.isEnabled) {
+                        view.parent.requestDisallowInterceptTouchEvent(true)
+                        startMicHold()
+                    }
+                }
+                MotionEvent.ACTION_UP -> releaseMicHold()
+                MotionEvent.ACTION_CANCEL -> cancelMicHold()
             }
-            checkPermissionAndListen()
+            true
         }
+        btnMic.setOnKeyListener { _, code, event ->
+            if (code !in listOf(KeyEvent.KEYCODE_SPACE, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER)) false
+            else {
+                if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) startMicHold()
+                if (event.action == KeyEvent.ACTION_UP) releaseMicHold()
+                true
+            }
+        }
+        // Accessible click activation toggles recording for switch/TalkBack users.
+        btnMic.setOnClickListener {
+            if (micHeld) releaseMicHold() else startMicHold()
+        }
+    }
+
+    private fun startMicHold() {
+        if (isProcessing || !btnMic.isEnabled) return
+        stopPlayback()
+        if (!isOnline()) { showOffline(); return }
+        micHeld = true
+        btnMic.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        checkPermissionAndListen()
+    }
+
+    private fun releaseMicHold() {
+        if (!micHeld) return
+        micHeld = false
+        btnMic.parent.requestDisallowInterceptTouchEvent(false)
+        if (!isProcessing) return
+        btnMic.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        showThinkingUi()
+        voiceRecorder.finish()
+        if (useAndroidRecognizer || (!whisperClient.isConfigured && assessment == null)) {
+            val pending = pendingAndroidResult
+            pendingAndroidResult = null
+            if (pending != null) pending() else pronunciationChecker.stopListening()
+        }
+    }
+
+    private fun cancelMicHold() {
+        micHeld = false
+        pendingAndroidResult = null
+        listenJob?.cancel()
+        voiceRecorder.close()
+        pronunciationChecker.destroy()
+        stopListeningUi()
+        prepareMicrophone()
     }
 
     private fun setButtonsEnabled(enabled: Boolean) {
@@ -247,7 +314,7 @@ class PronunciationActivity : AppCompatActivity() {
         btnMic.alpha = if (enabled) 1f else 0.85f
     }
 
-    // ───────────────────────────── Words ─────────────────────────────
+    // Words
 
     private fun loadWords() {
         if (lessonId.isEmpty()) {
@@ -256,13 +323,14 @@ class PronunciationActivity : AppCompatActivity() {
             return
         }
 
-        lifecycleScope.launch {
+        AssessmentUi.run(this) {
+            if (!PracticeLessons.refresh(this@PronunciationActivity, lessonId)) assessment = AssessmentSession.open(this@PronunciationActivity, lessonId)
             val fetched = pronunciationRepository.getActivity(lessonId)
 
             if (fetched == null || fetched.words.isEmpty()) {
                 showInfo(getString(R.string.pr_no_activity))
                 finish()
-                return@launch
+                return@run
             }
 
             pronunciationData = fetched
@@ -286,7 +354,7 @@ class PronunciationActivity : AppCompatActivity() {
             } else {
                 entries = MutableList(wordList.size) { null }
                 wordList.forEachIndexed { index, item ->
-                    launch {
+                    lifecycleScope.launch {
                         val entry = runCatching {
                             Dictionary.lookup(this@PronunciationActivity, item.word)
                         }.getOrNull()
@@ -299,16 +367,16 @@ class PronunciationActivity : AppCompatActivity() {
                 }
             }
 
-            // Continue where the child closed Bigkas (here or on the website): the word, the
-            // lives left on it and the score so far.
+            // Continue where the child closed Bigkas (here or on the website): the word, the lives left on it and the score so far.
             val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
-            if (progress?.getBoolean("pronunciationFinished") == true) {
+            val confirmed = assessment?.progress()
+            if (confirmed?.flag("pronunciationFinished") == true) {
                 finish()
-                return@launch
+                return@run
             }
-            LessonResume.of(progress, LessonResume.PRONUNCIATION, wordList.size)?.let { resume ->
-                currentWordIndex = resume["done"] as Int
+            confirmed?.getAsJsonObject("resume")?.getAsJsonObject("pronunciation")?.let { saved ->
+                val resume = com.google.gson.Gson().fromJson(saved, Map::class.java)
+                currentWordIndex = (resume["done"] as Number).toInt()
                 correctCount = (resume["correct"] as? Number)?.toInt() ?: 0
                 firstTryCorrect = (resume["firstTryCorrect"] as? Number)?.toInt() ?: 0
                 (resume["hardWords"] as? List<*>)?.filterIsInstance<String>()?.let { hardWords.addAll(it) }
@@ -319,37 +387,16 @@ class PronunciationActivity : AppCompatActivity() {
             // Every word was done before closing: only the result is left to save.
             if (currentWordIndex >= wordList.size) {
                 finishActivityWithScore()
-                return@launch
+                return@run
             }
             showCurrentWord(animate = false)
         }
     }
 
-    /**
-     * Saves the place: `done` words finished, with the lives and misses of word `done` when
-     * it is the current one (a fresh word starts with MAX_LIVES).
-     */
-    private fun savePlace(done: Int) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val current = done == currentWordIndex
-        LessonResume.save(
-            uid, lessonId, LessonResume.PRONUNCIATION,
-            mapOf(
-                "done" to done,
-                "total" to wordList.size,
-                "lives" to if (current) livesRemaining else MAX_LIVES,
-                "misses" to if (current) missesOnWord else 0,
-                "correct" to correctCount,
-                "firstTryCorrect" to firstTryCorrect,
-                "hardWords" to hardWords.toList()
-            )
-        )
-    }
+    /** Saves the place: `done` words finished, with the lives and misses of word `done` when it is the current one (a fresh word starts with MAX_LIVES). */
+    private fun savePlace(done: Int) { /* Accepted speech answers own the saved place. */ }
 
-    /**
-     * Pantig under the word and the "ⓘ Kahulugan" chip (display only; checking still uses the
-     * word itself). The chip is gone for words the Diksiyonaryo doesn't have.
-     */
+    /** Pantig under the word and the "ⓘ Kahulugan" chip (display only; checking still uses the word itself). The chip is gone for words the Diksiyonaryo doesn't have. */
     private fun showSyllables() {
         val text = syllables.getOrNull(currentWordIndex).orEmpty()
         tvTargetSyllables.text = text
@@ -362,8 +409,7 @@ class PronunciationActivity : AppCompatActivity() {
         if (hasMeaning && !wasShown) wiggleWordInfo()
     }
 
-    /** A little wiggle when the chip appears, so the student notices it. Kept gentle so the
-     *  wide pill doesn't swing out of the card. */
+    /** A little wiggle when the chip appears, so the student notices it. Kept gentle so the wide pill doesn't swing out of the card. */
     private fun wiggleWordInfo() {
         btnWordInfo.rotation = 0f
         ObjectAnimator.ofFloat(btnWordInfo, View.ROTATION, 0f, -6f, 5f, -3f, 0f).apply {
@@ -460,7 +506,7 @@ class PronunciationActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Listening ─────────────────────────────
+    // Listening
 
     private fun checkPermissionAndListen() {
         val hasPermission = ContextCompat.checkSelfPermission(
@@ -476,12 +522,12 @@ class PronunciationActivity : AppCompatActivity() {
     }
 
     private fun beginListening() {
-        if (wordList.isEmpty()) return
+        if (wordList.isEmpty() || !micHeld || isProcessing) return
         isProcessing = true
         btnSpeaker.isEnabled = false
         hideResult()
 
-        if (whisperClient.isConfigured && !useAndroidRecognizer) {
+        if (assessment != null || (whisperClient.isConfigured && !useAndroidRecognizer)) {
             listenWithWhisper()
         } else {
             listenWithAndroid()
@@ -492,6 +538,7 @@ class PronunciationActivity : AppCompatActivity() {
         bookView.setMood(PronunciationBookView.Mood.LISTENING)
         tvMicHint.setText(R.string.pr_mic_hint_listening)
         micProcessingSpinner.visibility = View.GONE
+        micWaveform.visibility = View.VISIBLE
         startPulseAnimation()
     }
 
@@ -507,64 +554,81 @@ class PronunciationActivity : AppCompatActivity() {
         showListeningUi()
 
         listenJob = lifecycleScope.launch {
-            val recording = voiceRecorder.record { level ->
+            val recording = voiceRecorder.record(whileHeld = { micHeld }) { level ->
                 voiceLevel = level
                 bookView.setVoiceLevel(level)
             }
+            if (!isProcessing) return@launch
+            // Capture once. Assessment retries reuse this recording and never reopen the mic.
+            listenJob = AssessmentUi.run(this@PronunciationActivity, showPending = false) {
+                when (recording) {
+                    VoiceRecorder.Result.MicUnavailable -> {
+                        stopListeningUi()
+                        showInfo(getString(R.string.pr_mic_unavailable))
+                    }
 
-            when (recording) {
-                VoiceRecorder.Result.MicUnavailable -> {
-                    stopListeningUi()
-                    showInfo(getString(R.string.pr_mic_unavailable))
-                }
+                    VoiceRecorder.Result.NoSpeech -> {
+                        stopListeningUi()
+                        showInfo(getString(R.string.pr_no_speech))
+                    }
 
-                VoiceRecorder.Result.NoSpeech -> {
-                    stopListeningUi()
-                    showInfo(getString(R.string.pr_no_speech))
-                }
-
-                is VoiceRecorder.Result.Speech -> {
-                    showThinkingUi()
-                    when (val result = whisperClient.transcribe(recording.wav)) {
-                        is WhisperSttClient.Result.Text -> {
-                            if (result.text.isBlank()) {
-                                stopListeningUi()
-                                showInfo(getString(R.string.pr_no_speech))
-                            } else {
-                                val score = PronunciationScorer.score(targetWord, listOf(result.text), null)
-                                handleScoreResult(score)
+                    is VoiceRecorder.Result.Speech -> {
+                        showThinkingUi()
+                        if (assessment != null) {
+                            val accepted = assessment!!.request("speech", "pronunciation", fields("index" to currentWordIndex,
+                                "audio" to android.util.Base64.encodeToString(recording.wav, android.util.Base64.NO_WRAP)))
+                            if (accepted.flag("noSpeech")) { stopListeningUi(); showInfo(getString(R.string.pr_no_speech)); return@run }
+                            val band = when (accepted.text("band")) {
+                                "great" -> PronunciationScorer.ScoreBand.GREAT
+                                "okay" -> PronunciationScorer.ScoreBand.OKAY
+                                else -> PronunciationScorer.ScoreBand.TRY_AGAIN
                             }
+                            handleScoreResult(PronunciationScorer.PronunciationResult(band, 0, null, 0))
+                            return@run
                         }
+                        when (val result = whisperClient.transcribe(recording.wav)) {
+                            is WhisperSttClient.Result.Text -> {
+                                if (result.text.isBlank()) {
+                                    stopListeningUi()
+                                    showInfo(getString(R.string.pr_no_speech))
+                                } else {
+                                    val score = PronunciationScorer.score(targetWord, listOf(result.text), null)
+                                    handleScoreResult(score)
+                                }
+                            }
 
-                        WhisperSttClient.Result.NetworkError -> {
-                            stopListeningUi()
-                            if (!isOnline()) showOffline() else switchToAndroidRecognizer()
+                            WhisperSttClient.Result.NetworkError -> {
+                                stopListeningUi()
+                                if (!isOnline()) showOffline() else switchToAndroidRecognizer()
+                            }
+
+                            WhisperSttClient.Result.Unavailable -> switchToAndroidRecognizer()
                         }
-
-                        WhisperSttClient.Result.Unavailable -> switchToAndroidRecognizer()
                     }
                 }
             }
         }
     }
 
-    /** Whisper failed while online (quota/server): ask again and let Android's recognizer listen. */
+    /** Whisper failed: the next hold uses Android recognition. Never reopen the mic automatically. */
     private fun switchToAndroidRecognizer() {
         Log.w("PronunciationActivity", "Whisper unavailable, using Android speech recognition")
         useAndroidRecognizer = true
+        voiceRecorder.close()
+        stopListeningUi()
         showInfo(getString(R.string.pr_say_again))
-        isProcessing = true
-        listenWithAndroid()
     }
 
     private fun listenWithAndroid() {
         val targetWord = wordList[currentWordIndex].word
+        voiceRecorder.close()
         showListeningUi()
 
         pronunciationChecker.startListening(targetWord, object : PronunciationChecker.PronunciationResultListener {
             override fun onResult(candidates: List<String>, confidenceScores: FloatArray?) {
                 val result = PronunciationScorer.score(targetWord, candidates, confidenceScores)
-                handleScoreResult(result)
+                if (micHeld) pendingAndroidResult = { handleScoreResult(result) }
+                else handleScoreResult(result)
             }
 
             override fun onError(errorMessage: String) {
@@ -592,6 +656,8 @@ class PronunciationActivity : AppCompatActivity() {
 
     private fun stopListeningUi() {
         isProcessing = false
+        micHeld = false
+        pendingAndroidResult = null
         stopPulseAnimation()
         micProcessingSpinner.visibility = View.GONE
         btnSpeaker.isEnabled = true
@@ -603,7 +669,7 @@ class PronunciationActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Results ─────────────────────────────
+    // Results
 
     private fun handleScoreResult(result: PronunciationScorer.PronunciationResult) {
         stopListeningUi()
@@ -630,10 +696,7 @@ class PronunciationActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Wrong answers only encourage; the misheard text is not shown. When the word's lives run
-     * out it scores 0 and the next word is up.
-     */
+    /** Wrong answers only encourage; the misheard text is not shown. When the word's lives run out it scores 0 and the next word is up. */
     private fun handleFailedAttempt() {
         livesRemaining--
         missesOnWord++
@@ -738,46 +801,18 @@ class PronunciationActivity : AppCompatActivity() {
         progressBarWords.setProgress(progressBarWords.max, true)
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-        lifecycleScope.launch {
-            if (uid != null) {
-                try {
-                    pronunciationRepository.markActivityFinished(uid, lessonId, correctCount, wordList.size)
-                } catch (e: Exception) {
-                    Log.e("PronunciationActivity", "Failed to save pronunciation result", e)
-                }
-                LessonResume.clear(uid, lessonId, LessonResume.PRONUNCIATION)
-
-                // Pagbigkas skill: first-try correct words, plus the words that needed help
-                try {
-                    SkillProgressRepository().recordResult(
-                        uid, lessonId, Skill.PAGBIGKAS,
-                        correct = firstTryCorrect, attempts = wordList.size, items = wordList.size,
-                        extras = mapOf(
-                            "eventuallyCorrect" to correctCount,
-                            "hardWords" to hardWords.toList()
-                        )
-                    )
-                    SkillProgressRepository.refreshInBackground(uid)
-                } catch (e: Exception) {
-                    Log.e("PronunciationActivity", "Failed to save pronunciation progress", e)
-                }
-
-                // Offline: the result was saved on the phone and is sent once online.
-                if (!PracticeLessons.isPractice(lessonId) && !Network.isOnline(this@PronunciationActivity)) {
-                    Toast.makeText(this@PronunciationActivity, R.string.saved_offline_note, Toast.LENGTH_LONG).show()
-                }
-            }
-
+        AssessmentUi.run(this) {
+            val accepted = assessment?.finish("pronunciation")
             val resultIntent = Intent().apply {
-                putExtra(EXTRA_SCORE, correctCount)
-                putExtra(EXTRA_TOTAL, wordList.size)
+                putExtra(EXTRA_SCORE, accepted?.number("score", correctCount) ?: correctCount)
+                putExtra(EXTRA_TOTAL, accepted?.number("total", wordList.size) ?: wordList.size)
             }
             setResult(RESULT_OK, resultIntent)
             finish()
         }
     }
 
-    // ───────────────────────────── Playback ─────────────────────────────
+    // Playback
 
     /** Audio source priority: downloaded file (offline) -> Cloudflare R2 stream -> bundled res/raw -> TTS. */
     private fun speakCurrentWord() {
@@ -868,7 +903,7 @@ class PronunciationActivity : AppCompatActivity() {
         mediaPlayer = null
     }
 
-    // ───────────────────────────── Animations ─────────────────────────────
+    // Animations
 
     /** Two ripples that grow bigger and brighter the louder the child speaks. */
     private fun startPulseAnimation() {
@@ -891,7 +926,8 @@ class PronunciationActivity : AppCompatActivity() {
                     ring.scaleY = scale
                     ring.alpha = (1f - phase) * (0.45f + shownLevel * 0.55f)
                 }
-                val micScale = 1f + shownLevel * 0.1f
+                micWaveform.setLevel(shownLevel, elapsed)
+                val micScale = 1.04f + shownLevel * 0.06f
                 btnMic.scaleX = micScale
                 btnMic.scaleY = micScale
             }
@@ -905,6 +941,7 @@ class PronunciationActivity : AppCompatActivity() {
         voiceLevel = 0f
         shownLevel = 0f
         bookView.setVoiceLevel(0f)
+        micWaveform.visibility = View.INVISIBLE
 
         listOf(pulseRing1, pulseRing2).forEach { ring ->
             ring.visibility = View.INVISIBLE
@@ -931,11 +968,31 @@ class PronunciationActivity : AppCompatActivity() {
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    // ───────────────────────────── Lifecycle ─────────────────────────────
+    // Lifecycle
+
+    private fun prepareMicrophone() {
+        if (isFinishing || isDestroyed || useAndroidRecognizer) return
+        if (assessment == null && !whisperClient.isConfigured) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            voiceRecorder.prepare()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            prepareMicrophone()
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     override fun onStop() {
         super.onStop()
         // Never keep the mic or audio running in the background.
+        voiceRecorder.close()
+        micHeld = false
+        pendingAndroidResult = null
         if (isProcessing) {
             listenJob?.cancel()
             pronunciationChecker.destroy()
@@ -946,6 +1003,7 @@ class PronunciationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        voiceRecorder.close()
         listenJob?.cancel()
         pronunciationChecker.destroy()
         textToSpeech?.stop()

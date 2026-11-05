@@ -1,5 +1,8 @@
 package ph.basaya.app.ui.quiz
 
+import ph.basaya.app.data.assessment.*
+import ph.basaya.app.ui.AssessmentUi
+
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Intent
@@ -42,11 +45,17 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class QuizActivity : AppCompatActivity() {
+    private var assessment: AssessmentSession? = null
+    private var submitting = false
+
 
     private lateinit var lessonId: String
     private lateinit var quizRepository: QuizRepository
     private lateinit var quiz: Quiz
 
+    private var attemptId = ""
+    private var practiceScore = 0
+    private val choiceOrders = mutableListOf<List<Int>>()
     private var currentQuestionIndex = 0
     /** Choices picked on the current question (several when the question has multiple answers). */
     private val selectedChoices = mutableSetOf<Int>()
@@ -124,19 +133,28 @@ class QuizActivity : AppCompatActivity() {
 
         quizRepository = QuizRepository(this)
 
-        lifecycleScope.launch {
+        AssessmentUi.run(this) {
+            if (!ph.basaya.app.data.progress.PracticeLessons.refresh(this@QuizActivity, lessonId) || ph.basaya.app.utils.Network.isOnline(this@QuizActivity))
+                assessment = AssessmentSession.open(this@QuizActivity, lessonId)
             val fetchedQuiz = quizRepository.getQuiz(lessonId)
 
             if (fetchedQuiz == null || fetchedQuiz.questions.isEmpty()) {
                 Toast.makeText(this@QuizActivity, getString(R.string.qz_not_found), Toast.LENGTH_SHORT).show()
                 finish()
-                return@launch
+                return@run
             }
+
+            if (assessment == null && fetchedQuiz.questions.any { it.requiresServerValidation })
+                throw AssessmentFailure(0, "Kumonekta upang masuri ang mga sagot sa pagsasanay.")
 
             // Where the student stopped: only the questions not answered yet are asked.
             total = fetchedQuiz.questions.size
             val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val resume = uid?.let { LessonResume.of(LessonResume.loadProgress(it, lessonId), LessonResume.QUIZ, total) }
+            if (assessment?.takeUnless { it.practice }?.progress()?.flag("quizFinished") == true) { finish(); return@run }
+            val begin = assessment?.takeUnless { it.practice }?.request("begin", "quiz")
+            if (begin?.flag("finished") == true) { finish(); return@run }
+            attemptId = begin?.text("attemptId").orEmpty()
+            val resume = begin?.getAsJsonObject("resume")?.let { com.google.gson.Gson().fromJson(it, Map::class.java) }
             answeredBefore = (resume?.get("answered") as? List<*>).orEmpty()
                 .mapNotNull { (it as? Number)?.toInt() }
                 .filter { it in 0 until total }
@@ -147,6 +165,7 @@ class QuizActivity : AppCompatActivity() {
             // A new random order of questions and choices every time.
             val remaining = fetchedQuiz.questions.withIndex().filter { it.index !in answeredBefore }.shuffled()
             positions = remaining.map { it.index }
+            choiceOrders.clear()
             quiz = fetchedQuiz.copy(questions = remaining.map { it.value.withShuffledChoices() })
             tvQuizTitle.text = quiz.title
             userAnswers.addAll(List(quiz.questions.size) { emptySet<Int>() })
@@ -155,28 +174,32 @@ class QuizActivity : AppCompatActivity() {
             if (quiz.questions.isEmpty()) {
                 btnNextQuestion.isEnabled = false
                 finishQuiz()
-                return@launch
+                return@run
             }
 
             showQuestion(currentQuestionIndex, animateIn = false)
 
             btnNextQuestion.setOnClickListener {
-                pressBounce(btnNextQuestion)
-                userAnswers[currentQuestionIndex] = selectedChoices.toSet()
-
-                if (currentQuestionIndex < quiz.questions.lastIndex) {
-                    currentQuestionIndex++
-                    savePlace(uid)
-                    showQuestion(currentQuestionIndex)
-                } else {
-                    btnNextQuestion.isEnabled = false
-                    finishQuiz()
+                if (submitting) return@setOnClickListener
+                val selected = selectedChoices.toSet()
+                submitting = true
+                btnNextQuestion.isEnabled = false
+                AssessmentUi.run(this@QuizActivity) {
+                    val answer = assessment?.request("answer", "quiz", fields("attemptId" to attemptId,
+                        "index" to positions[currentQuestionIndex], "selected" to selected.map { choiceOrders[currentQuestionIndex][it] }))
+                    if (assessment?.practice == true && answer?.flag("right") == true) practiceScore++
+                    userAnswers[currentQuestionIndex] = selected
+                    submitting = false
+                    if (currentQuestionIndex < quiz.questions.lastIndex) {
+                        currentQuestionIndex++
+                        showQuestion(currentQuestionIndex)
+                    } else finishQuiz()
                 }
             }
         }
     }
 
-    // ───────────────────────────── Questions ─────────────────────────────
+    // Questions
 
     private fun showQuestion(index: Int, animateIn: Boolean = true) {
         val question = quiz.questions[index]
@@ -327,12 +350,13 @@ class QuizActivity : AppCompatActivity() {
     /** The same question with its choices shuffled; the correct answers move with their choices. */
     private fun QuizQuestion.withShuffledChoices(): QuizQuestion {
         val order = choices.indices.shuffled() // order[new position] = old index
+        choiceOrders.add(order)
         val correct = correctAnswers.map { order.indexOf(it) }
         return copy(
             choices = order.map { choices[it] },
             answer = correct.first(),
             answers = correct,
-            multiple = correct.size > 1
+            multiple = isMultiple
         )
     }
 
@@ -352,7 +376,7 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Rocket progress ─────────────────────────────
+    // Rocket progress
 
     private fun moveRocket(fraction: Float) {
         rocketTrack.post {
@@ -383,7 +407,7 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Finish ─────────────────────────────
+    // Finish
 
     /** Answers so far, earlier sessions included, after [count] questions of this one. */
     private data class Answered(val answered: List<Int>, val missed: List<String>, val score: Int)
@@ -398,55 +422,18 @@ class QuizActivity : AppCompatActivity() {
         )
     }
 
-    /** Saves the answers given so far (they count at the deadline if the quiz isn't finished). */
-    private fun savePlace(uid: String?) {
-        uid ?: return
-        val so = answeredAfter(currentQuestionIndex)
-        LessonResume.save(
-            uid, lessonId, LessonResume.QUIZ,
-            mapOf(
-                "done" to so.answered.size,
-                "total" to total,
-                "score" to so.score,
-                "answered" to so.answered,
-                "missed" to so.missed
-            )
-        )
-    }
-
     private fun finishQuiz() {
         val result = answeredAfter(quiz.questions.size)
         val missed = result.missed
-        val score = result.score
+        val score = if (assessment?.practice == true) practiceScore else result.score
 
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-        lifecycleScope.launch {
-            if (uid != null) {
-                try {
-                    quizRepository.saveQuizResult(uid, lessonId, score, total)
-                    LessonResume.clear(uid, lessonId, LessonResume.QUIZ)
-                } catch (e: Exception) {
-                    android.util.Log.e("QuizActivity", "Failed to save quiz result", e)
-                }
-
-                // Pagsusulit skill
-                try {
-                    SkillProgressRepository().recordResult(
-                        uid, lessonId, Skill.PAGSUSULIT,
-                        correct = score, attempts = total, items = total,
-                        // The questions' text (they're shuffled), for the teacher's item analysis.
-                        extras = mapOf("missedQuestions" to missed)
-                    )
-                    SkillProgressRepository.refreshInBackground(uid)
-                } catch (e: Exception) {
-                    android.util.Log.e("QuizActivity", "Failed to save quiz progress", e)
-                }
-            }
-
+        AssessmentUi.run(this) {
+            val accepted = assessment?.takeUnless { it.practice }?.finish("quiz", fields("attemptId" to attemptId))
             val intent = Intent(this@QuizActivity, QuizCompleteScreen::class.java).apply {
-                putExtra("SCORE", score)
-                putExtra("TOTAL", total)
+                putExtra("SCORE", accepted?.number("score", score) ?: score)
+                putExtra("TOTAL", accepted?.number("total", total) ?: total)
                 putExtra("QUIZ_TITLE", quiz.title)
                 putExtra("LESSON_ID", lessonId)
             }
@@ -455,7 +442,7 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    // ───────────────────────────── Motion helpers ─────────────────────────────
+    // Motion helpers
 
     private fun pop(view: View) {
         view.animate().cancel()

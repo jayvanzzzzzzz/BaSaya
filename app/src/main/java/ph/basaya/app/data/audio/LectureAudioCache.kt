@@ -28,20 +28,14 @@ object LectureAudioCache {
 
     private const val DIR = "lecture_audio_cache"
 
-    /**
-     * Downloads outlive the screen that asked for them: a timed-out wait leaves them running,
-     * so "Subukan muli" or the next page picks up where they got to.
-     */
+    /** Downloads outlive the screen that asked for them: a timed-out wait leaves them running, so "Subukan muli" or the next page picks up where they got to. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val locks = ConcurrentHashMap<String, Mutex>()
 
     /** The cached copy of [url], or null when it isn't downloaded yet. */
     fun file(context: Context, url: String): File? = target(context, url).takeIf { it.exists() }
 
-    /**
-     * Makes every sentence of [page] ready to play: downloaded lessons already are, the rest
-     * are fetched into the cache. Completes with false when any file failed.
-     */
+    /** Makes every sentence of [page] ready to play: downloaded lessons already are, the rest are fetched into the cache. Completes with false when any file failed. */
     fun preparePage(context: Context, lessonId: String, page: LecturePage): Deferred<Boolean> {
         val app = context.applicationContext
         return scope.async {

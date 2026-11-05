@@ -84,7 +84,7 @@
             android:layout_marginBottom="16dp"
             android:background="@color/ch_line" />
 
-        <!-- ═══ Teacher ═══ -->
+        <!-- Teacher -->
         <TextView
             style="@style/Ch.MembersLabel"
             android:text="@string/ch_members_teacher" />
@@ -202,7 +202,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ═══ Students ═══ -->
+        <!-- Students -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

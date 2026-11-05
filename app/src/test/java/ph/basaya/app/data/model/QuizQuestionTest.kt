@@ -11,6 +11,12 @@ class QuizQuestionTest {
     private val choices = listOf("aso", "bahay", "pusa")
 
     @Test
+    fun sanitizedMultipleChoiceNeedsNoClientAnswerKey() {
+        val q = QuizQuestion("?", choices, multiple = true)
+        assertTrue(q.isMultiple)
+    }
+
+    @Test
     fun olderQuizWithSingleAnswer() {
         val q = QuizQuestion("?", choices, answer = 1)
         assertEquals(setOf(1), q.correctAnswers)

@@ -55,7 +55,7 @@ class SkillProgressRepository(
             "completedAt" to FieldValue.serverTimestamp()
         ) + extras
         lessonDoc(uid, lessonId)
-            .set(mapOf("skills" to mapOf(skill.key to record)), SetOptions.merge())
+            .set(ProgressSession.stamp(uid, mapOf("skills" to mapOf(skill.key to record))), SetOptions.merge())
             .addOnFailureListener { Log.w(TAG, "Could not save the ${skill.key} result", it) }
     }
 
@@ -75,7 +75,7 @@ class SkillProgressRepository(
             "completedAt" to FieldValue.serverTimestamp()
         )
         lessonDoc(uid, lessonId)
-            .set(mapOf("skills" to mapOf(Skill.TALASALITAAN.key to record)), SetOptions.merge())
+            .set(ProgressSession.stamp(uid, mapOf("skills" to mapOf(Skill.TALASALITAAN.key to record))), SetOptions.merge())
             .addOnFailureListener { Log.w(TAG, "Could not save the crossword level", it) }
     }
 
@@ -84,8 +84,7 @@ class SkillProgressRepository(
         val allDocs = firestore.collection("users").document(uid)
             .collection("assignedLessons").get().await().documents
 
-        // Only the lessons of the student's class count (see LessonCompletion), and never
-        // Practice ones (they save nothing).
+        // Only the lessons of the student's class count (see LessonCompletion), and never Practice ones (they save nothing).
         val classId = firestore.collection("users").document(uid).get().await().getString("classId")
         val links = if (classId.isNullOrBlank()) {
             emptyList()
@@ -171,8 +170,7 @@ class SkillProgressRepository(
     companion object {
         private const val TAG = "SkillProgress"
 
-        // Outlives the activity that finished the lesson, so the summary still updates
-        // after the screen closes.
+        // Outlives the activity that finished the lesson, so the summary still updates after the screen closes.
         private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
         fun refreshInBackground(uid: String) {

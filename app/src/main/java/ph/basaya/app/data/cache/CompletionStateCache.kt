@@ -1,5 +1,7 @@
 package ph.basaya.app.data.cache
 
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.content.Context
 
 class CompletionStateCache(context: Context) {
@@ -23,45 +25,47 @@ class CompletionStateCache(context: Context) {
     )
 
     fun save(lessonId: String, state: State) {
+        val scopedLesson = ProgressSession.gameKey(lessonId)
         prefs.edit()
-            .putBoolean("${lessonId}_lectureFinished", state.lectureFinished)
-            .putBoolean("${lessonId}_gameFinished", state.gameFinished)
-            .putLong("${lessonId}_gameScore", state.gameScore)
-            .putLong("${lessonId}_gameTotal", state.gameTotal)
-            .putBoolean("${lessonId}_activityFinished", state.activityFinished)
-            .putLong("${lessonId}_activityScore", state.activityScore ?: -1)
-            .putLong("${lessonId}_activityTotal", state.activityTotal ?: -1)
-            .putBoolean("${lessonId}_quizFinished", state.quizFinished)
-            .putLong("${lessonId}_quizScore", state.quizScore ?: -1)
-            .putLong("${lessonId}_quizTotal", state.quizTotal ?: -1)
-            .putBoolean("${lessonId}_pronunciationFinished", state.pronunciationFinished)
-            .putLong("${lessonId}_pronunciationScore", state.pronunciationScore ?: -1)
-            .putLong("${lessonId}_pronunciationTotal", state.pronunciationTotal ?: -1)
+            .putBoolean("${scopedLesson}_lectureFinished", state.lectureFinished)
+            .putBoolean("${scopedLesson}_gameFinished", state.gameFinished)
+            .putLong("${scopedLesson}_gameScore", state.gameScore)
+            .putLong("${scopedLesson}_gameTotal", state.gameTotal)
+            .putBoolean("${scopedLesson}_activityFinished", state.activityFinished)
+            .putLong("${scopedLesson}_activityScore", state.activityScore ?: -1)
+            .putLong("${scopedLesson}_activityTotal", state.activityTotal ?: -1)
+            .putBoolean("${scopedLesson}_quizFinished", state.quizFinished)
+            .putLong("${scopedLesson}_quizScore", state.quizScore ?: -1)
+            .putLong("${scopedLesson}_quizTotal", state.quizTotal ?: -1)
+            .putBoolean("${scopedLesson}_pronunciationFinished", state.pronunciationFinished)
+            .putLong("${scopedLesson}_pronunciationScore", state.pronunciationScore ?: -1)
+            .putLong("${scopedLesson}_pronunciationTotal", state.pronunciationTotal ?: -1)
             .apply()
     }
 
     fun get(lessonId: String): State? {
-        if (!prefs.contains("${lessonId}_lectureFinished")) return null
+        val scopedLesson = ProgressSession.gameKey(lessonId)
+        if (!prefs.contains("${scopedLesson}_lectureFinished")) return null
 
-        val activityScore = prefs.getLong("${lessonId}_activityScore", -1).takeIf { it >= 0 }
-        val activityTotal = prefs.getLong("${lessonId}_activityTotal", -1).takeIf { it >= 0 }
-        val quizScore = prefs.getLong("${lessonId}_quizScore", -1).takeIf { it >= 0 }
-        val quizTotal = prefs.getLong("${lessonId}_quizTotal", -1).takeIf { it >= 0 }
-        val pronunciationScore = prefs.getLong("${lessonId}_pronunciationScore", -1).takeIf { it >= 0 }
-        val pronunciationTotal = prefs.getLong("${lessonId}_pronunciationTotal", -1).takeIf { it >= 0 }
+        val activityScore = prefs.getLong("${scopedLesson}_activityScore", -1).takeIf { it >= 0 }
+        val activityTotal = prefs.getLong("${scopedLesson}_activityTotal", -1).takeIf { it >= 0 }
+        val quizScore = prefs.getLong("${scopedLesson}_quizScore", -1).takeIf { it >= 0 }
+        val quizTotal = prefs.getLong("${scopedLesson}_quizTotal", -1).takeIf { it >= 0 }
+        val pronunciationScore = prefs.getLong("${scopedLesson}_pronunciationScore", -1).takeIf { it >= 0 }
+        val pronunciationTotal = prefs.getLong("${scopedLesson}_pronunciationTotal", -1).takeIf { it >= 0 }
 
         return State(
-            lectureFinished = prefs.getBoolean("${lessonId}_lectureFinished", false),
-            gameFinished = prefs.getBoolean("${lessonId}_gameFinished", false),
-            gameScore = prefs.getLong("${lessonId}_gameScore", 0),
-            gameTotal = prefs.getLong("${lessonId}_gameTotal", 0),
-            activityFinished = prefs.getBoolean("${lessonId}_activityFinished", false),
+            lectureFinished = prefs.getBoolean("${scopedLesson}_lectureFinished", false),
+            gameFinished = prefs.getBoolean("${scopedLesson}_gameFinished", false),
+            gameScore = prefs.getLong("${scopedLesson}_gameScore", 0),
+            gameTotal = prefs.getLong("${scopedLesson}_gameTotal", 0),
+            activityFinished = prefs.getBoolean("${scopedLesson}_activityFinished", false),
             activityScore = activityScore,
             activityTotal = activityTotal,
-            quizFinished = prefs.getBoolean("${lessonId}_quizFinished", false),
+            quizFinished = prefs.getBoolean("${scopedLesson}_quizFinished", false),
             quizScore = quizScore,
             quizTotal = quizTotal,
-            pronunciationFinished = prefs.getBoolean("${lessonId}_pronunciationFinished", false),
+            pronunciationFinished = prefs.getBoolean("${scopedLesson}_pronunciationFinished", false),
             pronunciationScore = pronunciationScore,
             pronunciationTotal = pronunciationTotal
         )

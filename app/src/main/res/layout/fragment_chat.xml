@@ -12,13 +12,13 @@
     android:orientation="vertical"
     tools:context=".ui.fragment.ChatFragment">
 
-    <!-- ═══ Header: class tile + title + class name / open-closed subtitle ═══ -->
+    <!-- Header: class tile, title and class name -->
     <LinearLayout
         android:id="@+id/chatHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/ch_header"
         android:elevation="1dp"
@@ -31,15 +31,15 @@
 
         <TextView
             android:id="@+id/tvClassTile"
-            android:layout_width="48dp"
-            android:layout_height="51dp"
+            android:layout_width="31dp"
+            android:layout_height="35dp"
             android:background="@drawable/ch_class_tile"
             android:fontFamily="@font/lexend"
             android:gravity="center"
             android:importantForAccessibility="no"
             android:paddingBottom="3dp"
             android:textColor="#FFFFFF"
-            android:textSize="17sp"
+            android:textSize="8sp"
             android:textStyle="bold"
             tools:text="G4" />
 
@@ -60,7 +60,7 @@
                 android:maxLines="1"
                 android:text="@string/ch_title"
                 android:textColor="@color/ch_ink"
-                android:textSize="18sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -71,30 +71,18 @@
                 android:fontFamily="@font/be_vietnam_semi_bold"
                 android:maxLines="1"
                 android:textColor="@color/nav_tab_chat"
-                android:textSize="13sp"
+                android:textSize="11sp"
                 android:visibility="gone"
                 tools:text="Grade 4 - Sampaguita"
                 tools:visibility="visible" />
 
-            <TextView
-                android:id="@+id/tvChatSubtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:ellipsize="end"
-                android:fontFamily="@font/quicksand_medium"
-                android:maxLines="2"
-                android:text="@string/ch_subtitle_open"
-                android:textColor="@color/ch_ink_soft"
-                android:textSize="12sp"
-                android:textStyle="bold" />
         </LinearLayout>
 
         <!-- Class members: teacher on top, students A–Z (sheet_class_members). -->
         <ImageButton
             android:id="@+id/btnMembers"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/ch_info_button"
             android:contentDescription="@string/ch_members"
@@ -107,7 +95,7 @@
             tools:visibility="visible" />
     </LinearLayout>
 
-    <!-- ═══ Messages, or the empty / no-class / loading state ═══ -->
+    <!-- Messages, or the empty / no-class / loading state -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -233,7 +221,7 @@
         </FrameLayout>
     </FrameLayout>
 
-    <!-- ═══ Closed by the teacher: read only ═══ -->
+    <!-- Closed by the teacher: read only -->
     <TextView
         android:id="@+id/tvClosedBanner"
         android:layout_width="match_parent"
@@ -252,7 +240,7 @@
         android:textSize="13sp"
         android:visibility="gone" />
 
-    <!-- ═══ Composer ═══ -->
+    <!-- Composer -->
     <LinearLayout
         android:id="@+id/chatComposer"
         android:layout_width="match_parent"

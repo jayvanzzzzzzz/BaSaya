@@ -92,8 +92,7 @@ class SkillScoringTest {
 
     @Test
     fun skillsAreScoredSeparately() {
-        // Strong in the quiz, struggling in pronunciation: each skill keeps its own level,
-        // and only the weak one is flagged.
+        // Strong in the quiz, struggling in pronunciation: each skill keeps its own level, and only the weak one is flagged.
         val summary = SkillScoring.summarize(
             mapOf(
                 Skill.PAGSUSULIT to listOf(result("a", 90, 10, 1), result("b", 95, 10, 2)),

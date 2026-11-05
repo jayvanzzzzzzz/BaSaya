@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_lessons_heading">Mga Aralin</string>
+    <string name="home_search_toggle">Maghanap ng aralin</string>
+    <string name="home_options">Iba pang opsyon sa mga aralin</string>
+    <string name="home_filter">Salain</string>
+    <string name="home_filter_active">Salain · %1$d</string>
+    <string name="home_filter_title">Salain ang mga aralin</string>
+    <string name="home_filter_availability">Pagkakabukas</string>
+    <string name="home_filter_status">Progreso</string>
+    <string name="home_filter_all">Lahat</string>
+    <string name="home_filter_open">Bukas</string>
+    <string name="home_filter_closed">Sarado</string>
+    <string name="home_filter_done">Tapos na</string>
+    <string name="home_filter_progress">Nasa progreso</string>
+    <string name="home_filter_new">Hindi pa nasisimulan</string>
+    <string name="home_filter_apply">Ipakita ang mga aralin</string>
+    <string name="home_filter_reset">I-reset</string>
+    <string name="home_filter_empty">Walang aralin na tumutugma sa mga piniling filter.</string>
+    <string name="home_continue">Ipagpatuloy</string>
+</resources>

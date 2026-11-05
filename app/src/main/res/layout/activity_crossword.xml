@@ -9,7 +9,7 @@
     android:background="@drawable/cw_bg_scene"
     tools:context=".ui.game.CrosswordActivity">
 
-    <!-- ═══ Decorative sky (animated in code) ═══ -->
+    <!-- Decorative sky (animated in code) -->
     <ImageView
         android:id="@+id/cwSun"
         android:layout_width="120dp"
@@ -48,7 +48,7 @@
         android:clipChildren="false"
         android:clipToPadding="false">
 
-        <!-- ═══ Header ═══ -->
+        <!-- Header -->
         <ImageButton
             android:id="@+id/btnBack"
             android:layout_width="48dp"
@@ -120,7 +120,7 @@
                 tools:text="0/5" />
         </LinearLayout>
 
-        <!-- ═══ Crossword board ═══ -->
+        <!-- Crossword board -->
         <ScrollView
             android:id="@+id/boardVerticalScroll"
             android:layout_width="0dp"
@@ -155,7 +155,7 @@
             </HorizontalScrollView>
         </ScrollView>
 
-        <!-- ═══ Word being spelled ═══ -->
+        <!-- Word being spelled -->
         <TextView
             android:id="@+id/tempTv"
             android:layout_width="wrap_content"
@@ -180,7 +180,7 @@
             tools:text="BAHAY"
             tools:visibility="visible" />
 
-        <!-- ═══ Letter wheel ═══ -->
+        <!-- Letter wheel -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/letterContainer"
             android:layout_width="0dp"

@@ -144,7 +144,7 @@ class PronunciationBookView @JvmOverloads constructor(
         if (isShown) postInvalidateOnAnimation()
     }
 
-    // ───────────────────────────── Animation state ─────────────────────────────
+    // Animation state
 
     private fun step() {
         val now = SystemClock.uptimeMillis()
@@ -251,7 +251,7 @@ class PronunciationBookView @JvmOverloads constructor(
         return sin(p * PI).toFloat()
     }
 
-    // ───────────────────────────── Drawing ─────────────────────────────
+    // Drawing
 
     private fun drawShadow(canvas: Canvas, lift: Float) {
         val shrink = (1f - lift / 80f).coerceIn(0.6f, 1f)

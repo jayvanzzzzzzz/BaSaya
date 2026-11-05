@@ -3,7 +3,6 @@ package ph.basaya.app.ui
 import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
-import android.view.animation.AnimationUtils
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,13 +13,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import ph.basaya.app.R
+import ph.basaya.app.data.auth.RecentAccount
+import ph.basaya.app.data.auth.RecentAccounts
+import android.widget.LinearLayout
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.WindowInsetsControllerCompat
 import ph.basaya.app.data.auth.AuthHelper
 import ph.basaya.app.data.auth.StudentOnly
 import android.animation.ObjectAnimator
 import android.util.Log
 import android.view.animation.LinearInterpolator
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.view.inputmethod.EditorInfo
 import androidx.core.widget.doAfterTextChanged
@@ -55,7 +61,12 @@ class LogInActivity : AppCompatActivity() {
     private lateinit var imgLoginArrow: ImageView
     private lateinit var progressLogin: ProgressBar
 
+    private var selectedAccount: RecentAccount? = null
+    private var loginBusy = false
+    private lateinit var accountsBack: OnBackPressedCallback
+
     private var arrowSpinAnimator: ObjectAnimator? = null
+    private val bookAnimators = mutableListOf<ObjectAnimator>()
 
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -85,12 +96,18 @@ class LogInActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_log_in)
+        val loginScroll = findViewById<View>(R.id.loginScroll)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            // Include the IME so the scrollable form shrinks above the keyboard (edge-to-edge).
-            val systemBars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime()
-            )
+            // Keep the books anchored to the screen; only the form avoids the keyboard.
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            val keyboardOverlap = (ime.bottom - systemBars.bottom).coerceAtLeast(0)
+            if ((loginScroll.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin != keyboardOverlap) {
+                loginScroll.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                    bottomMargin = keyboardOverlap
+                }
+            }
             insets
         }
 
@@ -99,10 +116,8 @@ class LogInActivity : AppCompatActivity() {
         imgBgBookLeft = findViewById(R.id.imgBgBookLeft)
         imgBgBookRight = findViewById(R.id.imgBgBookRight)
 
-        val floatingAnim = AnimationUtils.loadAnimation(this, R.anim.floating)
-
-        imgBgBookLeft.startAnimation(floatingAnim)
-        imgBgBookRight.startAnimation(floatingAnim)
+        startFloatingBook(imgBgBookLeft)
+        startFloatingBook(imgBgBookRight)
 
         btnLogin = findViewById(R.id.btnLogin)
         btnGoogleLogin = findViewById(R.id.btnGoogleLogin)
@@ -136,7 +151,7 @@ class LogInActivity : AppCompatActivity() {
 
         btnLogin.setOnClickListener {
 
-            val email = etEmail.text.toString()
+            val email = selectedAccount?.email ?: etEmail.text.toString().trim()
             val password = etPassword.text.toString()
 
             tilEmail.error = if (email.isBlank()) getString(R.string.login_error_email_required) else null
@@ -170,6 +185,7 @@ class LogInActivity : AppCompatActivity() {
                                 return@addOnSuccessListener
                             }
 
+                            RecentAccounts.remember(this, FirebaseAuth.getInstance().currentUser, doc.data.orEmpty())
                             Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
 
                             val intent = Intent(this@LogInActivity, MainActivity::class.java)
@@ -211,9 +227,38 @@ class LogInActivity : AppCompatActivity() {
             showForgotPasswordDialog(authHelper)
         }
 
+        findViewById<View>(R.id.btnAnotherAccount).setOnClickListener { showAccountForm(null) }
+        findViewById<View>(R.id.btnBackToAccounts).setOnClickListener { showRecentAccounts() }
+        accountsBack = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() { if (!loginBusy) showRecentAccounts() }
+        }
+        onBackPressedDispatcher.addCallback(this, accountsBack)
+        val selectedUid = savedInstanceState?.getString("recentSelectedUid")
+        val restored = RecentAccounts.list(this).firstOrNull { it.uid == selectedUid }
+        if (restored != null) showAccountForm(restored, focus = false)
+        else if (savedInstanceState?.getBoolean("recentManualForm") == true) showAccountForm(null, focus = false)
+        else showRecentAccounts()
+
         // A saved login that turned out not to be a student's (MainActivity signed it out).
         if (savedInstanceState == null && intent.getBooleanExtra(StudentOnly.EXTRA_STUDENTS_ONLY, false)) {
             showStudentsOnlyDialog()
+        }
+    }
+
+    private fun startFloatingBook(book: ImageView) {
+        val baseRotation = book.rotation
+        val floatDistance = 20f * resources.displayMetrics.density
+        bookAnimators += ObjectAnimator.ofFloat(book, View.TRANSLATION_Y, 0f, floatDistance).apply {
+            duration = 2000L
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.REVERSE
+            start()
+        }
+        bookAnimators += ObjectAnimator.ofFloat(book, View.ROTATION, baseRotation - 5f, baseRotation + 5f).apply {
+            duration = 3000L
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.REVERSE
+            start()
         }
     }
 
@@ -304,7 +349,90 @@ class LogInActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun initials(name: String): String = name.trim().split(Regex("\\s+"))
+        .filter { it.isNotBlank() }.take(2).joinToString("") { it.take(1) }.uppercase(java.util.Locale.getDefault())
+
+    private fun showRecentAccounts() {
+        if (loginBusy) return
+        val accounts = RecentAccounts.list(this)
+        if (accounts.isEmpty()) { showAccountForm(null, focus = false); return }
+        selectedAccount = null
+        etPassword.text?.clear()
+        WindowInsetsControllerCompat(window, etPassword).hide(WindowInsetsCompat.Type.ime())
+        val list = findViewById<LinearLayout>(R.id.recentAccountsList)
+        list.removeAllViews()
+        accounts.forEach { account ->
+            val row = layoutInflater.inflate(R.layout.item_recent_account, list, false)
+            row.findViewById<TextView>(R.id.recentAccountAvatar).text = initials(account.name)
+            row.findViewById<TextView>(R.id.recentAccountName).text = account.name
+            row.findViewById<TextView>(R.id.recentAccountHint).setText(
+                if (account.provider == "google.com") R.string.recent_accounts_google else R.string.recent_accounts_password)
+            row.findViewById<View>(R.id.recentAccountChoose).apply {
+                contentDescription = getString(R.string.recent_accounts_choose_cd, account.name)
+                setOnClickListener { showAccountForm(account) }
+            }
+            row.findViewById<View>(R.id.recentAccountRemove).apply {
+                contentDescription = getString(R.string.recent_accounts_remove_cd, account.name)
+                setOnClickListener {
+                    if (RecentAccounts.remove(this@LogInActivity, account.uid)) showRecentAccounts()
+                    else Toast.makeText(this@LogInActivity, R.string.recent_accounts_remove_failed, Toast.LENGTH_SHORT).show()
+                }
+            }
+            list.addView(row)
+        }
+        findViewById<View>(R.id.loginFormCard).visibility = View.GONE
+        findViewById<View>(R.id.recentAccountsPanel).visibility = View.VISIBLE
+        accountsBack.isEnabled = false
+    }
+
+    private fun showAccountForm(account: RecentAccount?, focus: Boolean = true) {
+        if (loginBusy) return
+        selectedAccount = account
+        val google = account?.provider == "google.com"
+        findViewById<View>(R.id.recentAccountsPanel).visibility = View.GONE
+        findViewById<View>(R.id.loginFormCard).visibility = View.VISIBLE
+        findViewById<View>(R.id.btnBackToAccounts).visibility = if (RecentAccounts.list(this).isEmpty()) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.selectedAccountPanel).visibility = if (account == null) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.selectedAccountAvatar).text = account?.let { initials(it.name) }.orEmpty()
+        findViewById<TextView>(R.id.selectedAccountName).text = account?.name.orEmpty()
+        findViewById<TextView>(R.id.loginHeading).setText(if (account == null) R.string.login_heading else R.string.recent_accounts_welcome)
+        findViewById<TextView>(R.id.loginInstruction).setText(when {
+            google -> R.string.recent_accounts_google
+            account != null -> R.string.recent_accounts_password
+            else -> R.string.login_instruction
+        })
+        tilEmail.visibility = if (account == null) View.VISIBLE else View.GONE
+        tilPassword.visibility = if (google) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.btnForgotPassword).visibility = if (google) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.loginPrimaryAction).visibility = if (google) View.GONE else View.VISIBLE
+        btnGoogleLogin.visibility = if (account == null || google) View.VISIBLE else View.GONE
+        etEmail.setText(account?.email.orEmpty())
+        etPassword.text?.clear()
+        tilEmail.error = null
+        tilPassword.error = null
+        tilPassword.endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
+        etPassword.transformationMethod = android.text.method.PasswordTransformationMethod.getInstance()
+        accountsBack.isEnabled = RecentAccounts.list(this).isNotEmpty()
+        if (focus) {
+            val target = if (google) btnGoogleLogin else if (account != null) etPassword else etEmail
+            target.requestFocus()
+            if (!google) target.post { WindowInsetsControllerCompat(window, target).show(WindowInsetsCompat.Type.ime()) }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("recentSelectedUid", selectedAccount?.uid)
+        outState.putBoolean("recentManualForm", findViewById<View>(R.id.loginFormCard).visibility == View.VISIBLE && selectedAccount == null)
+        super.onSaveInstanceState(outState)
+    }
+
     private fun setLoading(isLoading: Boolean) {
+        loginBusy = isLoading
+        etEmail.isEnabled = !isLoading
+        etPassword.isEnabled = !isLoading
+        findViewById<View>(R.id.btnBackToAccounts).isEnabled = !isLoading
+        findViewById<View>(R.id.btnForgotPassword).isEnabled = !isLoading
+        tvRegister.isEnabled = !isLoading
         btnLogin.isEnabled = !isLoading
         btnGoogleLogin.isEnabled = !isLoading
 
@@ -389,6 +517,7 @@ class LogInActivity : AppCompatActivity() {
                             return@addOnSuccessListener
                         }
 
+                        RecentAccounts.remember(this, user, profile.data.orEmpty())
                         startActivity(
                             Intent(this, MainActivity::class.java)
                                 .putExtra("uid", user.uid)
@@ -420,6 +549,8 @@ class LogInActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         arrowSpinAnimator?.cancel()
+        bookAnimators.forEach { it.cancel() }
+        bookAnimators.clear()
     }
 
 }

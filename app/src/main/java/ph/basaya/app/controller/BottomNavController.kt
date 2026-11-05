@@ -55,8 +55,7 @@ class BottomNavController(
     fun selectTab(index: Int, animate: Boolean) {
         val icon = items[index].icon
 
-        // Center the bubble on the active icon, relative to the shared FrameLayout
-        // (the icon may sit inside a wrapper, e.g. Chat's icon + unread dot).
+        // Center the bubble on the active icon, relative to the shared FrameLayout (the icon may sit inside a wrapper, e.g. Chat's icon + unread dot).
         var iconX = 0f
         var iconY = 0f
         var view: View = icon

@@ -11,7 +11,7 @@
     android:clipToPadding="false"
     tools:context=".ui.pronunciation.PronunciationActivity">
 
-    <!-- ═══ Top bar: close · progress · lives ═══ -->
+    <!-- Top bar: close · progress · lives -->
     <ImageButton
         android:id="@+id/btnClose"
         android:layout_width="48dp"
@@ -77,7 +77,7 @@
             tools:text="5" />
     </LinearLayout>
 
-    <!-- ═══ Instruction ═══ -->
+    <!-- Instruction -->
     <TextView
         android:id="@+id/tvInstruction"
         android:layout_width="wrap_content"
@@ -99,7 +99,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnClose" />
 
-    <!-- ═══ Buddy ═══ -->
+    <!-- Buddy -->
     <ph.basaya.app.ui.pronunciation.PronunciationBookView
         android:id="@+id/bookView"
         android:layout_width="0dp"
@@ -114,7 +114,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvInstruction" />
 
-    <!-- ═══ Word card ═══ -->
+    <!-- Word card -->
     <LinearLayout
         android:id="@+id/wordCard"
         android:layout_width="0dp"
@@ -160,8 +160,7 @@
             tools:text="ba·hay"
             tools:visibility="visible" />
 
-        <!-- Kahulugan pill + speaker, centred together under the word. When the pill is gone
-             the speaker centres on its own. -->
+        <!-- Kahulugan pill + speaker, centred together under the word. When the pill is gone the speaker centres on its own. -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -206,8 +205,7 @@
                 app:strokeWidth="1.5dp"
                 tools:visibility="visible" />
 
-            <!-- Plays the word (the book reads it aloud). A 40dp circle, a bit taller than the
-                 pill; pr_btn_speaker's 4dp inset keeps the tap area 48dp. -->
+            <!-- Plays the word (the book reads it aloud). A 40dp circle, a bit taller than the pill; pr_btn_speaker's 4dp inset keeps the tap area 48dp. -->
             <ImageButton
                 android:id="@+id/btnSpeaker"
                 android:layout_width="48dp"
@@ -224,7 +222,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- ═══ Result bubble (space is reserved so nothing jumps) ═══ -->
+    <!-- Result bubble (space is reserved so nothing jumps) -->
     <LinearLayout
         android:id="@+id/resultStickyNote"
         android:layout_width="0dp"
@@ -270,7 +268,7 @@
             tools:text="Narinig ko: bahay" />
     </LinearLayout>
 
-    <!-- ═══ Microphone ═══ -->
+    <!-- Microphone -->
     <FrameLayout
         android:id="@+id/micButtonContainer"
         android:layout_width="170dp"
@@ -310,6 +308,14 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_mic"
             app:tint="@android:color/white" />
+
+        <ph.basaya.app.ui.pronunciation.MicWaveformView
+            android:id="@+id/micWaveform"
+            android:layout_width="100dp"
+            android:layout_height="24dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:importantForAccessibility="no"
+            android:visibility="invisible" />
 
         <ProgressBar
             android:id="@+id/micProcessingSpinner"

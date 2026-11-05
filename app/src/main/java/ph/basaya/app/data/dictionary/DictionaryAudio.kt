@@ -90,10 +90,7 @@ class DictionaryAudio(context: Context) {
         if (ttsReady) tts?.stop()
     }
 
-    /**
-     * Fetches [entry]'s saved audio ahead of a tap, so the speaker plays at once. Only
-     * fetches a recording someone already made; making one waits for a real tap.
-     */
+    /** Fetches [entry]'s saved audio ahead of a tap, so the speaker plays at once. Only fetches a recording someone already made; making one waits for a real tap. */
     suspend fun preload(entry: Dictionary.Entry) {
         val file = cachedFile(entry)
         if (!file.exists()) download(savedUrl(entry), file)
@@ -136,10 +133,7 @@ class DictionaryAudio(context: Context) {
             .joinToString("") { "%02x".format(it) }
     }
 
-    /**
-     * Saves [url] to [file]: one plain GET, much quicker than MediaPlayer streaming it (or
-     * finding a 404). The file, or null when it isn't there or the download fails.
-     */
+    /** Saves [url] to [file]: one plain GET, much quicker than MediaPlayer streaming it (or finding a 404). The file, or null when it isn't there or the download fails. */
     private suspend fun download(url: String, file: File): File? = withContext(Dispatchers.IO) {
         try {
             val connection = URL(url).openConnection() as HttpURLConnection

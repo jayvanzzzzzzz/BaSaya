@@ -6,10 +6,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Date
 
-/**
- * "Read up to" time per student. Everything that appeared after it is unread.
- * Kept on the phone (works offline) and in users/{uid}.notifReadAt (follows the account).
- */
+/** "Read up to" time per student. Everything that appeared after it is unread. Kept on the phone (works offline) and in users/{uid}.notifReadAt (follows the account). */
 object NotificationReadState {
 
     private const val PREFS = "notification_read"

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_app_dialog"
+    android:fillViewport="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <ph.basaya.app.ui.pronunciation.PronunciationBookView
+            android:layout_width="84dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center_horizontal"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:accessibilityHeading="true"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:text="@string/pf_logout_title"
+            android:textColor="@color/dlg_ink"
+            android:textSize="21sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/be_vietnam_regular"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:text="@string/pf_logout_message"
+            android:textColor="@color/dlg_body"
+            android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogoutConfirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:minHeight="52dp"
+            android:fontFamily="@font/be_vietnam_semi_bold"
+            android:text="@string/pf_logout"
+            android:textAllCaps="false"
+            android:textColor="@color/logout_button_text"
+            android:textSize="14sp"
+            app:backgroundTint="@color/dlg_action"
+            app:cornerRadius="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogoutStay"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:fontFamily="@font/be_vietnam_semi_bold"
+            android:text="@string/pf_logout_stay"
+            android:textAllCaps="false"
+            android:textColor="@color/dlg_action"
+            android:textSize="14sp" />
+    </LinearLayout>
+</ScrollView>

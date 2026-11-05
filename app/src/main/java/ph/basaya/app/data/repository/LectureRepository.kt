@@ -1,5 +1,7 @@
 package ph.basaya.app.data.repository
 
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.content.Context
 import android.util.Log
 import ph.basaya.app.data.audio.LectureAudioStore
@@ -22,10 +24,7 @@ class LectureRepository(private val context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val gson = Gson()
 
-    /**
-     * Room-first, Firestore-fallback for DISPLAY purposes only.
-     * The fallback does NOT write to Room — only a downloaded lesson's copy is kept locally.
-     */
+    /** Read from Room first, then Firestore for display only; only explicit downloads save lesson content to Room. */
     suspend fun getLecture(lessonId: String): Lecture? {
         LessonContentPrefetch.takeLecture(lessonId)?.let { return it }
 
@@ -165,21 +164,6 @@ class LectureRepository(private val context: Context) {
         } catch (e: Exception) {
             null // Offline and not downloaded
         }
-    }
-
-    /**
-     * Saves without waiting: offline, Firestore keeps the write on the phone and sends it
-     * once the phone is back online, so the lecture can close right away.
-     */
-    fun markLectureFinished(userId: String, lessonId: String) {
-        if (PracticeLessons.isPractice(lessonId)) return // Practice: nothing is saved
-        firestore
-            .collection("users")
-            .document(userId)
-            .collection("assignedLessons")
-            .document(lessonId)
-            .set(mapOf("lectureFinished" to true), SetOptions.merge())
-            .addOnFailureListener { Log.w("LectureRepository", "Could not save lectureFinished", it) }
     }
 
     suspend fun checkCompletion(userId: String, lessonId: String): Boolean? {

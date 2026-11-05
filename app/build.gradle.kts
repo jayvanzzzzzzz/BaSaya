@@ -27,6 +27,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "STT_WORKER_URL", "\"${localProperties.getProperty("stt.workerUrl", "")}\"")
+        buildConfigField("String", "MEMBERSHIP_API_URL", "\"https://basaya-notify-api.vercel.app\"")
         buildConfigField("String", "STT_APP_KEY", "\"${localProperties.getProperty("stt.appKey", "")}\"")
     }
 
@@ -51,6 +52,8 @@ android {
 }
 
 dependencies {
+    // Active audio downloads must be cancellable even during a blocked read.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

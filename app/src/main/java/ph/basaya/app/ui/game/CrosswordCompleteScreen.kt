@@ -1,5 +1,7 @@
 package ph.basaya.app.ui.game
 
+import ph.basaya.app.data.progress.ProgressSession
+
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
@@ -92,7 +94,7 @@ class CrosswordCompleteScreen : AppCompatActivity() {
 
             val repo = CrosswordRepository(this@CrosswordCompleteScreen)
             val levels = repo.getLevels(lessonId)
-            val progress = db.crosswordProgressDao().getProgress(lessonId)
+            val progress = db.crosswordProgressDao().getProgress(ProgressSession.gameKey(lessonId))
 
             val allLevels = levels.size
 
@@ -105,13 +107,6 @@ class CrosswordCompleteScreen : AppCompatActivity() {
             progressBar.max = allLevels
             progressBar.progress = currentLevel
 
-            // Offline: the level was saved on the phone and is sent once online.
-            if (!PracticeLessons.isPractice(lessonId) && !Network.isOnline(this@CrosswordCompleteScreen)) {
-                findViewById<TextView>(R.id.tvPracticeNote).apply {
-                    setText(R.string.saved_offline_note)
-                    visibility = View.VISIBLE
-                }
-            }
 
             if (currentLevel < allLevels) {
 

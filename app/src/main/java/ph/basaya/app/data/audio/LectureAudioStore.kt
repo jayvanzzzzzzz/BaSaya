@@ -2,12 +2,19 @@ package ph.basaya.app.data.audio
 
 import android.content.Context
 import ph.basaya.app.data.model.LecturePage
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.TimeUnit
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 /**
  * Offline copies of lecture sentence audio hosted on Cloudflare R2.
@@ -17,7 +24,10 @@ import java.net.URL
 object LectureAudioStore {
 
     private const val ROOT_DIR = "lecture_audio"
-    private const val TIMEOUT_MS = 15_000
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .build()
 
     fun localFile(context: Context, lessonId: String, pageNumber: Int, sentenceIndex: Int): File =
         File(lessonDir(context, lessonId), fileName(pageNumber, sentenceIndex))
@@ -49,16 +59,14 @@ object LectureAudioStore {
         }
     }
 
-    /**
-     * Fills a staging folder, then swaps it in for `dir` (dropping audio from an older version).
-     * On failure the staging folder is removed and `dir` is left untouched.
-     */
-    internal fun replaceDir(dir: File, fill: (staging: File) -> Unit) {
+    /** Fills a staging folder, then swaps it in for `dir` (dropping audio from an older version). On failure the staging folder is removed and `dir` is left untouched. */
+    internal suspend fun replaceDir(dir: File, fill: suspend (staging: File) -> Unit) {
         val staging = File(dir.parentFile, "${dir.name}.new")
         staging.deleteRecursively()
         staging.mkdirs()
         try {
             fill(staging)
+            currentCoroutineContext().ensureActive()
         } catch (e: Exception) {
             staging.deleteRecursively()
             throw e
@@ -77,27 +85,43 @@ object LectureAudioStore {
     private fun lessonDir(context: Context, lessonId: String) =
         File(File(context.filesDir, ROOT_DIR), lessonId)
 
-    internal fun downloadFile(url: String, target: File) {
-        val connection = URL(url).openConnection() as HttpURLConnection
+    internal suspend fun downloadFile(url: String, target: File) = coroutineScope {
+        val call = client.newCall(Request.Builder().url(url).build())
+        // Call.cancel closes the underlying socket without waiting for the read lock.
+        val cancellationWatcher = launch(Dispatchers.IO, start = CoroutineStart.UNDISPATCHED) {
+            try { awaitCancellation() } finally { call.cancel() }
+        }
         try {
-            connection.connectTimeout = TIMEOUT_MS
-            connection.readTimeout = TIMEOUT_MS
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("HTTP ${connection.responseCode} for $url")
+            currentCoroutineContext().ensureActive()
+            call.execute().use { response ->
+                if (response.code != 200) throw IOException("HTTP " + response.code + " for " + url)
+                val body = response.body ?: throw IOException("Missing audio body")
+                val temp = File(target.parentFile, target.name + ".part")
+                body.byteStream().use { input ->
+                    temp.outputStream().use { output ->
+                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                        while (true) {
+                            currentCoroutineContext().ensureActive()
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            currentCoroutineContext().ensureActive()
+                            output.write(buffer, 0, count)
+                        }
+                    }
+                }
+                currentCoroutineContext().ensureActive()
+                if (!temp.renameTo(target)) {
+                    temp.delete()
+                    throw IOException("Could not save " + target.name)
+                }
             }
-
-            // Write to a temp file first so a dropped connection never leaves a truncated mp3.
-            val temp = File(target.parentFile, "${target.name}.part")
-            connection.inputStream.use { input ->
-                temp.outputStream().use { output -> input.copyTo(output) }
-            }
-            if (!temp.renameTo(target)) {
-                temp.delete()
-                throw IOException("Could not save ${target.name}")
-            }
+        } catch (failure: Exception) {
+            // Socket closure is expected on cancellation, not a download failure.
+            currentCoroutineContext().ensureActive()
+            throw failure
         } finally {
-            connection.disconnect()
+            cancellationWatcher.cancel()
+            call.cancel()
         }
     }
 }

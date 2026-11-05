@@ -1,19 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+﻿<?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
+    <!-- Device-bound Firebase session/keyset: keep in sync with backup_rules.xml. -->
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="sharedpref" path="com.google.firebase.auth.api.Store.W0RFRkFVTFRd+MToxNjc0NDU1ODY3NTphbmRyb2lkOjcyYjZkYjdhMzJiMzZlOTllZjE2YTY.xml" />
+        <exclude domain="sharedpref" path="com.google.firebase.auth.api.crypto.W0RFRkFVTFRd+MToxNjc0NDU1ODY3NTphbmRyb2lkOjcyYjZkYjdhMzJiMzZlOTllZjE2YTY.xml" />
+        <exclude domain="sharedpref" path="recent_accounts.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="com.google.firebase.auth.api.Store.W0RFRkFVTFRd+MToxNjc0NDU1ODY3NTphbmRyb2lkOjcyYjZkYjdhMzJiMzZlOTllZjE2YTY.xml" />
+        <exclude domain="sharedpref" path="com.google.firebase.auth.api.crypto.W0RFRkFVTFRd+MToxNjc0NDU1ODY3NTphbmRyb2lkOjcyYjZkYjdhMzJiMzZlOTllZjE2YTY.xml" />
+        <exclude domain="sharedpref" path="recent_accounts.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

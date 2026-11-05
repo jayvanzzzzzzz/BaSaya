@@ -42,15 +42,11 @@ import java.text.Normalizer
 import kotlin.math.ceil
 import kotlin.math.max
 
-/**
- * The Chat tab: the class's group chat with the teacher and classmates (see [ClassChat]).
- * Firestore listeners run only while this tab is on screen.
- */
+/** The Chat tab: the class's group chat with the teacher and classmates (see [ClassChat]). Firestore listeners run only while this tab is on screen. */
 class ChatFragment : Fragment() {
 
     private lateinit var tvClassTile: TextView
     private lateinit var tvChatClass: TextView
-    private lateinit var tvChatSubtitle: TextView
     private lateinit var rvMessages: RecyclerView
     private lateinit var chatEmpty: View
     private lateinit var ivEmptyIcon: ImageView
@@ -104,7 +100,6 @@ class ChatFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
         tvClassTile = view.findViewById(R.id.tvClassTile)
         tvChatClass = view.findViewById(R.id.tvChatClass)
-        tvChatSubtitle = view.findViewById(R.id.tvChatSubtitle)
         rvMessages = view.findViewById(R.id.rvMessages)
         chatEmpty = view.findViewById(R.id.chatEmpty)
         ivEmptyIcon = view.findViewById(R.id.ivEmptyIcon)
@@ -187,7 +182,7 @@ class ChatFragment : Fragment() {
         adapter = null
     }
 
-    // ---------- Listening (only while on screen) ----------
+    // Listening (only while on screen)
 
     private fun start() {
         if (started) return
@@ -285,7 +280,7 @@ class ChatFragment : Fragment() {
         adapter?.show(emptyList(), hasOlder = false, loadingOlder = false, context = requireContext())
     }
 
-    // ---------- Showing ----------
+    // Showing
 
     private fun showHeader(className: String, hasClass: Boolean) {
         this.className = className
@@ -306,14 +301,12 @@ class ChatFragment : Fragment() {
         jumpToNewest.visibility = View.GONE
         chatComposer.visibility = View.GONE
         tvClosedBanner.visibility = View.GONE
-        tvChatSubtitle.setText(R.string.ch_subtitle_open)
         tvEmptyTitle.setText(R.string.ch_no_class_title)
         tvEmptyBody.setText(R.string.ch_no_class_body)
         chatEmpty.visibility = View.VISIBLE
     }
 
     private fun showOpen(open: Boolean) {
-        tvChatSubtitle.setText(if (open) R.string.ch_subtitle_open else R.string.ch_subtitle_closed)
         tvClosedBanner.visibility = if (open) View.GONE else View.VISIBLE
         chatComposer.visibility = if (open) View.VISIBLE else View.GONE
         updateSendButton()
@@ -376,7 +369,7 @@ class ChatFragment : Fragment() {
         if (newest > 0) ClassChat.markRead(requireContext(), id, newest)
     }
 
-    // ---------- Class members (the (i) button) ----------
+    // Class members (the (i) button)
 
     /** Teacher on top (or "no assigned teacher yet"), then the students A–Z; this student is tagged "IKAW". */
     private fun showMembers() {
@@ -471,7 +464,7 @@ class ChatFragment : Fragment() {
         return if (first != null && first in 'A'..'Z') first.toString() else "#"
     }
 
-    // ---------- Older messages ----------
+    // Older messages
 
     private fun loadOlder() {
         val id = classId ?: return
@@ -494,7 +487,7 @@ class ChatFragment : Fragment() {
         }
     }
 
-    // ---------- Sending ----------
+    // Sending
 
     /**
      * Right after a message the text box is locked for the rules' 5 seconds and counts down
@@ -573,7 +566,7 @@ class ChatFragment : Fragment() {
         }
     }
 
-    // ---------- Deleting your own message (within 5 minutes) ----------
+    // Deleting your own message (within 5 minutes)
 
     private fun confirmDelete(message: ClassChat.Message) {
         val id = classId ?: return

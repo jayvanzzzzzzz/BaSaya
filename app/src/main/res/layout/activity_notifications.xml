@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ═══ Header (top padding = status bar, set in code) ═══ -->
+        <!-- Header (top padding = status bar, set in code) -->
         <LinearLayout
             android:id="@+id/header"
             android:layout_width="match_parent"
@@ -92,7 +92,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ═══ Body ═══ -->
+        <!-- Body -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"

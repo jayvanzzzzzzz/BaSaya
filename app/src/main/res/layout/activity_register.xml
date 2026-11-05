@@ -345,8 +345,7 @@
 
                         <include layout="@layout/view_password_rules" />
 
-                        <!-- Primary action. imgRegisterArrow / progressRegister overlay the button
-                             and are swapped by RegisterActivity.setLoading(). -->
+                        <!-- Primary action. imgRegisterArrow / progressRegister overlay the button and are swapped by RegisterActivity.setLoading(). -->
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

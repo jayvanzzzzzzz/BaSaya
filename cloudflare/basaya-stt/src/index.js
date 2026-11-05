@@ -37,7 +37,10 @@ export default {
       if (!(await isSignedInUser(authorization.slice("Bearer ".length), env))) {
         return json({ error: "Unauthorized" }, 401, request, env);
       }
-    } else if (env.APP_KEY && request.headers.get("X-App-Key") !== env.APP_KEY) {
+    } else if (
+      typeof env.APP_KEY !== "string" || !env.APP_KEY.trim() ||
+      request.headers.get("X-App-Key") !== env.APP_KEY
+    ) {
       return json({ error: "Unauthorized" }, 401, request, env);
     }
 

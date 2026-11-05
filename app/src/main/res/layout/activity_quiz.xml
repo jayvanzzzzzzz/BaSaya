@@ -16,7 +16,7 @@
         android:clipToPadding="false"
         android:orientation="vertical">
 
-        <!-- ═══ Header ═══ -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -66,7 +66,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ═══ Rocket progress ═══ -->
+        <!-- Rocket progress -->
         <FrameLayout
             android:id="@+id/rocketTrack"
             android:layout_width="match_parent"
@@ -136,7 +136,7 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- ═══ Question & answers ═══ -->
+        <!-- Question & answers -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -187,7 +187,7 @@
             </LinearLayout>
         </ScrollView>
 
-        <!-- ═══ Next ═══ -->
+        <!-- Next -->
         <TextView
             android:id="@+id/btnNextQuestion"
             android:layout_width="match_parent"

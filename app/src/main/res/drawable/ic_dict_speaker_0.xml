@@ -4,8 +4,7 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- ic_speaker_on without its waves: the Diksiyonaryo speaker while the audio loads,
-         and the first frame of its waves rolling while it plays (DictionaryActivity) -->
+    <!-- ic_speaker_on without its waves: the Diksiyonaryo speaker while the audio loads, and the first frame of its waves rolling while it plays (DictionaryActivity) -->
     <path
         android:fillColor="@color/white"
         android:pathData="M3,9v6h4l5,5V4L7,9H3z"/>

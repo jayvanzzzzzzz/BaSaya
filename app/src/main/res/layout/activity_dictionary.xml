@@ -31,7 +31,7 @@
             app:elevation="0dp"
             app:liftOnScroll="false">
 
-        <!-- ═══ Header (top padding and min height = status bar, set in code) ═══ -->
+        <!-- Header (top padding and min height = status bar, set in code) -->
         <LinearLayout
             android:id="@+id/header"
             android:layout_width="match_parent"
@@ -112,7 +112,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-        <!-- ═══ Search ═══ -->
+        <!-- Search -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="54dp"
@@ -152,7 +152,7 @@
                 android:textSize="16sp" />
         </LinearLayout>
 
-        <!-- ═══ A–Y letters (Abakada order), filled in code ═══ -->
+        <!-- A–Y letters (Abakada order), filled in code -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -172,7 +172,7 @@
         </LinearLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
-        <!-- ═══ Body ═══ -->
+        <!-- Body -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -214,8 +214,7 @@
                     android:paddingBottom="22dp" />
             </androidx.core.widget.NestedScrollView>
 
-            <!-- Not found / error. Near the top, not centered: the body runs below the screen
-                 while the header is showing. -->
+            <!-- Not found / error. Near the top, not centered: the body runs below the screen while the header is showing. -->
             <LinearLayout
                 android:id="@+id/emptyState"
                 android:layout_width="match_parent"

@@ -159,7 +159,7 @@ class DictionaryActivity : AppCompatActivity() {
         showAll()
     }
 
-    // ---------- loading ----------
+    // loading
 
     private fun setQuery(text: String) {
         etSearch.tag = true
@@ -216,7 +216,7 @@ class DictionaryActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- showing ----------
+    // showing
 
     private fun showOnly(view: View?) {
         listOf(recycler, detailScroll, emptyState, progress).forEach {
@@ -477,7 +477,7 @@ class DictionaryActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- small view helpers ----------
+    // small view helpers
 
     private fun chip(label: String, onClick: () -> Unit) = TextView(this).apply {
         text = label
@@ -524,7 +524,7 @@ class DictionaryActivity : AppCompatActivity() {
         etSearch.clearFocus()
     }
 
-    // ---------- list ----------
+    // list
 
     /**
      * The heading, one page of words, then the page nav (like the website's lesson list):
