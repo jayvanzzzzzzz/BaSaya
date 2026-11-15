@@ -59,11 +59,11 @@ class SubmissionDispatcher(
         val existing = storage.read(key)?.let { JsonParser.parseString(it).asJsonObject }
         val command = if (existing != null) {
             fun answer(value: JsonObject) = value.deepCopy().apply { remove("eventId") }
-            if (answer(existing) != answer(request)) throw AssessmentFailure(409,
+            if ((request.has("eventId") && existing.get("eventId") != request.get("eventId")) || answer(existing) != answer(request)) throw AssessmentFailure(409,
                 "May sagot pang naghihintay. Buksan muli ang aralin para maipasa ito.")
             existing
         } else request.deepCopy().apply {
-            if (get("operation")?.asString in listOf("answer", "speech")) addProperty("eventId", UUID.randomUUID().toString())
+            if (!has("eventId") && get("operation")?.asString in listOf("answer", "speech")) addProperty("eventId", UUID.randomUUID().toString())
             storage.write(key, toString())
         }
         transmit(key, command)

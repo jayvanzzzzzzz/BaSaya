@@ -1,0 +1,16 @@
+<resources>
+    <color name="pf_page">#0B182B</color>
+    <color name="pf_surface">#142B45</color>
+    <color name="pf_ink">#F0F6FF</color>
+    <color name="pf_muted">#B5CAE1</color>
+    <color name="pf_line">#35516F</color>
+    <color name="pf_blue">#9BC7FF</color>
+    <color name="pf_blue_tint">#1D416A</color>
+    <color name="pf_aqua">#8BE6CF</color>
+    <color name="pf_aqua_tint">#163F40</color>
+    <color name="pf_ticket">#143653</color>
+    <color name="pf_gold_ink">#FFE298</color>
+    <color name="pf_gold_tint">#473B20</color>
+    <color name="pf_hero_lip">#07182F</color>
+    <color name="pf_binding">#3C6189</color>
+</resources>

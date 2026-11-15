@@ -1,0 +1,4 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape><solid android:color="@color/dash_lecture_tint" /></shape></item>
+    <item android:width="7dp" android:gravity="start"><shape><solid android:color="@color/dash_lecture" /></shape></item>
+</layer-list>

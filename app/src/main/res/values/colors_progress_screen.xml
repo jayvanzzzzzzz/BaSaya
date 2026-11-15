@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <color name="ps_bg">#F7F7FB</color>
+ <color name="ps_surface">#FFFFFF</color>
+ <color name="ps_ink">#25243A</color>
+ <color name="ps_ink_soft">#626279</color>
+ <color name="ps_accent">#5C48A5</color>
+ <color name="ps_stroke">#E2E1EC</color>
+ <color name="ps_divider">#EAE8F0</color>
+ <color name="ps_track">#ECEAF3</color>
+ <color name="ps_star_on">#B57D18</color>
+ <color name="ps_star_off">#D7D4E1</color>
+ <color name="ps_unawa">#4162A2</color>
+ <color name="ps_unawa_tint">#EAF0FB</color>
+ <color name="ps_talasalitaan">#287249</color>
+ <color name="ps_talasalitaan_tint">#E7F2EB</color>
+ <color name="ps_pagkilala">#8C5A22</color>
+ <color name="ps_pagkilala_tint">#FAEFDF</color>
+ <color name="ps_pagbigkas">#9A456B</color>
+ <color name="ps_pagbigkas_tint">#F7EAF0</color>
+ <color name="ps_pagsusulit">#5C48A5</color>
+ <color name="ps_pagsusulit_tint">#ECE9F8</color>
+ <color name="ps_up">#287249</color>
+ <color name="ps_up_tint">#E7F2EB</color>
+ <color name="ps_down">#A13F4C</color>
+ <color name="ps_down_tint">#FBE9EC</color>
+</resources>

@@ -1,24 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Class chat tab (ChatFragment). Dark variants live in values-night/colors_chat.xml. -->
 <resources>
-    <color name="ch_bg">#F4F6FC</color>
-    <color name="ch_ink">#1F2547</color>
-    <color name="ch_ink_soft">#6A7290</color>
-    <color name="ch_line">#E3E8F4</color>
-    <color name="ch_lip">#DCE3F3</color>
+    <color name="ch_bg">#F7F7FB</color>
+    <color name="ch_ink">#25243A</color>
+    <color name="ch_ink_soft">#626279</color>
+    <color name="ch_line">#E2E1EC</color>
+    <color name="ch_lip">#E2E1EC</color>
     <color name="ch_bubble_in">#FFFFFF</color>
-    <color name="ch_teacher">#7A55D8</color>
-    <color name="ch_teacher_tint">#F1ECFF</color>
-    <color name="ch_teacher_line">#DCCFFF</color>
-    <color name="ch_mine_start">#4F8BFF</color>
-    <color name="ch_mine_end">#8A6CF0</color>
-    <color name="ch_mine_lip">#5A4BC4</color>
-    <color name="ch_closed">#B9650A</color>
+    <color name="ch_teacher">#5C48A5</color>
+    <color name="ch_teacher_tint">#F0ECFA</color>
+    <color name="ch_teacher_line">#D8CFEC</color>
+    <color name="ch_mine_start">#5C48A5</color>
+    <color name="ch_mine_end">#5C48A5</color>
+    <color name="ch_mine_lip">#4A398C</color>
+    <color name="ch_closed">#86521A</color>
     <color name="ch_closed_tint">#FFF1DC</color>
-    <color name="ch_dot">#F25C54</color>
-    <color name="ch_send_off">#C9CFE0</color>
+    <color name="ch_dot">#B73550</color>
+    <color name="ch_send_off">#E7E5EF</color>
     <!-- Cards, pills and member rows -->
     <color name="ch_surface">#FFFFFF</color>
     <color name="ch_closed_line">#F3D3A6</color>
     <color name="ch_member_me">#F3F1FF</color>
+    <color name="ch_accent">#5C48A5</color>
+    <color name="ch_accent_tint">#ECE9F8</color>
+    <color name="ch_on_action">#FFFFFF</color>
+    <color name="ch_mine_ink">#FFFFFF</color>
+    <color name="ch_avatar_teacher">#5C48A5</color>
+    <color name="ch_ripple">#245C48A5</color>
 </resources>

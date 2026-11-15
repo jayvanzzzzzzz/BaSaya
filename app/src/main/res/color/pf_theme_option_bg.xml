@@ -1,6 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Theme picker segment: violet when chosen, see-through otherwise. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/pg_pagsusulit" android:state_checked="true" />
-    <item android:color="@android:color/transparent" />
-</selector>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:color="#135DCC" android:state_checked="true"/><item android:color="@color/pf_surface"/></selector>

@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- "Aalis ka na?": the book buddy peeks over a sticker card, cheering the child to keep reading. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:scrollbars="vertical" android:scrollbarSize="3dp" android:fadeScrollbars="false"
     android:clipChildren="false"
     android:clipToPadding="false">
+<FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:clipChildren="false" android:clipToPadding="false">
 
     <LinearLayout
         android:id="@+id/lexCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="64dp"
-        android:background="@drawable/lex_bg_card"
+        android:background="@drawable/fb_panel"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingStart="22dp"
@@ -34,6 +37,7 @@
             android:textSize="12sp"
             tools:text="Pahina 3 ng 8" />
 
+        <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none">
         <!-- One dot per page: read, here now, still to read -->
         <LinearLayout
             android:id="@+id/lexDots"
@@ -44,6 +48,7 @@
             android:importantForAccessibility="no"
             android:orientation="horizontal" />
 
+        </HorizontalScrollView>
         <TextView
             android:id="@+id/lexTitle"
             android:layout_width="match_parent"
@@ -52,7 +57,7 @@
             android:fontFamily="@font/lexend"
             android:gravity="center"
             android:text="@string/lex_title"
-            android:textColor="@color/lecture_ink"
+            android:textColor="@color/fb_ink"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -64,14 +69,14 @@
             android:fontFamily="@font/quicksand_medium"
             android:gravity="center"
             android:lineSpacingExtra="3dp"
-            android:textColor="@color/lecture_ink_soft"
+            android:textColor="@color/fb_body"
             android:textSize="15sp"
             tools:text="Huwag mag-alala! Babalikan natin ang pahina 3 sa susunod mong pagbasa." />
 
         <TextView
             android:id="@+id/lexStay"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="wrap_content" android:minHeight="60dp" android:paddingTop="14dp"
             android:layout_marginTop="22dp"
             android:background="@drawable/lex_btn_stay"
             android:clickable="true"
@@ -86,7 +91,7 @@
         <TextView
             android:id="@+id/lexLeave"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content" android:minHeight="56dp" android:paddingTop="14dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/lex_btn_leave"
             android:clickable="true"
@@ -95,7 +100,7 @@
             android:gravity="center"
             android:paddingBottom="5dp"
             android:text="@string/lex_leave"
-            android:textColor="@color/lex_leave"
+            android:textColor="@color/fb_link"
             android:textSize="15sp" />
     </LinearLayout>
 
@@ -130,3 +135,4 @@
         android:layout_gravity="top|center_horizontal"
         android:importantForAccessibility="no" />
 </FrameLayout>
+</ScrollView>

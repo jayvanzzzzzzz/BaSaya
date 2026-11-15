@@ -1,604 +1,197 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Lesson dashboard as an adventure path: violet header with the book buddy, then the five
-  activities as numbered stops on a colored trail. Every ID DashboardActivity uses is kept
-  (cards are MaterialCardView, badges and the quiz overlay are LinearLayout).
--->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/pg_bg"
-    android:orientation="vertical"
-    tools:context=".ui.DashboardActivity">
-
-    <!-- Header (status-bar inset added in code) -->
-    <LinearLayout
-        android:id="@+id/dashboardHeader"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/jc_header"
-        android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="22dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/tb_glass"
-                android:contentDescription="@string/dl_back"
-                android:padding="11dp"
-                android:rotation="180"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_chevron_right"
-                app:tint="@color/tb_on" />
-
-            <TextView
-                android:id="@+id/tvLessonEyebrow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:background="@drawable/qz_glass_pill"
-                android:fontFamily="@font/be_vietnam_bold"
-                android:letterSpacing="0.12"
-                android:paddingStart="12dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="5dp"
-                android:text="@string/lesson_dash_eyebrow"
-                android:textColor="@color/tb_on"
-                android:textSize="12sp" />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/dash_bg" tools:context=".ui.DashboardActivity">
+  <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:clipToPadding="false" android:scrollbars="none">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+      <LinearLayout android:id="@+id/dashboardHeader" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="8dp" android:paddingBottom="16dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+          <ImageButton android:id="@+id/btnBack" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/dl_back" android:padding="12dp" android:rotation="180" android:src="@drawable/ic_chevron_right" app:tint="@color/dash_text_primary" />
+          <TextView android:id="@+id/tvLessonEyebrow" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" android:fontFamily="@font/be_vietnam_bold" android:text="@string/lesson_dash_eyebrow" android:textColor="@color/dash_lecture" android:textSize="11sp" android:letterSpacing="0.08" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvLessonTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:accessibilityHeading="true"
-                    android:fontFamily="@font/lexend"
-                    android:textColor="@color/tb_on"
-                    android:textSize="25sp"
-                    android:textStyle="bold"
-                    tools:text="Ang Pangngalan" />
-
-                <TextView
-                    android:id="@+id/tvLessonDesc"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:lineSpacingExtra="2dp"
-                    android:textColor="@color/tb_on_soft"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    tools:text="Matututunan mo ang mga salitang tumutukoy sa tao, bagay, hayop at lugar." />
+        <LinearLayout android:id="@+id/questHero" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical" android:background="@drawable/quest_hero" android:padding="22dp">
+          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/quest_invitation" android:textColor="@color/quest_hero_soft" android:textSize="14sp" android:fontFamily="@font/quicksand_medium" />
+            <ImageView android:id="@+id/buddy" android:layout_width="112dp" android:layout_height="80dp" android:src="@drawable/il_quest_book" android:importantForAccessibility="no" />
+          </LinearLayout>
+          <TextView android:id="@+id/tvLessonTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:accessibilityHeading="true" android:fontFamily="@font/lexend" android:textColor="@color/quest_hero_ink" android:textSize="29sp" android:textStyle="bold" tools:text="Ang Pangngalan" />
+          <TextView android:id="@+id/tvLessonDesc" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:fontFamily="@font/be_vietnam_regular" android:textColor="@color/quest_hero_soft" android:textSize="13sp" android:lineSpacingExtra="3dp" tools:text="Tuklasin ang mga salitang tumutukoy sa tao, bagay, hayop at lugar." />
+        </LinearLayout>
+      </LinearLayout>
+      <LinearLayout android:id="@+id/dashboardContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingBottom="24dp">
+        <LinearLayout android:id="@+id/questProgressTicket" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/quest_ticket" android:padding="16dp" android:layout_marginBottom="24dp">
+          <TextView android:id="@+id/tvDashboardProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/dash_progress_loading" android:textSize="13sp" android:textColor="@color/dash_text_primary" android:fontFamily="@font/be_vietnam_bold" android:accessibilityLiveRegion="polite" />
+          <ProgressBar android:id="@+id/dashboardProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="10dp" android:layout_marginTop="12dp" android:progressDrawable="@drawable/dashboard_progress" android:importantForAccessibility="no" android:max="100" />
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_path" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" android:accessibilityHeading="true" />
+        <TextView android:id="@+id/tvPathSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:layout_marginBottom="20dp" android:text="@string/dl_path_sub" android:textColor="@color/dash_text_secondary" android:textSize="13sp" android:fontFamily="@font/be_vietnam_regular" />
+        <LinearLayout style="@style/Dl.Row">
+          <FrameLayout style="@style/Dl.Rail">
+            <View style="@style/Dl.Trail" />
+            <TextView style="@style/Dl.Step" android:text="1" tools:ignore="HardcodedText" />
+          </FrameLayout>
+          <com.google.android.material.card.MaterialCardView android:id="@+id/lectureCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/dash_lecture_tint" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="22dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp" android:background="@drawable/quest_book_panel">
+              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_book" android:textSize="10sp" android:textColor="@color/dash_lecture" android:textStyle="bold" android:letterSpacing="0.06" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+                <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_book" app:tint="@color/dash_lecture" />
+                <LinearLayout style="@style/Dl.Texts">
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_lecture_title" android:textSize="25sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_lecture_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" />
+                  <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
+                    <TextView android:id="@+id/tvLectureCount" style="@style/Dl.Count" />
+                    <LinearLayout android:id="@+id/lectureCompletedBadge" style="@style/Dl.Badge">
+                      <ImageView style="@style/Dl.BadgeIcon" />
+                      <TextView style="@style/Dl.BadgeText" />
+                    </LinearLayout>
+                  </com.google.android.flexbox.FlexboxLayout>
+                </LinearLayout>
+                <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp">
+                  <ImageView android:id="@+id/lecturePlayIcon" style="@style/Dl.Play" app:tint="@color/dash_lecture" />
+                  <ProgressBar android:id="@+id/lecturePreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/dash_lecture" android:importantForAccessibility="no" android:visibility="gone" />
+                </FrameLayout>
+              </LinearLayout>
             </LinearLayout>
-
-            <ph.basaya.app.ui.pronunciation.PronunciationBookView
-                android:id="@+id/buddy"
-                android:layout_width="92dp"
-                android:layout_height="108dp"
-                android:importantForAccessibility="no" />
+          </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
+        <LinearLayout style="@style/Dl.Row">
+          <FrameLayout style="@style/Dl.Rail">
+            <View style="@style/Dl.Trail" />
+            <TextView style="@style/Dl.Step" android:text="2" tools:ignore="HardcodedText" />
+          </FrameLayout>
+          <com.google.android.material.card.MaterialCardView android:id="@+id/gameCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/quest_mint" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="28dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp" android:background="@drawable/quest_puzzle_ticket">
+              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_game" android:textSize="10sp" android:textColor="@color/quest_mint_ink" android:textStyle="bold" android:letterSpacing="0.06" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+                <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_puzzle" app:tint="@color/quest_mint_ink" android:rotation="-8" />
+                <LinearLayout style="@style/Dl.Texts">
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_game_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_game_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" />
+                  <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
+                    <TextView android:id="@+id/tvGameCount" style="@style/Dl.Count" />
+                    <TextView android:id="@+id/gamePreparingText" style="@style/Dl.Count" android:text="@string/lesson_dash_preparing" android:visibility="gone" android:accessibilityLiveRegion="polite" />
+                    <LinearLayout android:id="@+id/gameCompletedBadge" style="@style/Dl.Badge">
+                      <ImageView style="@style/Dl.BadgeIcon" />
+                      <TextView style="@style/Dl.BadgeText" />
+                    </LinearLayout>
+                  </com.google.android.flexbox.FlexboxLayout>
+                </LinearLayout>
+                <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp">
+                  <ImageView android:id="@+id/gamePlayIcon" style="@style/Dl.Play" app:tint="@color/quest_mint_ink" />
+                  <ProgressBar android:id="@+id/gamePreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/quest_mint_ink" android:importantForAccessibility="no" android:visibility="gone" />
+                </FrameLayout>
+              </LinearLayout>
+            </LinearLayout>
+          </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+        <LinearLayout style="@style/Dl.Row">
+          <FrameLayout style="@style/Dl.Rail">
+            <View style="@style/Dl.Trail" />
+            <TextView android:id="@+id/stepActivity" style="@style/Dl.Step" android:text="3" tools:ignore="HardcodedText" />
+          </FrameLayout>
+          <com.google.android.material.card.MaterialCardView android:id="@+id/activityCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/quest_paper" app:strokeWidth="1dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="8dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_pencil" app:tint="@color/dash_gawain" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/quest_activity" android:textColor="@color/dash_gawain" android:textSize="10sp" android:fontFamily="@font/be_vietnam_bold" />
+              </LinearLayout>
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+                <LinearLayout style="@style/Dl.Texts">
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_activity_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_activity_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" />
+                  <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
+                    <TextView android:id="@+id/tvActivityCount" style="@style/Dl.Count" />
+                    <TextView android:id="@+id/activityPreparingText" style="@style/Dl.Count" android:text="@string/lesson_dash_preparing" android:visibility="gone" android:accessibilityLiveRegion="polite" />
+                    <LinearLayout android:id="@+id/activityCompletedBadge" style="@style/Dl.Badge">
+                      <ImageView style="@style/Dl.BadgeIcon" />
+                      <TextView style="@style/Dl.BadgeText" />
+                    </LinearLayout>
+                  </com.google.android.flexbox.FlexboxLayout>
+                </LinearLayout>
+                <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp">
+                  <ImageView android:id="@+id/activityPlayIcon" style="@style/Dl.Play" app:tint="@color/dash_gawain" />
+                  <ProgressBar android:id="@+id/activityPreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/dash_gawain" android:importantForAccessibility="no" android:visibility="gone" />
+                </FrameLayout>
+              </LinearLayout>
+              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:background="@color/quest_rule" android:importantForAccessibility="no" />
+              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:background="@color/quest_rule" android:importantForAccessibility="no" />
+            </LinearLayout>
+          </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+        <LinearLayout style="@style/Dl.Row">
+          <FrameLayout style="@style/Dl.Rail">
+            <View style="@style/Dl.Trail" />
+            <TextView android:id="@+id/stepPronunciation" style="@style/Dl.Step" android:text="4" tools:ignore="HardcodedText" />
+          </FrameLayout>
+          <com.google.android.material.card.MaterialCardView android:id="@+id/pronunciationCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/quest_pink" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="22dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_pronunciation" android:textSize="10sp" android:textColor="@color/quest_pink_ink" android:textStyle="bold" android:letterSpacing="0.06" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_horizontal" android:layout_marginTop="12dp">
+                <ImageView style="@style/Dl.Icon" android:layout_width="64dp" android:layout_height="64dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_mic" app:tint="@color/quest_pink_ink" />
+                <LinearLayout style="@style/Dl.Texts" android:layout_width="match_parent" android:layout_weight="0" android:layout_marginStart="0dp" android:layout_marginTop="12dp" android:gravity="center_horizontal">
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_pron_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" android:gravity="center" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_pron_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" android:gravity="center" />
+                  <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta" android:gravity="center" app:justifyContent="center">
+                    <TextView android:id="@+id/tvPronunciationCount" style="@style/Dl.Count" />
+                    <TextView android:id="@+id/pronunciationPreparingText" style="@style/Dl.Count" android:text="@string/lesson_dash_preparing" android:visibility="gone" android:accessibilityLiveRegion="polite" />
+                    <LinearLayout android:id="@+id/pronunciationCompletedBadge" style="@style/Dl.Badge">
+                      <ImageView style="@style/Dl.BadgeIcon" />
+                      <TextView style="@style/Dl.BadgeText" />
+                    </LinearLayout>
+                  </com.google.android.flexbox.FlexboxLayout>
+                </LinearLayout>
+                <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp" android:layout_marginTop="8dp">
+                  <ImageView android:id="@+id/pronunciationPlayIcon" style="@style/Dl.Play" app:tint="@color/quest_pink_ink" />
+                  <ProgressBar android:id="@+id/pronunciationPreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/quest_pink_ink" android:importantForAccessibility="no" android:visibility="gone" />
+                </FrameLayout>
+              </LinearLayout>
+            </LinearLayout>
+          </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+        <LinearLayout style="@style/Dl.Row">
+          <FrameLayout style="@style/Dl.Rail">
+            <View style="@style/Dl.Trail" />
+            <TextView android:id="@+id/stepQuiz" style="@style/Dl.Step" android:text="5" tools:ignore="HardcodedText" />
+          </FrameLayout>
+          <FrameLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content">
+            <com.google.android.material.card.MaterialCardView android:id="@+id/quizCard" style="@style/Dl.Card" android:layout_width="match_parent" app:cardBackgroundColor="@color/dash_quiz_tint" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="22dp">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_quiz" android:textSize="10sp" android:textColor="@color/dash_quiz" android:textStyle="bold" android:letterSpacing="0.06" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+                  <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_clipboard_check" app:tint="@color/dash_quiz" />
+                  <LinearLayout style="@style/Dl.Texts">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_quiz_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_quiz_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" />
+                    <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
+                      <TextView android:id="@+id/tvQuizCount" style="@style/Dl.Count" />
+                      <TextView android:id="@+id/quizPreparingText" style="@style/Dl.Count" android:text="@string/lesson_dash_preparing" android:visibility="gone" android:accessibilityLiveRegion="polite" />
+                      <LinearLayout android:id="@+id/quizCompletedBadge" style="@style/Dl.Badge">
+                        <ImageView style="@style/Dl.BadgeIcon" />
+                        <TextView style="@style/Dl.BadgeText" />
+                      </LinearLayout>
+                    </com.google.android.flexbox.FlexboxLayout>
+                  </LinearLayout>
+                  <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp">
+                    <ImageView android:id="@+id/quizPlayIcon" style="@style/Dl.Play" app:tint="@color/dash_quiz" />
+                    <ProgressBar android:id="@+id/quizPreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/dash_quiz" android:importantForAccessibility="no" android:visibility="gone" />
+                  </FrameLayout>
+                </LinearLayout>
+              </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <LinearLayout android:id="@+id/quizLockOverlay" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="150dp" android:layout_marginBottom="12dp" android:background="@drawable/bg_dashboard_lock" android:foreground="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:contentDescription="@string/lesson_dash_locked_cd" android:gravity="center_vertical" android:orientation="horizontal" android:padding="18dp">
+              <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/ic_lock_small" app:tint="@color/dash_lock_icon" android:importantForAccessibility="no" />
+              <LinearLayout style="@style/Dl.Texts" android:importantForAccessibility="noHideDescendants">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_quiz_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_locked_msg" android:textSize="13sp" android:textColor="@color/dash_lock_fg" android:layout_marginTop="6dp" />
+              </LinearLayout>
+            </LinearLayout>
+          </FrameLayout>
+        </LinearLayout>
+      </LinearLayout>
     </LinearLayout>
-
-    <!-- Path -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:fillViewport="true"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:id="@+id/dashboardContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipChildren="false"
-                android:clipToPadding="false"
-                android:orientation="vertical"
-                android:paddingStart="12dp"
-                android:paddingTop="20dp"
-                android:paddingEnd="18dp"
-                android:paddingBottom="24dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:accessibilityHeading="true"
-                android:fontFamily="@font/lexend"
-                android:text="@string/dl_path_title"
-                android:textColor="@color/pg_ink"
-                android:textSize="19sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvPathSub"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="10dp"
-                android:fontFamily="@font/quicksand_medium"
-                android:text="@string/dl_path_sub"
-                android:textColor="@color/pg_ink_soft"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <!-- ── 1 · Lecture ── -->
-            <LinearLayout style="@style/Dl.Row">
-
-                <FrameLayout style="@style/Dl.Rail">
-
-                    <View
-                        style="@style/Dl.Trail"
-                        android:layout_marginTop="48dp"
-                        android:backgroundTint="@color/pg_unawa_tint" />
-
-                    <TextView
-                        style="@style/Dl.Step"
-                        android:backgroundTint="@color/pg_unawa"
-                        android:text="1"
-                        tools:ignore="HardcodedText" />
-                </FrameLayout>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/lectureCard"
-                    style="@style/Dl.Card"
-                    app:strokeColor="@color/pg_unawa_tint">
-
-                    <LinearLayout style="@style/Dl.CardBody">
-
-                        <ImageView
-                            style="@style/Dl.Icon"
-                            android:backgroundTint="@color/pg_unawa_tint"
-                            android:src="@drawable/ic_book"
-                            app:tint="@color/pg_unawa" />
-
-                        <LinearLayout style="@style/Dl.Texts">
-
-                            <TextView
-                                style="@style/Dl.Title"
-                                android:text="@string/lesson_dash_lecture_title" />
-
-                            <TextView
-                                style="@style/Dl.Sub"
-                                android:text="@string/lesson_dash_lecture_sub" />
-
-                            <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
-
-                                <TextView
-                                    android:id="@+id/tvLectureCount"
-                                    style="@style/Dl.Count"
-                                    android:backgroundTint="@color/pg_unawa_tint"
-                                    android:textColor="@color/pg_unawa" />
-
-                                <LinearLayout
-                                    android:id="@+id/lectureCompletedBadge"
-                                    style="@style/Dl.Badge"
-                                    tools:visibility="visible">
-
-                                    <ImageView style="@style/Dl.BadgeIcon" />
-
-                                    <TextView style="@style/Dl.BadgeText" />
-                                </LinearLayout>
-                            </com.google.android.flexbox.FlexboxLayout>
-                        </LinearLayout>
-
-                        <!-- The arrow turns into a spinner while the lecture audio downloads -->
-                        <FrameLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content">
-
-                            <ImageView
-                                android:id="@+id/lecturePlayIcon"
-                                style="@style/Dl.Play"
-                                android:backgroundTint="@color/pg_unawa" />
-
-                            <ProgressBar
-                                android:id="@+id/lecturePreparing"
-                                android:layout_width="38dp"
-                                android:layout_height="38dp"
-                                android:layout_marginStart="8dp"
-                                android:background="@drawable/pg_circle"
-                                android:backgroundTint="@color/pg_unawa"
-                                android:importantForAccessibility="no"
-                                android:indeterminateTint="@android:color/white"
-                                android:padding="8dp"
-                                android:visibility="gone" />
-                        </FrameLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- ── 2 · Laro (crossword) ── -->
-            <LinearLayout style="@style/Dl.Row">
-
-                <FrameLayout style="@style/Dl.Rail">
-
-                    <View
-                        style="@style/Dl.Trail"
-                        android:backgroundTint="@color/pg_talasalitaan_tint" />
-
-                    <TextView
-                        style="@style/Dl.Step"
-                        android:backgroundTint="@color/pg_talasalitaan"
-                        android:text="2"
-                        tools:ignore="HardcodedText" />
-                </FrameLayout>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/gameCard"
-                    style="@style/Dl.Card"
-                    app:strokeColor="@color/pg_talasalitaan_tint">
-
-                    <LinearLayout style="@style/Dl.CardBody">
-
-                        <ImageView
-                            style="@style/Dl.Icon"
-                            android:backgroundTint="@color/pg_talasalitaan_tint"
-                            android:src="@drawable/ic_puzzle"
-                            app:tint="@color/pg_talasalitaan" />
-
-                        <LinearLayout style="@style/Dl.Texts">
-
-                            <TextView
-                                style="@style/Dl.Title"
-                                android:text="@string/lesson_dash_game_title" />
-
-                            <TextView
-                                style="@style/Dl.Sub"
-                                android:text="@string/lesson_dash_game_sub" />
-
-                            <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
-
-                                <TextView
-                                    android:id="@+id/tvGameCount"
-                                    style="@style/Dl.Count"
-                                    android:backgroundTint="@color/pg_talasalitaan_tint"
-                                    android:textColor="@color/pg_talasalitaan" />
-
-                                <LinearLayout
-                                    android:id="@+id/gameCompletedBadge"
-                                    style="@style/Dl.Badge">
-
-                                    <ImageView style="@style/Dl.BadgeIcon" />
-
-                                    <TextView style="@style/Dl.BadgeText" />
-                                </LinearLayout>
-                            </com.google.android.flexbox.FlexboxLayout>
-                        </LinearLayout>
-
-                        <ImageView
-                            style="@style/Dl.Play"
-                            android:backgroundTint="@color/pg_talasalitaan" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- ── 3 · Gawain ── -->
-            <LinearLayout style="@style/Dl.Row">
-
-                <FrameLayout style="@style/Dl.Rail">
-
-                    <View
-                        style="@style/Dl.Trail"
-                        android:backgroundTint="@color/pg_pagkilala_tint" />
-
-                    <TextView
-                        android:id="@+id/stepActivity"
-                        style="@style/Dl.Step"
-                        android:backgroundTint="@color/pg_pagkilala"
-                        android:text="3"
-                        tools:ignore="HardcodedText" />
-                </FrameLayout>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/activityCard"
-                    style="@style/Dl.Card"
-                    app:strokeColor="@color/pg_pagkilala_tint">
-
-                    <LinearLayout style="@style/Dl.CardBody">
-
-                        <ImageView
-                            style="@style/Dl.Icon"
-                            android:backgroundTint="@color/pg_pagkilala_tint"
-                            android:src="@drawable/ic_pencil"
-                            app:tint="@color/pg_pagkilala" />
-
-                        <LinearLayout style="@style/Dl.Texts">
-
-                            <TextView
-                                style="@style/Dl.Title"
-                                android:text="@string/lesson_dash_activity_title" />
-
-                            <TextView
-                                style="@style/Dl.Sub"
-                                android:text="@string/lesson_dash_activity_sub" />
-
-                            <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
-
-                                <TextView
-                                    android:id="@+id/tvActivityCount"
-                                    style="@style/Dl.Count"
-                                    android:backgroundTint="@color/pg_pagkilala_tint"
-                                    android:textColor="@color/pg_pagkilala" />
-
-                                <LinearLayout
-                                    android:id="@+id/activityCompletedBadge"
-                                    style="@style/Dl.Badge">
-
-                                    <ImageView style="@style/Dl.BadgeIcon" />
-
-                                    <TextView style="@style/Dl.BadgeText" />
-                                </LinearLayout>
-                            </com.google.android.flexbox.FlexboxLayout>
-                        </LinearLayout>
-
-                        <ImageView
-                            style="@style/Dl.Play"
-                            android:backgroundTint="@color/pg_pagkilala" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- ── 4 · Bigkas ── -->
-            <LinearLayout style="@style/Dl.Row">
-
-                <FrameLayout style="@style/Dl.Rail">
-
-                    <View
-                        style="@style/Dl.Trail"
-                        android:backgroundTint="@color/pg_pagbigkas_tint" />
-
-                    <TextView
-                        android:id="@+id/stepPronunciation"
-                        style="@style/Dl.Step"
-                        android:backgroundTint="@color/pg_pagbigkas"
-                        android:text="4"
-                        tools:ignore="HardcodedText" />
-                </FrameLayout>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/pronunciationCard"
-                    style="@style/Dl.Card"
-                    app:strokeColor="@color/pg_pagbigkas_tint">
-
-                    <LinearLayout style="@style/Dl.CardBody">
-
-                        <ImageView
-                            style="@style/Dl.Icon"
-                            android:backgroundTint="@color/pg_pagbigkas_tint"
-                            android:src="@drawable/ic_mic"
-                            app:tint="@color/pg_pagbigkas" />
-
-                        <LinearLayout style="@style/Dl.Texts">
-
-                            <TextView
-                                style="@style/Dl.Title"
-                                android:text="@string/lesson_dash_pron_title" />
-
-                            <TextView
-                                style="@style/Dl.Sub"
-                                android:text="@string/lesson_dash_pron_sub" />
-
-                            <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
-
-                                <TextView
-                                    android:id="@+id/tvPronunciationCount"
-                                    style="@style/Dl.Count"
-                                    android:backgroundTint="@color/pg_pagbigkas_tint"
-                                    android:textColor="@color/pg_pagbigkas" />
-
-                                <LinearLayout
-                                    android:id="@+id/pronunciationCompletedBadge"
-                                    style="@style/Dl.Badge">
-
-                                    <ImageView style="@style/Dl.BadgeIcon" />
-
-                                    <TextView style="@style/Dl.BadgeText" />
-                                </LinearLayout>
-                            </com.google.android.flexbox.FlexboxLayout>
-                        </LinearLayout>
-
-                        <ImageView
-                            style="@style/Dl.Play"
-                            android:backgroundTint="@color/pg_pagbigkas" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- ── 5 · Pagsusulit (with lock overlay) ── -->
-            <LinearLayout style="@style/Dl.Row">
-
-                <FrameLayout style="@style/Dl.Rail">
-
-                    <View
-                        style="@style/Dl.Trail"
-                        android:layout_height="48dp"
-                        android:layout_gravity="top|center_horizontal"
-                        android:backgroundTint="@color/pg_pagsusulit_tint" />
-
-                    <TextView
-                        android:id="@+id/stepQuiz"
-                        style="@style/Dl.Step"
-                        android:backgroundTint="@color/pg_pagsusulit"
-                        android:text="5"
-                        tools:ignore="HardcodedText" />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1">
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/quizCard"
-                        style="@style/Dl.Card"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:stateListAnimator="@null"
-                        app:cardElevation="0dp"
-                        app:strokeColor="@color/pg_pagsusulit_tint">
-
-                        <LinearLayout style="@style/Dl.CardBody">
-
-                            <ImageView
-                                style="@style/Dl.Icon"
-                                android:backgroundTint="@color/pg_pagsusulit_tint"
-                                android:src="@drawable/ic_clipboard_check"
-                                app:tint="@color/pg_pagsusulit" />
-
-                            <LinearLayout style="@style/Dl.Texts">
-
-                                <TextView
-                                    style="@style/Dl.Title"
-                                    android:text="@string/lesson_dash_quiz_title" />
-
-                                <TextView
-                                    style="@style/Dl.Sub"
-                                    android:text="@string/lesson_dash_quiz_sub" />
-
-                                <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
-
-                                    <TextView
-                                        android:id="@+id/tvQuizCount"
-                                        style="@style/Dl.Count"
-                                        android:backgroundTint="@color/pg_pagsusulit_tint"
-                                        android:textColor="@color/pg_pagsusulit" />
-
-                                    <LinearLayout
-                                        android:id="@+id/quizCompletedBadge"
-                                        style="@style/Dl.Badge">
-
-                                        <ImageView style="@style/Dl.BadgeIcon" />
-
-                                        <TextView style="@style/Dl.BadgeText" />
-                                    </LinearLayout>
-                                </com.google.android.flexbox.FlexboxLayout>
-                            </LinearLayout>
-
-                            <ImageView
-                                style="@style/Dl.Play"
-                                android:backgroundTint="@color/pg_pagsusulit" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <!-- Lock overlay: shown by default, hidden by DashboardActivity once unlocked -->
-                    <LinearLayout
-                        android:id="@+id/quizLockOverlay"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginBottom="16dp"
-                        android:background="@drawable/bg_dashboard_lock"
-                        android:clickable="true"
-                        android:contentDescription="@string/lesson_dash_locked_cd"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingStart="16dp"
-                        android:paddingTop="12dp"
-                        android:paddingEnd="16dp"
-                        android:paddingBottom="12dp">
-
-                        <ImageView
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:background="@drawable/pg_circle"
-                            android:backgroundTint="@color/pg_pagsusulit_tint"
-                            android:importantForAccessibility="no"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_lock_small"
-                            app:tint="@color/pg_pagsusulit" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/quicksand_medium"
-                            android:importantForAccessibility="no"
-                            android:text="@string/lesson_dash_locked_msg"
-                            android:textColor="@color/pg_ink"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </FrameLayout>
-            </LinearLayout>
-            </LinearLayout>
-        </ScrollView>
-
-        <FrameLayout
-            android:id="@+id/contentLoadingOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#99000000"
-            android:clickable="true"
-            android:focusable="true"
-            android:importantForAccessibility="yes"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:background="@drawable/pg_card"
-                android:elevation="8dp"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingStart="28dp"
-                android:paddingTop="24dp"
-                android:paddingEnd="28dp"
-                android:paddingBottom="24dp">
-
-                <ProgressBar
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:indeterminate="true"
-                    android:indeterminateTint="@color/pg_unawa" />
-
-                <TextView
-                    android:id="@+id/tvContentLoading"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:text="@string/lesson_dash_loading_content"
-                    android:textColor="@color/pg_ink"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </FrameLayout>
-    </FrameLayout>
-</LinearLayout>
+  </ScrollView>
+  <FrameLayout android:id="@+id/contentLoadingOverlay" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/dash_loading_scrim" android:clickable="true" android:focusable="true" android:importantForAccessibility="yes" android:visibility="gone">
+    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="24dp" android:layout_gravity="center" android:background="@drawable/bg_dashboard_lock" android:gravity="center" android:orientation="vertical" android:padding="24dp">
+      <ProgressBar android:layout_width="40dp" android:layout_height="40dp" android:indeterminateTint="@color/dash_lecture" />
+      <TextView android:id="@+id/tvContentLoading" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:fontFamily="@font/be_vietnam_regular" android:gravity="center" android:text="@string/lesson_dash_loading_content" android:textColor="@color/dash_text_primary" android:textSize="15sp" />
+    </LinearLayout>
+  </FrameLayout>
+</FrameLayout>

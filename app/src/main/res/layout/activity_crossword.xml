@@ -137,7 +137,7 @@
             app:layout_constraintBottom_toTopOf="@id/tempTv"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnBack">
+            app:layout_constraintTop_toBottomOf="@id/cwSyncStatus">
 
             <HorizontalScrollView
                 android:id="@+id/boardHorizontalScroll"
@@ -154,6 +154,22 @@
                     android:clipToPadding="false" />
             </HorizontalScrollView>
         </ScrollView>
+
+        <TextView
+            android:id="@+id/cwSyncStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:fontFamily="@font/be_vietnam_bold"
+            android:textColor="@color/cw_ink"
+            android:textSize="12sp"
+            android:accessibilityLiveRegion="polite"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/btnBack"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Word being spelled -->
         <TextView

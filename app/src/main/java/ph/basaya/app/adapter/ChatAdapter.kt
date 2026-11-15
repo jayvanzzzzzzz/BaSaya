@@ -60,8 +60,8 @@ class ChatAdapter(
 
         // Classmates' avatars: one steady color per person. Also used by the class members sheet (ChatFragment), so each person keeps their color.
         val AVATAR_COLORS = intArrayOf(
-            0xFF4F8BFF.toInt(), 0xFF24994A.toInt(), 0xFFF2784B.toInt(), 0xFFE0509A.toInt(),
-            0xFF1BA3A3.toInt(), 0xFFD9A21B.toInt(), 0xFF5C6BC0.toInt(), 0xFFB5651D.toInt()
+            0xFF4162A2.toInt(), 0xFF287249.toInt(), 0xFFA84D2D.toInt(), 0xFFA13D73.toInt(),
+            0xFF227478.toInt(), 0xFF856315.toInt(), 0xFF5961A6.toInt(), 0xFF935729.toInt()
         )
     }
 
@@ -179,7 +179,7 @@ class ChatAdapter(
         val avatar = view.findViewById<TextView>(R.id.tvAvatar)
         avatar.visibility = if (row.last) View.VISIBLE else View.INVISIBLE
         avatar.text = m.senderName.trim().firstOrNull()?.uppercase() ?: "?"
-        val avatarColor = if (m.isTeacher) ContextCompat.getColor(context, R.color.ch_teacher)
+        val avatarColor = if (m.isTeacher) ContextCompat.getColor(context, R.color.ch_avatar_teacher)
         else AVATAR_COLORS[Math.floorMod(m.senderId.hashCode(), AVATAR_COLORS.size)]
         avatar.backgroundTintList = ColorStateList.valueOf(avatarColor)
 

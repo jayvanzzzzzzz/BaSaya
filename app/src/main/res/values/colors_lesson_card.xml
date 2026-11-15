@@ -2,16 +2,16 @@
 <resources>
     <!-- Lesson list card (light). Dark variants live in values-night/colors_lesson_card.xml. -->
     <color name="lesson_card_surface">#FFFFFF</color>
-    <color name="lesson_card_stroke">#E6E4DA</color>
-    <color name="lesson_card_divider">#EFECE3</color>
-    <color name="lesson_card_ripple">#141F4D3A</color>
-    <color name="lesson_card_primary">#1F4D3A</color>
-    <color name="lesson_card_primary_pressed">#163828</color>
-    <color name="lesson_card_eyebrow">#4E6E5A</color>
-    <color name="lesson_card_title">#1F2A24</color>
-    <color name="lesson_card_body">#56635C</color>
-    <color name="lesson_card_track">#E8E4D9</color>
-    <color name="lesson_card_primary_border">#3E6B55</color>
+    <color name="lesson_card_stroke">#E2E1EC</color>
+    <color name="lesson_card_divider">#ECEBF2</color>
+    <color name="lesson_card_ripple">#145C48A5</color>
+    <color name="lesson_card_primary">#5C48A5</color>
+    <color name="lesson_card_primary_pressed">#4A398C</color>
+    <color name="lesson_card_eyebrow">#5C48A5</color>
+    <color name="lesson_card_title">#25243A</color>
+    <color name="lesson_card_body">#626279</color>
+    <color name="lesson_card_track">#E7E4EF</color>
+    <color name="lesson_card_primary_border">#7762B4</color>
     <!-- Downloaded check on the card -->
     <color name="lesson_downloaded_check">#1F6B4A</color>
     <!-- Search match behind the title -->
@@ -23,7 +23,7 @@
     <color name="lesson_status_progress_bg">#FBF0DA</color>
     <color name="lesson_status_progress_fg">#875A12</color>
     <color name="lesson_status_new_bg">#F0EEE7</color>
-    <color name="lesson_status_new_fg">#5E625C</color>
+    <color name="lesson_status_new_fg">#626279</color>
 
     <!-- Step bar segments: a finished part, while the lesson is in progress / once it is all done -->
     <color name="lesson_seg_progress">#B87314</color>
@@ -31,7 +31,7 @@
 
     <!-- Difficulty (same hue families as before, deepened for contrast on white) -->
     <color name="lesson_diff_beginner">#2E7D4F</color>
-    <color name="lesson_diff_intermediate">#A8650F</color>
+    <color name="lesson_diff_intermediate">#8D570B</color>
     <color name="lesson_diff_advanced">#B83A4B</color>
-    <color name="lesson_diff_default">#4E6E5A</color>
+    <color name="lesson_diff_default">#626279</color>
 </resources>

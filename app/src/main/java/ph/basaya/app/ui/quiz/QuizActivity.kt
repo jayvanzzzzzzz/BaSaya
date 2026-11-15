@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
+import com.google.gson.Gson
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
@@ -25,7 +26,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -45,12 +46,18 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class QuizActivity : AppCompatActivity() {
+    companion object {
+        const val EXTRA_PREPARED_QUIZ = "PREPARED_QUIZ"
+        private const val STATE_SCREEN = "quizScreenState"
+    }
+    private var restoration: QuizRecreationState? = null
+    private lateinit var preparedState: PreparedQuiz
     private var assessment: AssessmentSession? = null
     private var submitting = false
+    private val locallyAccepted = mutableSetOf<Int>()
 
 
     private lateinit var lessonId: String
-    private lateinit var quizRepository: QuizRepository
     private lateinit var quiz: Quiz
 
     private var attemptId = ""
@@ -129,72 +136,92 @@ class QuizActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
         announceAsButton(btnNextQuestion)
-        startRocketWobble()
-
-        quizRepository = QuizRepository(this)
-
-        AssessmentUi.run(this) {
-            if (!ph.basaya.app.data.progress.PracticeLessons.refresh(this@QuizActivity, lessonId) || ph.basaya.app.utils.Network.isOnline(this@QuizActivity))
-                assessment = AssessmentSession.open(this@QuizActivity, lessonId)
-            val fetchedQuiz = quizRepository.getQuiz(lessonId)
-
-            if (fetchedQuiz == null || fetchedQuiz.questions.isEmpty()) {
-                Toast.makeText(this@QuizActivity, getString(R.string.qz_not_found), Toast.LENGTH_SHORT).show()
-                finish()
-                return@run
-            }
-
-            if (assessment == null && fetchedQuiz.questions.any { it.requiresServerValidation })
-                throw AssessmentFailure(0, "Kumonekta upang masuri ang mga sagot sa pagsasanay.")
-
-            // Where the student stopped: only the questions not answered yet are asked.
-            total = fetchedQuiz.questions.size
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
-            if (assessment?.takeUnless { it.practice }?.progress()?.flag("quizFinished") == true) { finish(); return@run }
-            val begin = assessment?.takeUnless { it.practice }?.request("begin", "quiz")
-            if (begin?.flag("finished") == true) { finish(); return@run }
-            attemptId = begin?.text("attemptId").orEmpty()
-            val resume = begin?.getAsJsonObject("resume")?.let { com.google.gson.Gson().fromJson(it, Map::class.java) }
-            answeredBefore = (resume?.get("answered") as? List<*>).orEmpty()
-                .mapNotNull { (it as? Number)?.toInt() }
-                .filter { it in 0 until total }
-                .toSet()
-            missedBefore = (resume?.get("missed") as? List<*>).orEmpty().filterIsInstance<String>()
-            scoreBefore = ((resume?.get("score") as? Number)?.toInt() ?: 0).coerceIn(0, answeredBefore.size)
-
-            // A new random order of questions and choices every time.
-            val remaining = fetchedQuiz.questions.withIndex().filter { it.index !in answeredBefore }.shuffled()
-            positions = remaining.map { it.index }
-            choiceOrders.clear()
-            quiz = fetchedQuiz.copy(questions = remaining.map { it.value.withShuffledChoices() })
-            tvQuizTitle.text = quiz.title
-            userAnswers.addAll(List(quiz.questions.size) { emptySet<Int>() })
-
-            // Every answer was saved but finishing wasn't: finish now.
-            if (quiz.questions.isEmpty()) {
-                btnNextQuestion.isEnabled = false
-                finishQuiz()
-                return@run
-            }
-
-            showQuestion(currentQuestionIndex, animateIn = false)
-
-            btnNextQuestion.setOnClickListener {
-                if (submitting) return@setOnClickListener
-                val selected = selectedChoices.toSet()
-                submitting = true
-                btnNextQuestion.isEnabled = false
-                AssessmentUi.run(this@QuizActivity) {
-                    val answer = assessment?.request("answer", "quiz", fields("attemptId" to attemptId,
-                        "index" to positions[currentQuestionIndex], "selected" to selected.map { choiceOrders[currentQuestionIndex][it] }))
-                    if (assessment?.practice == true && answer?.flag("right") == true) practiceScore++
-                    userAnswers[currentQuestionIndex] = selected
-                    submitting = false
-                    if (currentQuestionIndex < quiz.questions.lastIndex) {
-                        currentQuestionIndex++
-                        showQuestion(currentQuestionIndex)
-                    } else finishQuiz()
+        restoration = savedInstanceState?.getString(STATE_SCREEN)?.let { json ->
+            runCatching { Gson().fromJson(json, QuizRecreationState::class.java) }.getOrNull()
+        }
+        val ready = PreparedQuiz.take(intent.getStringExtra(EXTRA_PREPARED_QUIZ), lessonId)
+        if (savedInstanceState != null) {
+            // Reconcile durable submissions before restoring display state, including
+            // an answer accepted while the old activity was being destroyed.
+            AssessmentUi.run(this) {
+                try {
+                    showQuiz(PreparedQuiz.prepare(this, lessonId))
+                } catch (_: QuizAlreadyFinished) {
+                    returnToLesson()
                 }
+            }
+        } else if (ready != null) showQuiz(ready)
+        else returnToLesson(prepare = true)
+    }
+
+    private fun returnToLesson(prepare: Boolean = false) {
+        startActivity(Intent(this, ph.basaya.app.ui.DashboardActivity::class.java).apply {
+            putExtra("LESSON_ID", lessonId)
+            putExtra(ph.basaya.app.ui.DashboardActivity.EXTRA_PREPARE_QUIZ, prepare)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        })
+        finish()
+    }
+
+    private fun showQuiz(ready: PreparedQuiz) {
+        preparedState = ready
+        startRocketWobble()
+        assessment = ready.assessment
+        val fetchedQuiz = ready.quiz
+        total = fetchedQuiz.questions.size
+        attemptId = ready.attemptId
+        answeredBefore = ready.answered
+        missedBefore = ready.missed
+        scoreBefore = ready.score
+
+        val restored = restoration?.restore(fetchedQuiz, lessonId, ready.owner,
+            ready.sessionStamp["classId"].toString(), ready.sessionStamp["progressSession"].toString(),
+            attemptId, ready.answered, assessment?.practice != false)
+        if (restored != null) {
+            positions = restored.positions
+            answeredBefore = restored.completed
+            practiceScore = restored.practiceScore
+        } else {
+            positions = fetchedQuiz.questions.indices.filter { it !in answeredBefore }.shuffled()
+        }
+        currentQuestionIndex = 0
+        choiceOrders.clear()
+        quiz = fetchedQuiz.copy(questions = positions.mapIndexed { index, position ->
+            fetchedQuiz.questions[position].withShuffledChoices(restored?.choiceOrders?.get(index)
+                ?: fetchedQuiz.questions[position].choices.indices.shuffled())
+        })
+        tvQuizTitle.text = quiz.title
+        userAnswers.clear()
+        userAnswers.addAll(List(quiz.questions.size) { emptySet<Int>() })
+        if (userAnswers.isNotEmpty() && restored != null) userAnswers[0] = restored.selected
+        restoration = null
+
+        // Every answer was saved but finishing wasn't: finish now.
+        if (quiz.questions.isEmpty()) {
+            btnNextQuestion.isEnabled = false
+            finishQuiz()
+            return
+        }
+
+        showQuestion(currentQuestionIndex, animateIn = false)
+
+        btnNextQuestion.setOnClickListener {
+            if (submitting) return@setOnClickListener
+            if (!preparedState.isCurrent()) { finish(); return@setOnClickListener }
+            val selected = selectedChoices.toSet()
+            submitting = true
+            btnNextQuestion.isEnabled = false
+            AssessmentUi.run(this@QuizActivity) {
+                val answer = assessment?.request("answer", "quiz", fields("attemptId" to attemptId,
+                    "index" to positions[currentQuestionIndex], "selected" to selected.map { choiceOrders[currentQuestionIndex][it] }))
+                if (assessment?.practice == true && answer?.flag("right") == true) practiceScore++
+                userAnswers[currentQuestionIndex] = selected
+                locallyAccepted.add(positions[currentQuestionIndex])
+                submitting = false
+                if (currentQuestionIndex < quiz.questions.lastIndex) {
+                    currentQuestionIndex++
+                    showQuestion(currentQuestionIndex)
+                } else finishQuiz()
             }
         }
     }
@@ -348,8 +375,8 @@ class QuizActivity : AppCompatActivity() {
     private fun letterFor(index: Int): String = ('A' + index).toString()
 
     /** The same question with its choices shuffled; the correct answers move with their choices. */
-    private fun QuizQuestion.withShuffledChoices(): QuizQuestion {
-        val order = choices.indices.shuffled() // order[new position] = old index
+    private fun QuizQuestion.withShuffledChoices(order: List<Int>): QuizQuestion {
+        // order[new position] = old index; reuse the saved order after recreation.
         choiceOrders.add(order)
         val correct = correctAnswers.map { order.indexOf(it) }
         return copy(
@@ -468,6 +495,20 @@ class QuizActivity : AppCompatActivity() {
                 info.className = Button::class.java.name
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        val state = if (::preparedState.isInitialized && ::quiz.isInitialized) {
+            val accepted = answeredBefore + locallyAccepted
+            QuizRecreationState(lessonId, preparedState.owner,
+                preparedState.sessionStamp["classId"].toString(),
+                preparedState.sessionStamp["progressSession"].toString(), attemptId,
+                QuizRecreationState.fingerprint(preparedState.quiz), positions.toList(),
+                choiceOrders.map { it.toList() }, positions.getOrNull(currentQuestionIndex),
+                selectedChoices.toSet(), accepted, practiceScore)
+        } else restoration
+        if (state != null) outState.putString(STATE_SCREEN, Gson().toJson(state))
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {

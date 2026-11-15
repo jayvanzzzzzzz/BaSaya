@@ -17,6 +17,36 @@ class QuizQuestionTest {
     }
 
     @Test
+    fun serverValidatedMultipleChoiceStaysMultipleAfterShuffling() {
+        val question = QuizQuestion("?", choices, multiple = true, requiresServerValidation = true)
+        val order = listOf(2, 0, 1)
+        val remapped = question.correctAnswers.map { order.indexOf(it) }
+        val shuffled = question.copy(
+            choices = order.map { choices[it] },
+            answer = remapped.first(),
+            answers = remapped,
+            multiple = question.isMultiple
+        )
+
+        assertEquals(listOf(1), shuffled.answers)
+        assertTrue(shuffled.isMultiple)
+        val selected = mutableSetOf<Int>()
+        for (index in listOf(0, 2)) {
+            if (!shuffled.isMultiple) selected.clear()
+            selected.add(index)
+        }
+        assertEquals(setOf(0, 2), selected)
+        assertEquals(listOf(2, 1), selected.map { order[it] })
+    }
+
+    @Test
+    fun serverValidatedSingleChoiceUsesServerSelectionMode() {
+        val question = QuizQuestion("?", choices, answers = listOf(0, 2),
+            multiple = false, requiresServerValidation = true)
+        assertFalse(question.isMultiple)
+    }
+
+    @Test
     fun olderQuizWithSingleAnswer() {
         val q = QuizQuestion("?", choices, answer = 1)
         assertEquals(setOf(1), q.correctAnswers)

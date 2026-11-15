@@ -6,15 +6,15 @@
     <color name="dash_surface">@color/ns_surface</color>
     <color name="dash_stroke">@color/ns_stroke</color>
     <color name="dash_divider">@color/ns_divider</color>
-    <color name="dash_primary">@color/ns_periwinkle</color>
+    <color name="dash_primary">@color/mh_border</color>
     <color name="dash_text_primary">@color/ns_ink</color>
     <color name="dash_text_secondary">@color/ns_ink_soft</color>
     <color name="dash_sage">@color/ns_mint</color>
     <color name="dash_sage_soft">@color/ns_mint_tint</color>
     <color name="dash_accent_gold">@color/ns_gold</color>
-    <color name="dash_lecture">@color/ns_periwinkle</color>
-    <color name="dash_lecture_tint">@color/ns_periwinkle_tint</color>
-    <color name="dash_lecture_stroke">#4D8EA2FF</color>
+    <color name="dash_lecture">@color/mh_border</color>
+    <color name="dash_lecture_tint">@color/mh_surface</color>
+    <color name="dash_lecture_stroke">#375E8C</color>
     <color name="dash_laro">@color/ns_mint</color>
     <color name="dash_laro_tint">@color/ns_mint_tint</color>
     <color name="dash_gawain">@color/ns_tangerine</color>
@@ -25,8 +25,9 @@
     <color name="dash_quiz_tint">@color/ns_sky_tint</color>
     <color name="dash_done_bg">@color/ns_mint_tint</color>
     <color name="dash_done_fg">@color/ns_mint</color>
-    <color name="dash_lock_scrim">#F21A1F3D</color>
+    <color name="dash_lock_scrim">#1A1F3D</color>
     <color name="dash_lock_stroke">@color/ns_stroke</color>
     <color name="dash_lock_fg">@color/ns_ink</color>
     <color name="dash_lock_icon">@color/ns_gold</color>
+    <color name="dash_loading_scrim">#C00F1226</color>
 </resources>

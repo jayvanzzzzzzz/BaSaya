@@ -5,21 +5,21 @@
     android:layout_height="wrap_content"
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
-
     <TextView
         android:id="@+id/btnOlder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/ch_pill"
+        android:background="@drawable/ch_info_button"
         android:clickable="true"
         android:focusable="true"
         android:fontFamily="@font/be_vietnam_semi_bold"
         android:gravity="center"
-        android:minHeight="40dp"
+        android:minHeight="48dp"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
         android:text="@string/ch_older"
-        android:textColor="@color/nav_tab_chat"
-        android:textSize="13sp" />
+        android:textColor="@color/ch_accent"
+        android:textSize="13sp"
+        android:stateListAnimator="@animator/chat_press" />
 </FrameLayout>

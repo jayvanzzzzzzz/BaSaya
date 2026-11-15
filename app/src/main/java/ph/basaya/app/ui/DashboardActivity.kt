@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import android.widget.TextView
 import com.google.firebase.firestore.DocumentSnapshot
@@ -35,9 +36,18 @@ import ph.basaya.app.data.repository.LectureRepository
 import ph.basaya.app.data.repository.LessonContentPrefetch
 import ph.basaya.app.data.repository.PronunciationRepository
 import ph.basaya.app.data.repository.QuizRepository
+import ph.basaya.app.ui.activity.PreparedPractice
+import ph.basaya.app.ui.activity.PracticeAlreadyFinished
 import ph.basaya.app.ui.activity.PracticeActivity
 import ph.basaya.app.ui.pronunciation.PronunciationActivity
+import ph.basaya.app.ui.pronunciation.ReadingActivity
+import ph.basaya.app.ui.pronunciation.ReadingSession
+import ph.basaya.app.ui.pronunciation.PreparedReading
 import ph.basaya.app.ui.game.CrosswordActivity
+import ph.basaya.app.ui.game.PreparedCrossword
+import ph.basaya.app.ui.game.GameAlreadyFinished
+import ph.basaya.app.ui.quiz.PreparedQuiz
+import ph.basaya.app.ui.quiz.QuizAlreadyFinished
 import ph.basaya.app.ui.quiz.QuizActivity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -52,7 +62,7 @@ import ph.basaya.app.data.cache.ContentCountsCache
 import ph.basaya.app.data.database.AppDatabase
 import ph.basaya.app.data.schedule.LessonSchedule
 import android.app.Activity
-import android.app.Dialog
+import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
@@ -63,6 +73,9 @@ import com.google.android.material.button.MaterialButton
 class DashboardActivity : AppCompatActivity() {
 
     companion object {
+        const val EXTRA_PREPARE_QUIZ = "PREPARE_QUIZ"
+        const val EXTRA_PREPARE_GAME = "PREPARE_GAME"
+        const val EXTRA_PREPARE_ACTIVITY = "PREPARE_ACTIVITY"
         private const val CONTENT_PREPARATION_TIMEOUT_MS = 60_000L
 
         /** How long the lecture card waits for the audio before asking the child. */
@@ -77,12 +90,17 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var quizLockOverlay: LinearLayout
     private lateinit var contentLoadingOverlay: View
     private var isPreparingContent = false
+    private var preparedPracticeToken: String? = null
+    private var preparedQuizToken: String? = null
+    private var preparedGameToken: String? = null
+    private var preparedReadingToken: String? = null
 
     private var gameIsFinished = false
     private var activityIsFinished = false
     private var quizIsFinished = false
     private var lectureFinished = false
     private var pronunciationIsFinished = false
+    private var readingBased = false
 
     private var hasGameScore = false
     private var hasActivityScore = false
@@ -121,8 +139,20 @@ class DashboardActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_dashboard)
 
+        // One short welcome reveal; the learning path stays still while reading.
+        if (savedInstanceState == null && questMotionEnabled()) {
+            findViewById<View>(R.id.questHero).apply {
+                alpha = 0f
+                translationY = 12f * resources.displayMetrics.density
+                animate().alpha(1f).translationY(0f).setDuration(320L)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+            }
+        }
+
         val header = findViewById<View>(R.id.dashboardHeader)
         val content = findViewById<View>(R.id.dashboardContent)
+        val backButton = findViewById<View>(R.id.btnBack)
+        val loadingOverlay = findViewById<View>(R.id.contentLoadingOverlay)
         val headerTop = header.paddingTop
         val contentBottom = content.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -130,15 +160,21 @@ class DashboardActivity : AppCompatActivity() {
             v.updatePadding(left = bars.left, right = bars.right)
             header.updatePadding(top = headerTop + bars.top)
             content.updatePadding(bottom = contentBottom + bars.bottom)
+            // Keep the existing Back action reachable while lesson content prepares.
+            loadingOverlay.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = headerTop + bars.top + backButton.layoutParams.height
+            }
             insets
         }
 
-        // White status bar icons on the violet header
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+        val isLightTheme = resources.configuration.uiMode and
+            Configuration.UI_MODE_NIGHT_MASK != Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = isLightTheme
+            isAppearanceLightNavigationBars = isLightTheme
+        }
 
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
-        val buddy = findViewById<ph.basaya.app.ui.pronunciation.PronunciationBookView>(R.id.buddy)
-        buddy.postDelayed({ buddy.setMood(ph.basaya.app.ui.pronunciation.PronunciationBookView.Mood.HAPPY) }, 450)
 
         lessonId = intent.getStringExtra("LESSON_ID") ?: ""
 
@@ -194,10 +230,10 @@ class DashboardActivity : AppCompatActivity() {
                 null
             }
             if (savedLesson != null) {
-                tvLessonTitle.text = savedLesson.title.ifBlank { "BaSaya" }
+                tvLessonTitle.text = savedLesson.title.ifBlank { "BASAya" }
                 tvLessonDescription.text = savedLesson.description
             } else {
-                tvLessonTitle.text = "BaSaya"
+                tvLessonTitle.text = "BASAya"
                 tvLessonDescription.text = ""
             }
 
@@ -208,7 +244,7 @@ class DashboardActivity : AppCompatActivity() {
                     .get()
                     .await()
 
-                tvLessonTitle.text = lessonDoc.getString("title") ?: "BaSaya"
+                tvLessonTitle.text = lessonDoc.getString("title") ?: "BASAya"
                 tvLessonDescription.text = lessonDoc.getString("description") ?: ""
 
             } catch (e: Exception) {
@@ -278,7 +314,9 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         pronunciationCard.setOnClickListener {
-            if (pronunciationIsFinished) {
+            if (pronunciationIsFinished && (readingBased || ReadingSession.hasDraft(this, lessonId))) {
+                openContentIfAvailable(ReadingActivity::class.java, reviewing = true)
+            } else if (pronunciationIsFinished) {
                 showLessonDialog(
                     iconRes = R.drawable.ic_check_completed,
                     title = "Tapos na",
@@ -287,6 +325,18 @@ class DashboardActivity : AppCompatActivity() {
             } else {
                 openContentIfAvailable(PronunciationActivity::class.java)
             }
+        }
+        if (intent.getBooleanExtra(EXTRA_PREPARE_ACTIVITY, false)) {
+            intent.removeExtra(EXTRA_PREPARE_ACTIVITY)
+            openContentIfAvailable(PracticeActivity::class.java)
+        }
+        if (intent.getBooleanExtra(EXTRA_PREPARE_QUIZ, false)) {
+            intent.removeExtra(EXTRA_PREPARE_QUIZ)
+            openContentIfAvailable(QuizActivity::class.java)
+        }
+        if (intent.getBooleanExtra(EXTRA_PREPARE_GAME, false)) {
+            intent.removeExtra(EXTRA_PREPARE_GAME)
+            openContentIfAvailable(CrosswordActivity::class.java)
         }
     }
 
@@ -326,6 +376,47 @@ class DashboardActivity : AppCompatActivity() {
             View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         }
         quizLockOverlay.visibility = if (locked) View.VISIBLE else View.GONE
+        updateDashboardProgress()
+    }
+
+    /** Summarize the same completion flags used by the existing badges and actions. */
+    private fun updateDashboardProgress() {
+        val label = findViewById<TextView>(R.id.tvDashboardProgress)
+        val progress = findViewById<android.widget.ProgressBar>(R.id.dashboardProgress)
+        if (PracticeLessons.isPractice(lessonId)) {
+            label.setText(R.string.dash_progress_practice)
+            progress.visibility = View.GONE
+            return
+        }
+        val parts = listOf(
+            lectureCard to lectureFinished, gameCard to gameIsFinished,
+            activityCard to activityIsFinished, pronunciationCard to pronunciationIsFinished,
+            quizCard to quizIsFinished
+        ).filter { (card, _) -> (card.parent as View).visibility != View.GONE }
+        val done = parts.count { it.second }
+        label.text = getString(R.string.dash_progress_count, done, parts.size)
+        progress.visibility = View.VISIBLE
+        val target = if (parts.isEmpty()) 0 else done * 100 / parts.size
+        val motionEnabled = questMotionEnabled()
+        // Animate a changed milestone only; cached state appears immediately on entry.
+        if (motionEnabled && progress.isLaidOut && target > progress.progress) {
+            findViewById<View>(R.id.questProgressTicket).apply {
+                animate().cancel()
+                scaleX = 0.98f
+                scaleY = 0.98f
+                animate().scaleX(1f).scaleY(1f).setDuration(360L)
+                    .setInterpolator(android.view.animation.OvershootInterpolator(1.2f)).start()
+            }
+        }
+        progress.setProgress(target, motionEnabled && progress.isLaidOut && target > progress.progress)
+    }
+
+    private fun questMotionEnabled(): Boolean = if (android.os.Build.VERSION.SDK_INT >= 26) {
+        android.animation.ValueAnimator.areAnimatorsEnabled()
+    } else {
+        android.provider.Settings.Global.getFloat(
+            contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+        ) != 0f
     }
 
     /** Practice: nothing is ever finished or locked, so each part can be done again. */
@@ -380,6 +471,7 @@ class DashboardActivity : AppCompatActivity() {
                 hasPronunciationScore = true
             }
             pronunciationCompletedBadge.visibility = if (cached.pronunciationFinished) View.VISIBLE else View.GONE
+            updateDashboardProgress()
         }
 
         lifecycleScope.launch {
@@ -454,6 +546,7 @@ class DashboardActivity : AppCompatActivity() {
                 // score shows as soon as it exists; lock only depends on finished
                 val pronunciationFinished = doc.getBoolean("pronunciationFinished") ?: false
                 pronunciationIsFinished = pronunciationFinished
+                readingBased = doc.get("fluency") != null
 
                 val pronunciationScore = doc.getLong("pronunciationScore")
                 val pronunciationTotal = doc.getLong("pronunciationTotal")
@@ -463,6 +556,16 @@ class DashboardActivity : AppCompatActivity() {
                     hasPronunciationScore = true
                 }
 
+                if (readingBased) {
+                    val reviewStatus = doc.getString("pronunciationReviewStatus")
+                    val reading = doc.get("fluency") as? Map<*, *>
+                    tvPronunciationCount.text = when (reviewStatus) {
+                        "pending" -> "Naipasa • hinihintay ang guro"
+                        "graded" -> "Puntos • $pronunciationScore/$pronunciationTotal"
+                        else -> "Pahina "+(((reading?.get("page") as? Number)?.toInt() ?: 0)+1)+"/"+((reading?.get("total") as? Number)?.toInt() ?: 0)
+                    }
+                    hasPronunciationScore = true
+                }
                 if (pronunciationFinished) {
                     pronunciationCompletedBadge.visibility = View.VISIBLE
                 } else {
@@ -470,6 +573,7 @@ class DashboardActivity : AppCompatActivity() {
                 }
 
                 showStartedParts(doc)
+                updateDashboardProgress()
 
                 completionCache.save(
                     lessonId,
@@ -686,10 +790,13 @@ class DashboardActivity : AppCompatActivity() {
     private fun openContentIfAvailable(destination: Class<out Activity>, reviewing: Boolean = false) {
         if (isPreparingContent) return
 
-        setContentLoading(true)
+        setContentLoading(true, destination)
         lifecycleScope.launch {
             try {
-                if (!canOpenContent(reviewing)) return@launch
+                // Completed local recordings were already reviewable without a download.
+                val localReadingReview = destination == ReadingActivity::class.java && reviewing &&
+                    ReadingSession.hasDraft(this@DashboardActivity, lessonId)
+                if (!localReadingReview && !canOpenContent(reviewing)) return@launch
                 val audioWait = withTimeoutOrNull(CONTENT_PREPARATION_TIMEOUT_MS) {
                     prepareContent(destination)
                 } ?: throw IllegalStateException("Timed out while preparing lesson content")
@@ -698,6 +805,24 @@ class DashboardActivity : AppCompatActivity() {
                     AudioWait.READY -> launchContent(destination)
                     AudioWait.SLOW, AudioWait.FAILED -> showLectureAudioDialog(audioWait, reviewing)
                 }
+            } catch (e: PracticeAlreadyFinished) {
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Nakumpleto mo na ang gawaing ito. Hindi na ito maaaring ulitin."
+                )
+            } catch (e: QuizAlreadyFinished) {
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Natapos mo na ang pagsusulit. Hindi na ito maaaring ulitin."
+                )
+            } catch (e: GameAlreadyFinished) {
+                showLessonDialog(
+                    iconRes = R.drawable.ic_check_completed,
+                    title = "Tapos na",
+                    message = "Nakumpleto mo na ang larong ito. Hindi na ito maaaring ulitin."
+                )
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -710,13 +835,45 @@ class DashboardActivity : AppCompatActivity() {
                     onPrimary = { openContentIfAvailable(destination, reviewing) }
                 )
             } finally {
-                setContentLoading(false)
+                setContentLoading(false, destination)
             }
         }
     }
 
-    private fun setContentLoading(loading: Boolean) {
+    private fun setContentLoading(loading: Boolean, destination: Class<out Activity>) {
         isPreparingContent = loading
+        if (destination == PracticeActivity::class.java) {
+            findViewById<View>(R.id.activityPlayIcon).visibility = if (loading) View.INVISIBLE else View.VISIBLE
+            findViewById<View>(R.id.activityPreparing).visibility = if (loading) View.VISIBLE else View.GONE
+            tvActivityCount.visibility = if (loading) View.GONE else View.VISIBLE
+            findViewById<View>(R.id.activityPreparingText).visibility = if (loading) View.VISIBLE else View.GONE
+            activityCard.isEnabled = !loading
+            return
+        }
+        if (destination == QuizActivity::class.java) {
+            findViewById<View>(R.id.quizPlayIcon).visibility = if (loading) View.INVISIBLE else View.VISIBLE
+            findViewById<View>(R.id.quizPreparing).visibility = if (loading) View.VISIBLE else View.GONE
+            tvQuizCount.visibility = if (loading) View.GONE else View.VISIBLE
+            findViewById<View>(R.id.quizPreparingText).visibility = if (loading) View.VISIBLE else View.GONE
+            quizCard.isEnabled = !loading
+            return
+        }
+        if (destination == CrosswordActivity::class.java) {
+            findViewById<View>(R.id.gamePlayIcon).visibility = if (loading) View.INVISIBLE else View.VISIBLE
+            findViewById<View>(R.id.gamePreparing).visibility = if (loading) View.VISIBLE else View.GONE
+            tvGameCount.visibility = if (loading) View.GONE else View.VISIBLE
+            findViewById<View>(R.id.gamePreparingText).visibility = if (loading) View.VISIBLE else View.GONE
+            gameCard.isEnabled = !loading
+            return
+        }
+        if (destination == PronunciationActivity::class.java || destination == ReadingActivity::class.java) {
+            findViewById<View>(R.id.pronunciationPlayIcon).visibility = if (loading) View.INVISIBLE else View.VISIBLE
+            findViewById<View>(R.id.pronunciationPreparing).visibility = if (loading) View.VISIBLE else View.GONE
+            tvPronunciationCount.visibility = if (loading) View.GONE else View.VISIBLE
+            findViewById<View>(R.id.pronunciationPreparingText).visibility = if (loading) View.VISIBLE else View.GONE
+            pronunciationCard.isEnabled = !loading
+            return
+        }
         contentLoadingOverlay.visibility = if (loading) View.VISIBLE else View.GONE
         contentLoadingOverlay.importantForAccessibility = if (loading) {
             View.IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -730,10 +887,33 @@ class DashboardActivity : AppCompatActivity() {
      * to the destination through LessonContentPrefetch so it does not fetch again on entry.
      */
     private suspend fun prepareContent(destination: Class<out Activity>): AudioWait {
+        if (destination == QuizActivity::class.java) {
+            preparedQuizToken = null
+            preparedQuizToken = PreparedQuiz.store(PreparedQuiz.prepare(this, lessonId))
+            return AudioWait.READY
+        }
+        if (destination == PracticeActivity::class.java) {
+            preparedPracticeToken = null
+            preparedPracticeToken = PreparedPractice.store(PreparedPractice.prepare(this, lessonId))
+            return AudioWait.READY
+        }
+        if (destination == CrosswordActivity::class.java) {
+            preparedGameToken = null
+            val game = PreparedCrossword.prepare(this, lessonId)
+            preparedGameToken = PreparedCrossword.store(game)
+            return AudioWait.READY
+        }
+        if (destination == PronunciationActivity::class.java || destination == ReadingActivity::class.java) {
+            preparedReadingToken = null
+            if (destination == ReadingActivity::class.java || ReadingSession.hasDraft(this, lessonId)) {
+                preparedReadingToken = PreparedReading.store(PreparedReading.prepare(this, lessonId))
+                return AudioWait.READY
+            }
+        }
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         val online = hasInternetConnection()
         val progress = uid?.let { LessonResume.loadProgress(it, lessonId, cacheOnly = !online) }
-        if (uid != null && destination != CrosswordActivity::class.java) {
+        if (uid != null) {
             LessonResume.preload(uid, lessonId, progress)
         }
 
@@ -745,39 +925,14 @@ class DashboardActivity : AppCompatActivity() {
                 LessonContentPrefetch.store(lessonId, lecture)
                 waitForLectureAudio(lecture, progress)
             }
-            CrosswordActivity::class.java -> {
-                val repository = CrosswordRepository(this)
-                val levels = repository.getLevels(lessonId)
-                if (levels.isEmpty()) throw IllegalStateException("No crossword levels are available")
-                if (!PracticeLessons.isPractice(lessonId)) {
-                    repository.syncProgress(
-                        lessonId,
-                        progressDocument = progress,
-                        progressLoaded = uid != null,
-                        cacheOnly = !online
-                    )
-                }
-                LessonContentPrefetch.storeGame(lessonId, levels)
-                AudioWait.READY
-            }
-            PracticeActivity::class.java -> {
-                val activity = ActivityRepository(this).getActivity(lessonId)
-                    ?.takeIf { it.pages.isNotEmpty() }
-                    ?: throw IllegalStateException("No activity content is available")
-                LessonContentPrefetch.storeActivity(lessonId, activity)
-                AudioWait.READY
-            }
-            QuizActivity::class.java -> {
-                val quiz = QuizRepository(this).getQuiz(lessonId)
-                    ?.takeIf { it.questions.isNotEmpty() }
-                    ?: throw IllegalStateException("No quiz content is available")
-                LessonContentPrefetch.storeQuiz(lessonId, quiz)
-                AudioWait.READY
-            }
             PronunciationActivity::class.java -> {
                 val pronunciation = PronunciationRepository(this).getActivity(lessonId)
-                    ?.takeIf { it.words.isNotEmpty() }
+                    ?.takeIf { it.words.isNotEmpty() || it.pages.isNotEmpty() }
                     ?: throw IllegalStateException("No pronunciation content is available")
+                if (pronunciation.pages.isNotEmpty()) {
+                    preparedReadingToken = PreparedReading.store(PreparedReading.prepare(this, lessonId, pronunciation))
+                    return AudioWait.READY
+                }
                 val lookupLimit = Semaphore(6)
                 val entries = coroutineScope {
                     pronunciation.words.map { word ->
@@ -796,10 +951,21 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun launchContent(destination: Class<out Activity>, muted: Boolean = false) {
-        startActivity(Intent(this, destination).apply {
+        val reading = preparedReadingToken.takeIf {
+            destination == PronunciationActivity::class.java || destination == ReadingActivity::class.java
+        }
+        val screen = if (reading != null) ReadingActivity::class.java else destination
+        startActivity(Intent(this, screen).apply {
             putExtra("LESSON_ID", lessonId)
+            if (reading != null) putExtra(ReadingActivity.EXTRA_PREPARED_READING, reading)
+            if (destination == PracticeActivity::class.java) {
+                putExtra(PracticeActivity.EXTRA_PREPARED_ACTIVITY, preparedPracticeToken)
+            }
+            if (destination == QuizActivity::class.java) {
+                putExtra(QuizActivity.EXTRA_PREPARED_QUIZ, preparedQuizToken)
+            }
             if (destination == CrosswordActivity::class.java) {
-                putExtra(CrosswordActivity.EXTRA_CONTENT_READY, true)
+                putExtra(CrosswordActivity.EXTRA_PREPARED_GAME, preparedGameToken)
             }
             if (destination == LectureActivity::class.java) {
                 putExtra(LectureActivity.EXTRA_MUTED, muted)
@@ -926,6 +1092,7 @@ class DashboardActivity : AppCompatActivity() {
             if (!activitySkipped) findViewById<TextView>(R.id.stepActivity).text = (number++).toString()
             findViewById<TextView>(R.id.stepPronunciation).text = (number++).toString()
             findViewById<TextView>(R.id.stepQuiz).text = number.toString()
+            updateDashboardProgress()
         }
     }
 

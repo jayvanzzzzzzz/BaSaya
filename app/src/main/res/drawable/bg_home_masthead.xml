@@ -1,0 +1,4 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<item><shape><solid android:color="@color/mh_bg"/><corners android:bottomRightRadius="28dp"/></shape></item>
+<item android:height="4dp" android:width="72dp" android:gravity="bottom|start"><shape><solid android:color="@color/mh_accent"/><corners android:topRightRadius="4dp"/></shape></item>
+<item android:height="4dp" android:width="40dp" android:left="76dp" android:gravity="bottom|start"><shape><solid android:color="@color/mh_mint"/><corners android:radius="4dp"/></shape></item></layer-list>

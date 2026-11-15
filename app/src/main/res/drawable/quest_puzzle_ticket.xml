@@ -1,0 +1,5 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape><solid android:color="@color/quest_mint" /></shape></item>
+    <item android:width="16dp" android:height="20dp" android:gravity="start|center_vertical" android:left="-8dp"><shape android:shape="oval"><solid android:color="@color/dash_bg" /></shape></item>
+    <item android:width="16dp" android:height="20dp" android:gravity="end|center_vertical" android:right="-8dp"><shape android:shape="oval"><solid android:color="@color/dash_bg" /></shape></item>
+</layer-list>

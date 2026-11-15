@@ -8,6 +8,8 @@ import ph.basaya.app.data.audio.PronunciationAudioStore
 import ph.basaya.app.data.database.AppDatabase
 import ph.basaya.app.data.entity.PronunciationEntity
 import ph.basaya.app.data.model.PronunciationActivityData
+import ph.basaya.app.data.model.PronunciationReadingPage
+import ph.basaya.app.data.model.PronunciationReadingWord
 import ph.basaya.app.data.progress.PracticeLessons
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -89,12 +91,15 @@ class PronunciationRepository(private val context: Context) {
                 cloudUrlFor(word, index, cloudAudio) ?: legacyRefs.getOrNull(index).orEmpty()
             }
 
+            val readingPages = readingPages(doc.get("pages"), words, audioRefs)
+            context.getSharedPreferences("pronunciation_reading_pages", Context.MODE_PRIVATE).edit().putString(lessonId, gson.toJson(readingPages)).apply()
             PronunciationActivityData(
                 id = lessonId,
                 title = title,
                 instruction = instruction,
                 words = words,
-                audioRefs = audioRefs
+                audioRefs = audioRefs + readingPages.map { it.audioUrl }.filter { it.isNotBlank() },
+                pages = readingPages
             )
         } catch (e: Exception) {
             null // Offline and not downloaded
@@ -124,6 +129,24 @@ class PronunciationRepository(private val context: Context) {
         return (entry?.get("audioUrl") as? String)?.takeIf { it.startsWith("https://") }
     }
 
+
+    private fun readingPages(raw: Any?, words: List<String>, refs: List<String>): List<PronunciationReadingPage> {
+        fun key(value: String) = java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFC).lowercase(java.util.Locale.ROOT).replace('’', '\'')
+        val token = Regex("[\\p{L}\\p{M}\\p{N}]+(?:[-'’][\\p{L}\\p{M}\\p{N}]+)*")
+        return (raw as? List<*>).orEmpty().mapNotNull { item ->
+            val page = item as? Map<*, *> ?: return@mapNotNull null
+            val sentence = (page["sentence"] as? String)?.trim().orEmpty()
+            if (sentence.isBlank()) return@mapNotNull null
+            val selected = ((page["readyWords"] as? List<*>)?.filterIsInstance<String>() ?: words).map(::key).toSet()
+            val ready = token.findAll(sentence).map { it.value }.distinctBy(::key).filter { key(it) in selected }.map { word ->
+                val at = words.indexOfFirst { key(it) == key(word) }
+                PronunciationReadingWord(word, refs.getOrNull(at).orEmpty().takeIf { it.startsWith("https://") }.orEmpty())
+            }.toList()
+            val audio = (page["cloudAudio"] as? Map<*, *>)?.get("audioUrl") as? String ?: ""
+            PronunciationReadingPage(sentence, audio.takeIf { it.startsWith("https://") }.orEmpty(), ready)
+        }
+    }
+
     // Mapping helpers
 
     private fun PronunciationEntity.toPronunciationActivityData(): PronunciationActivityData {
@@ -133,7 +156,8 @@ class PronunciationRepository(private val context: Context) {
             title = title,
             instruction = instruction,
             words = gson.fromJson(wordsJson, listType),
-            audioRefs = gson.fromJson(audioRefsJson, listType)
+            audioRefs = gson.fromJson(audioRefsJson, listType),
+            pages = runCatching { gson.fromJson<List<PronunciationReadingPage>>(context.getSharedPreferences("pronunciation_reading_pages", Context.MODE_PRIVATE).getString(lessonId, "[]"), object : TypeToken<List<PronunciationReadingPage>>() {}.type) }.getOrDefault(emptyList())
         )
     }
 

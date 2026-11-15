@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">BaSaya</string>
+    <string name="app_name">BASAya</string>
     <string name="register"><u>Wala pang account? Mag register</u></string>
-    <string name="app_title">BaSaya</string>
+    <string name="app_title">BASAya</string>
     <string name="kumusta_kaibigan_nhanda_kanabang_mag_basa">Kumusta kaibigan!\nHanda kanabang mag basa?</string>
     <string name="login_welcome_back">Bawat pahina, bagong saya.</string>
     <string name="login_heading">Magandang pagbabalik!</string>
@@ -123,7 +123,7 @@
     <string name="lecture_finish">TAPUSIN</string>
 
     <!-- Register screen -->
-    <string name="register_heading">Sumali sa BaSaya!</string>
+    <string name="register_heading">Sumali sa BASAya!</string>
     <string name="register_subtitle">Ilang hakbang na lang, magsisimula na ang iyong pagbabasa.</string>
     <string name="register_step_one">1</string>
     <string name="register_step_two">2</string>
@@ -151,7 +151,7 @@
     <string name="register_failed">Hindi nagawa ang account. Subukan muli.</string>
     <string name="register_save_failed">Hindi na-save ang iyong impormasyon. Subukan muli.</string>
     <string name="complete_profile_heading">Kumpletuhin ang iyong account</string>
-    <string name="complete_profile_subtitle">Ilagay ang iyong pangalan para masimulan ang paggamit ng BaSaya.</string>
+    <string name="complete_profile_subtitle">Ilagay ang iyong pangalan para masimulan ang paggamit ng BASAya.</string>
     <string name="complete_profile_email">Email ng Google account</string>
     <string name="complete_profile_action">Tapusin ang account setup</string>
     <string name="complete_profile_saving">Sine-save ang iyong impormasyon…</string>

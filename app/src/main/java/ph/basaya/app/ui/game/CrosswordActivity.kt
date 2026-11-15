@@ -1,7 +1,8 @@
 package ph.basaya.app.ui.game
 
 import ph.basaya.app.data.assessment.*
-import ph.basaya.app.ui.AssessmentUi
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 
 import ph.basaya.app.data.progress.ProgressSession
 
@@ -62,11 +63,14 @@ import kotlin.math.sin
 class CrosswordActivity : AppCompatActivity() {
     private var assessment: AssessmentSession? = null
     private var gameAttemptId = ""
-    private var submitting = false
+    private var saveJob: Job? = null
+    private lateinit var wordSaves: GameWordOutbox
+    private lateinit var syncStatus: TextView
+    private var saveRejected = false
 
 
     companion object {
-        const val EXTRA_CONTENT_READY = "CONTENT_READY"
+        const val EXTRA_PREPARED_GAME = "PREPARED_GAME"
     }
 
     private var allGameLevels: List<CrosswordGameLevel> = emptyList()
@@ -528,6 +532,27 @@ class CrosswordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        lessonId = intent.getStringExtra("LESSON_ID") ?: ""
+        val ready = PreparedCrossword.take(intent.getStringExtra(EXTRA_PREPARED_GAME), lessonId)
+        if (ready == null) {
+            // Direct entry and process restoration prepare on the dashboard first.
+            startActivity(Intent(this, ph.basaya.app.ui.DashboardActivity::class.java).apply {
+                putExtra("LESSON_ID", lessonId)
+                putExtra(ph.basaya.app.ui.DashboardActivity.EXTRA_PREPARE_GAME, true)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            })
+            finish()
+            return
+        }
+        progressOwner = ready.owner
+        progressKey = ready.progressKey
+        assessment = ready.assessment
+        gameAttemptId = ready.attemptId
+        wordSaves = GameWordSaves.open(this, progressKey, ::ownsProgress)
+        allGameLevels = ready.levels
+        currentLevel = ready.level
+        currentLevelWords = ready.level.words.map { it.trim() }
+        findWord = ready.foundWords.toMutableList()
         setContentView(R.layout.activity_crossword)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -544,6 +569,10 @@ class CrosswordActivity : AppCompatActivity() {
         tvProgress = findViewById(R.id.tvProgress)
         progressChip = findViewById(R.id.progressChip)
         confettiView = findViewById(R.id.confettiView)
+        syncStatus = findViewById(R.id.cwSyncStatus)
+        syncStatus.setOnClickListener {
+            if (saveRejected) finish() else syncWords()
+        }
         tempTv = findViewById(R.id.tempTv)
         tempTv.visibility = View.INVISIBLE
 
@@ -551,98 +580,18 @@ class CrosswordActivity : AppCompatActivity() {
         btnShuffle.setOnClickListener { shuffleLetters() }
         startAmbientAnimations()
 
-        lessonId = intent.getStringExtra("LESSON_ID") ?: ""
-        val owner = FirebaseAuth.getInstance().currentUser?.uid
-        if (owner == null) { finish(); return }
-        progressOwner = owner
-        progressKey = ProgressSession.gameKey(lessonId, owner)
-
-        AssessmentUi.run(this) {
-            if (!PracticeLessons.refresh(this@CrosswordActivity, lessonId))
-                assessment = AssessmentSession.open(this@CrosswordActivity, lessonId)
-            val repo = CrosswordRepository(this@CrosswordActivity)
-
-            // Room-only read first — this lesson may already be downloaded.
-            allGameLevels = repo.getLevels(lessonId)
-
-            if (allGameLevels.isEmpty()) {
-                // Not downloaded yet — fetch directly from Firestore for THIS
-                // session only. Does not write to Room; only the Download
-                // button (LessonRepository.downloadLesson -> syncLevels) does.
-                allGameLevels = repo.fetchLevelsRemote(lessonId)
-            }
-            // Student's own progress state (not lesson content) — still fine to persist locally regardless of download status.
-            if (!intent.getBooleanExtra(EXTRA_CONTENT_READY, false)) {
-                repo.syncProgress(lessonId)
-            }
-
-            if (allGameLevels.isEmpty()) {
-                // Offline, an empty list only means the levels couldn't be read, not that there are none.
-                if (!Network.isOnline(this@CrosswordActivity)) {
-                    Toast.makeText(this@CrosswordActivity, R.string.cw_offline_levels, Toast.LENGTH_LONG).show()
-                } else {
-                    Log.e("CrosswordActivity", "No game levels found for lessonId=$lessonId — check Firestore 'game' subcollection")
-                    Toast.makeText(this@CrosswordActivity, "Walang laro para sa araling ito.", Toast.LENGTH_SHORT).show()
-                }
-                finish()
-                return@run
-            }
-
-            if (!ownsProgress()) { finish(); return@run }
-            val progress = db.crosswordProgressDao().getProgress(progressKey)
-            val begin = assessment?.request("begin", "game")
-            if (begin?.flag("finished") == true) { finish(); return@run }
-            var currentLevelNumber = begin?.number("level") ?: progress?.currentLevel ?: 1
-            gameAttemptId = begin?.text("attemptId").orEmpty()
-
-            val maxLevel = allGameLevels.maxOf { it.level }
-            if (currentLevelNumber > maxLevel) {
-                Log.w("CrosswordActivity", "currentLevel ($currentLevelNumber) exceeds max level ($maxLevel) — clamping")
-                currentLevelNumber = maxLevel
-            }
-
-            currentLevel = allGameLevels.firstOrNull { it.level == currentLevelNumber }
-            currentLevelWords = currentLevel?.words?.map { it.trim() }
-
-            if (currentLevel == null) {
-                Log.e("CrosswordActivity", "No matching level entity for level=$currentLevelNumber among ${allGameLevels.map { it.level }}")
-                Toast.makeText(this@CrosswordActivity, "May problema sa pag-load ng laro.", Toast.LENGTH_SHORT).show()
-                finish()
-                return@run
-            }
-
-            val words = currentLevelWords.orEmpty()
-            if (words.isEmpty() || words.any { it.isEmpty() }) {
-                Log.e("CrosswordActivity", "Level ${currentLevel?.level} has no usable words")
-                Toast.makeText(this@CrosswordActivity, "May problema sa mga salita ng laro.", Toast.LENGTH_SHORT).show()
-                finish()
-                return@run
-            }
-
-            // Saved words may differ in case from the level data; map them back to the originals.
-            val savedFoundWords = if (begin != null) begin.getAsJsonObject("resume")?.getAsJsonArray("foundWords")?.joinToString(",") { it.asString }.orEmpty() else progress?.foundWords ?: ""
-            if (savedFoundWords.isNotEmpty()) {
-                savedFoundWords.split(",")
-                    .mapNotNull { saved -> words.firstOrNull { normalize(it) == normalize(saved) } }
-                    .distinct()
-                    .forEach { findWord.add(it) }
-            }
-
-            tvLevel.text = getString(R.string.cw_level, currentLevel?.level ?: currentLevelNumber)
-            updateProgress(animate = false)
-
-            boardVerticalScroll.post {
-                renderCrosswordGrid(words, findWord)
-            }
-
-            val letters = wheelLetters(words)
-            letterContainer.post { buildWheel(letters) }
+        tvLevel.text = getString(R.string.cw_level, ready.level.level)
+        updateProgress(animate = false)
+        boardVerticalScroll.post {
+            renderCrosswordGrid(currentLevelWords.orEmpty(), findWord)
         }
+        val letters = wheelLetters(currentLevelWords.orEmpty())
+        letterContainer.post { buildWheel(letters) }
 
         // touch controls
         letterContainer.setOnTouchListener { _, event ->
 
-            if (!::lineView.isInitialized || isShuffling || levelCompleted) return@setOnTouchListener false
+            if (!::lineView.isInitialized || isShuffling || levelCompleted || saveRejected) return@setOnTouchListener false
 
             val touchX = event.x
             val touchY = event.y
@@ -730,40 +679,73 @@ class CrosswordActivity : AppCompatActivity() {
     }
 
     private fun onWordFound(wordIndex: Int) {
-        if (!ownsProgress() || submitting) return
+        if (!ownsProgress() || levelCompleted || saveRejected) return
         val word = currentLevelWords?.getOrNull(wordIndex) ?: return
-        val words = (findWord + word).distinct()
+        if (isWordFound(word)) return
+        val words = findWord + word
         val completed = currentLevelWords.orEmpty().all { target -> words.any { normalize(it) == normalize(target) } }
-        submitting = true
-        AssessmentUi.run(this) {
-            val result = if (completed) assessment?.request("finish", "game", fields(
-                "level" to currentLevel!!.level, "attemptId" to gameAttemptId, "words" to words))
-            else assessment?.request("answer", "game", fields("level" to currentLevel!!.level,
-                "attemptId" to gameAttemptId, "word" to word))
-            if (!ownsProgress()) { finish(); return@run }
-            if (completed && result != null && !result.has("finished")) throw AssessmentFailure(0, "Hindi pa nakumpirma ang antas.")
-            findWord = words.toMutableList()
-            previewSuccess()
-            revealWord(wordIndex)
-            updateProgress(animate = true)
-            val levelNumber = currentLevel!!.level
-            val nextLevel = allGameLevels.firstOrNull { it.level > levelNumber }?.level ?: (levelNumber + 1)
-            db.crosswordProgressDao().saveProgress(CrosswordProgress(
-                lessonId = progressKey,
-                currentLevel = if (completed && assessment == null && currentLevel == allGameLevels.lastOrNull()) allGameLevels.first().level else if (completed) nextLevel else levelNumber,
-                completedLevel = if (completed) result?.number("score", 1) ?: 1 else 0,
-                foundWords = if (completed) "" else findWord.joinToString(",")
-            ))
-            submitting = false
-            if (completed && !levelCompleted) {
-                levelCompleted = true
-                celebrateLevel()
-                delay(2000)
-                startActivity(Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
-                    putExtra("NEXT_LEVEL", allGameLevels.indexOf(currentLevel) + 1)
-                    putExtra("LESSON_ID", lessonId)
-                })
-                finish()
+        // Persist before revealing; swipes never wait for the network.
+        try {
+            wordSaves.enqueue(fields("operation" to if (completed) "finish" else "answer",
+                "level" to currentLevel!!.level, "attemptId" to gameAttemptId,
+                "word" to word, "words" to words))
+        } catch (e: Exception) {
+            showSyncStatus(getString(R.string.cw_save_local_error))
+            return
+        }
+        findWord = words.toMutableList()
+        previewSuccess()
+        revealWord(wordIndex)
+        updateProgress(animate = true)
+        if (completed) {
+            levelCompleted = true
+            celebrateLevel()
+            showSyncStatus(getString(R.string.cw_sync_finishing))
+        }
+        syncWords()
+    }
+
+    private fun showSyncStatus(message: String) {
+        syncStatus.text = message
+        syncStatus.visibility = View.VISIBLE
+    }
+
+    private fun syncWords() {
+        if (saveJob?.isActive == true || saveRejected || !ownsProgress()) return
+        saveJob = lifecycleScope.launch {
+            var retry = 0
+            while (ownsProgress()) {
+                try {
+                    val accepted = wordSaves.drain { command ->
+                        GameWordSaves.send(this@CrosswordActivity, progressKey, allGameLevels,
+                            assessment, command, ::ownsProgress)
+                    }
+                    if (!ownsProgress()) { finish(); return@launch }
+                    syncStatus.visibility = View.GONE
+                    if (levelCompleted && accepted != null) {
+                        // The board celebrates immediately; recorded completion waits for acceptance.
+                        delay(2000)
+                        if (!ownsProgress()) { finish(); return@launch }
+                        startActivity(Intent(this@CrosswordActivity, CrosswordCompleteScreen::class.java).apply {
+                            putExtra("NEXT_LEVEL", allGameLevels.indexOf(currentLevel) + 1)
+                            putExtra("LESSON_ID", lessonId)
+                        })
+                        finish()
+                    }
+                    return@launch
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    if (!ownsProgress()) { finish(); return@launch }
+                    if (e is AssessmentFailure && !e.retryable) {
+                        saveRejected = true
+                        showSyncStatus(getString(R.string.cw_sync_rejected))
+                        return@launch
+                    }
+                    showSyncStatus(getString(R.string.cw_sync_pending))
+                    delay((1000L shl retry.coerceAtMost(4)).coerceAtMost(10000L))
+                    retry++
+                }
             }
         }
     }

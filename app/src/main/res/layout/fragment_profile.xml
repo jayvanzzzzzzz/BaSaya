@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Account: violet header, editable student info, password change, logout. -->
+<!-- Reader's Pass: toolbar blue identity, notebook details, class ticket and theme studio. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/pfScroll"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/tb_page_bg"
+    android:background="@color/pf_page"
     android:clipToPadding="false"
     android:fillViewport="true"
     android:scrollbars="none"
     tools:context=".ui.fragment.ProfileFragment">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <include layout="@layout/include_scrolling_brand" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,67 +26,17 @@
         android:paddingEnd="20dp"
         android:paddingBottom="32dp">
 
-        <!-- Header -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/pf_header"
-            android:elevation="2dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="18dp"
-            android:paddingTop="20dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="26dp">
-
-            <TextView
-                android:id="@+id/pfAvatar"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:background="@drawable/tb_avatar"
-                android:contentDescription="@string/profile_picture"
-                android:fontFamily="@font/lexend"
-                android:gravity="center"
-                android:textColor="@color/tb_avatar_ink"
-                android:textSize="30sp"
-                android:textStyle="bold"
-                tools:text="J" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/pfName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/lexend"
-                    android:maxLines="2"
-                    android:ellipsize="end"
-                    android:textColor="@color/tb_on"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    tools:text="Juan Dela Cruz" />
-
-                <!-- Email (read-only) -->
-                <TextView
-                    android:id="@+id/pfEmail"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:ellipsize="end"
-                    android:fontFamily="@font/quicksand_medium"
-                    android:maxLines="1"
-                    android:textColor="@color/tb_on_soft"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    tools:text="juan@gmail.com" />
-            </LinearLayout>
-        </LinearLayout>
-
+<LinearLayout android:id="@+id/pfIdentityPass" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/pf_studio_hero" android:orientation="vertical" android:padding="20dp" android:paddingBottom="28dp">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:fontFamily="@font/lexend" android:text="@string/pf_studio_title" android:textColor="@color/mh_on" android:textSize="24sp" android:textStyle="bold"/>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="center_vertical" android:orientation="horizontal">
+<TextView android:id="@+id/pfAvatar" android:layout_width="80dp" android:layout_height="80dp" android:background="@drawable/pf_studio_avatar" android:contentDescription="@string/profile_picture" android:fontFamily="@font/lexend" android:gravity="center" android:textColor="@color/mh_avatar_ink" android:textSize="36sp" android:textStyle="bold" tools:text="J"/>
+<Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+<ImageView android:layout_width="112dp" android:layout_height="88dp" android:importantForAccessibility="no" android:src="@drawable/il_account_reader"/>
+</LinearLayout>
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/pf_studio_chip" android:paddingHorizontal="8dp" android:paddingVertical="4dp" android:fontFamily="@font/be_vietnam_bold" android:letterSpacing="0.08" android:text="@string/pf_studio_reader" android:textColor="@color/mh_avatar_ink" android:textSize="10sp"/>
+<TextView android:id="@+id/pfName" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:fontFamily="@font/lexend" android:textColor="@color/mh_on" android:textSize="24sp" android:textStyle="bold" tools:text="Juan Dela Cruz"/>
+<TextView android:id="@+id/pfEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:fontFamily="@font/be_vietnam_regular" android:textColor="@color/mh_soft" android:textSize="13sp" tools:text="juan@gmail.com"/>
+</LinearLayout>
         <!-- My info -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -98,16 +53,17 @@
                 android:accessibilityHeading="true"
                 android:fontFamily="@font/lexend"
                 android:text="@string/pf_section_info"
-                android:textColor="@color/pg_ink"
+                android:textColor="@color/pf_ink"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btnEditProfile"
+                android:stateListAnimator="@animator/pf_studio_press"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:background="@drawable/pg_round"
-                android:backgroundTint="@color/pg_unawa_tint"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:background="@drawable/pf_studio_edit"
                 android:clickable="true"
                 android:contentDescription="@string/pf_edit_cd"
                 android:drawablePadding="6dp"
@@ -117,18 +73,18 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="16dp"
                 android:text="@string/pf_edit"
-                android:textColor="@color/pg_unawa"
+                android:textColor="@color/pf_blue"
                 android:textSize="14sp"
                 app:drawableStartCompat="@drawable/ac_ic_pencil"
-                app:drawableTint="@color/pg_unawa" />
+                app:drawableTint="@color/pf_blue" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/pg_card"
+            android:background="@drawable/pf_studio_notebook"
             android:orientation="vertical"
-            android:paddingStart="16dp"
+            android:paddingStart="28dp"
             android:paddingTop="6dp"
             android:paddingEnd="16dp"
             android:paddingBottom="11dp">
@@ -138,9 +94,9 @@
 
                 <ImageView
                     style="@style/Pf.RowIcon"
-                    android:backgroundTint="@color/pg_unawa_tint"
+                    android:backgroundTint="@color/pf_blue_tint"
                     android:src="@drawable/pf_ic_person"
-                    app:tint="@color/pg_unawa" />
+                    app:tint="@color/pf_blue" />
 
                 <LinearLayout style="@style/Pf.RowTexts">
 
@@ -160,9 +116,9 @@
 
                 <ImageView
                     style="@style/Pf.RowIcon"
-                    android:backgroundTint="@color/pg_pagkilala_tint"
+                    android:backgroundTint="@color/pf_gold_tint"
                     android:src="@drawable/pf_ic_gender"
-                    app:tint="@color/pg_pagkilala" />
+                    app:tint="@color/pf_gold_ink" />
 
                 <LinearLayout style="@style/Pf.RowTexts">
 
@@ -182,9 +138,9 @@
 
                 <ImageView
                     style="@style/Pf.RowIcon"
-                    android:backgroundTint="@color/pg_pagbigkas_tint"
+                    android:backgroundTint="@color/pf_aqua_tint"
                     android:src="@drawable/pf_ic_calendar"
-                    app:tint="@color/pg_pagbigkas" />
+                    app:tint="@color/pf_aqua" />
 
                 <LinearLayout style="@style/Pf.RowTexts">
 
@@ -207,15 +163,16 @@
             android:accessibilityHeading="true"
             android:fontFamily="@font/lexend"
             android:text="@string/pf_section_class"
-            android:textColor="@color/pg_ink"
+            android:textColor="@color/pf_ink"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/pfClassTicket"
             android:animateLayoutChanges="true"
-            android:background="@drawable/pg_card"
+            android:background="@drawable/pf_studio_ticket"
             android:orientation="vertical"
             android:paddingStart="16dp"
             android:paddingTop="6dp"
@@ -227,9 +184,9 @@
 
                 <ImageView
                     style="@style/Pf.RowIcon"
-                    android:backgroundTint="@color/pg_pagsusulit_tint"
+                    android:backgroundTint="@color/pf_blue_tint"
                     android:src="@drawable/pf_ic_class"
-                    app:tint="@color/pg_pagsusulit" />
+                    app:tint="@color/pf_blue" />
 
                 <LinearLayout style="@style/Pf.RowTexts">
 
@@ -263,7 +220,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
-                    android:textColor="@color/pg_ink"
+                    android:textColor="@color/pf_ink"
                     android:textSize="15sp"
                     android:textStyle="bold"
                     tools:text="Hinihintay ang iyong guro" />
@@ -275,15 +232,17 @@
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/quicksand_medium"
                     android:lineSpacingExtra="2dp"
-                    android:textColor="@color/pg_ink_soft"
+                    android:textColor="@color/pf_muted"
                     android:textSize="13sp"
                     tools:text="Humiling kang umalis sa klase." />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLeaveStatusAction"
+                android:stateListAnimator="@animator/pf_studio_press"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="44dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/be_vietnam_bold"
                     android:textAllCaps="false"
@@ -299,6 +258,7 @@
             <!-- Leave the class -->
             <LinearLayout
                 android:id="@+id/rowLeaveClass"
+                android:stateListAnimator="@animator/pf_studio_press"
                 style="@style/Pf.Row"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
@@ -329,12 +289,13 @@
                     android:layout_height="24dp"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/pg_ink_soft" />
+                    app:tint="@color/pf_muted" />
             </LinearLayout>
 
             <!-- Join a class (only while the student has none) -->
             <LinearLayout
                 android:id="@+id/rowJoinClass"
+                android:stateListAnimator="@animator/pf_studio_press"
                 style="@style/Pf.Row"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
@@ -343,9 +304,9 @@
 
                 <ImageView
                     style="@style/Pf.RowIcon"
-                    android:backgroundTint="@color/pg_pagkilala_tint"
+                    android:backgroundTint="@color/pf_gold_tint"
                     android:src="@drawable/ic_join_class"
-                    app:tint="@color/pg_pagkilala" />
+                    app:tint="@color/pf_gold_ink" />
 
                 <LinearLayout style="@style/Pf.RowTexts">
 
@@ -365,7 +326,7 @@
                     android:layout_height="24dp"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/pg_ink_soft" />
+                    app:tint="@color/pf_muted" />
             </LinearLayout>
         </LinearLayout>
 
@@ -378,14 +339,14 @@
             android:accessibilityHeading="true"
             android:fontFamily="@font/lexend"
             android:text="@string/pf_section_appearance"
-            android:textColor="@color/pg_ink"
+            android:textColor="@color/pf_ink"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/pg_card"
+            android:background="@drawable/pf_studio_theme"
             android:orientation="vertical"
             android:paddingStart="16dp"
             android:paddingTop="14dp"
@@ -400,9 +361,9 @@
 
                 <ImageView
                     style="@style/Pf.RowIcon"
-                    android:backgroundTint="@color/pg_pagsusulit_tint"
+                    android:backgroundTint="@color/pf_blue_tint"
                     android:src="@drawable/pf_ic_theme"
-                    app:tint="@color/pg_pagsusulit" />
+                    app:tint="@color/pf_blue" />
 
                 <LinearLayout style="@style/Pf.RowTexts">
 
@@ -414,10 +375,11 @@
                     <TextView
                         style="@style/Pf.RowLabel"
                         android:layout_marginTop="2dp"
-                        android:text="@string/pf_theme_sub" />
+                        android:text="@string/pf_studio_theme_hint" />
                 </LinearLayout>
             </LinearLayout>
 
+<ImageView android:layout_width="match_parent" android:layout_height="64dp" android:layout_marginTop="16dp" android:importantForAccessibility="no" android:src="@drawable/il_account_theme" android:scaleType="fitXY"/>
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/pfThemeGroup"
                 android:layout_width="match_parent"
@@ -452,15 +414,16 @@
             android:accessibilityHeading="true"
             android:fontFamily="@font/lexend"
             android:text="@string/pf_section_security"
-            android:textColor="@color/pg_ink"
+            android:textColor="@color/pf_ink"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <LinearLayout
             android:id="@+id/rowChangePassword"
+                android:stateListAnimator="@animator/pf_studio_press"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/pg_card"
+            android:background="@drawable/pf_studio_surface"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
@@ -472,9 +435,9 @@
 
             <ImageView
                 style="@style/Pf.RowIcon"
-                android:backgroundTint="@color/pg_talasalitaan_tint"
+                android:backgroundTint="@color/pf_aqua_tint"
                 android:src="@drawable/pf_ic_key"
-                app:tint="@color/pg_talasalitaan" />
+                app:tint="@color/pf_aqua" />
 
             <LinearLayout style="@style/Pf.RowTexts">
 
@@ -494,12 +457,13 @@
                 android:layout_height="24dp"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_chevron_right"
-                app:tint="@color/pg_ink_soft" />
+                app:tint="@color/pf_muted" />
         </LinearLayout>
 
         <!-- Logout -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogout"
+                android:stateListAnimator="@animator/pf_studio_press"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="56dp"
@@ -523,8 +487,9 @@
             android:layout_marginTop="16dp"
             android:fontFamily="@font/quicksand_medium"
             android:gravity="center"
-            android:textColor="@color/pg_ink_soft"
+            android:textColor="@color/pf_muted"
             android:textSize="12sp"
-            tools:text="BaSaya v1.0" />
+            tools:text="BASAya v1.0" />
+    </LinearLayout>
     </LinearLayout>
 </ScrollView>

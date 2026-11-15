@@ -1,15 +1,29 @@
 const normalize = (text) =>
   text.trim().toLowerCase().normalize("NFD").replace(/\p{Mn}+/gu, "").replace(/[^a-z]/g, "");
 
-/** Tagalog speakers (and recognizers) freely swap o/u and e/i ("puno"/"punu", "babae"/"babai"), so treat those vowels as the same sound when comparing. */
-const loose = (text) => text.replace(/o/g, "u").replace(/e/g, "i");
+/** Transcript spelling tolerance, not acoustic assessment. Keep in sync with Android.
+ * Fold consonant + i/iy or u/uw + vowel to glides before the existing vowel folding.
+ */
+const loose = (text) => {
+  const spelling = text
+    .replace(/([bcdfghjklmnpqrstvwxz])iy?([aeo])/g, "$1y$2")
+    .replace(/([bcdfghjklmnpqrstvxyz])uw?([aei])/g, "$1w$2");
+  return spelling.replace(/o/g, "u").replace(/e/g, "i");
+};
 
-/** The recognizer may hear extra words ("ang bahay") or split one ("ba hay"). */
+/** Include contiguous fragments, including words split into more than two pieces. */
 function candidateVariants(candidate) {
   const words = candidate.trim().toLowerCase().split(/[\s-]+/).map(normalize).filter(Boolean);
   if (!words.length) return [];
-  const pairs = words.slice(1).map((word, index) => words[index] + word);
-  return [...new Set([...words, ...pairs, words.join("")])];
+  const variants = new Set();
+  for (let start = 0; start < words.length; start += 1) {
+    let joined = "";
+    for (let end = start; end < words.length; end += 1) {
+      joined += words[end];
+      variants.add(joined);
+    }
+  }
+  return [...variants];
 }
 
 function levenshtein(a, b) {

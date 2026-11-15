@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string name="dash_read_first">UNAWAIN ANG ARALIN</string>
+ <string name="dash_progress_loading">Ang iyong pag-unlad</string>
+ <string name="dash_progress_count">%1$d sa %2$d gawain ang natapos</string>
+ <string name="dash_progress_practice">Magsanay sa sarili mong bilis</string>
+</resources>

@@ -90,7 +90,7 @@ class CrosswordCompleteScreen : AppCompatActivity() {
                 null
             }
 
-            title.text = lessonTitle ?: "BaSaya"
+            title.text = lessonTitle ?: "BASAya"
 
             val repo = CrosswordRepository(this@CrosswordCompleteScreen)
             val levels = repo.getLevels(lessonId)
@@ -118,9 +118,11 @@ class CrosswordCompleteScreen : AppCompatActivity() {
                     startActivity(
                         Intent(
                             this@CrosswordCompleteScreen,
-                            CrosswordActivity::class.java
+                            ph.basaya.app.ui.DashboardActivity::class.java
                         ).apply {
                             putExtra("LESSON_ID", lessonId)
+                            putExtra(ph.basaya.app.ui.DashboardActivity.EXTRA_PREPARE_GAME, true)
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         },
                         ActivityOptions.makeCustomAnimation(
                             this@CrosswordCompleteScreen,
@@ -152,8 +154,10 @@ class CrosswordCompleteScreen : AppCompatActivity() {
                         setOnClickListener {
                             it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                             startActivity(
-                                Intent(this@CrosswordCompleteScreen, CrosswordActivity::class.java)
+                                Intent(this@CrosswordCompleteScreen, ph.basaya.app.ui.DashboardActivity::class.java)
                                     .putExtra("LESSON_ID", lessonId)
+                                    .putExtra(ph.basaya.app.ui.DashboardActivity.EXTRA_PREPARE_GAME, true)
+                                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             )
                             finish()
                         }

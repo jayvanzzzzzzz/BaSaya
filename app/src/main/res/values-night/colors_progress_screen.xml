@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <color name="ps_bg">@color/ns_bg</color>
+ <color name="ps_surface">@color/ns_surface</color>
+ <color name="ps_ink">@color/ns_ink</color>
+ <color name="ps_ink_soft">@color/ns_ink_soft</color>
+ <color name="ps_accent">@color/ns_periwinkle</color>
+ <color name="ps_stroke">@color/ns_stroke</color>
+ <color name="ps_divider">@color/ns_divider</color>
+ <color name="ps_track">@color/ns_track</color>
+ <color name="ps_star_on">@color/ns_gold</color>
+ <color name="ps_star_off">#50587D</color>
+ <color name="ps_unawa">@color/ns_sky</color>
+ <color name="ps_unawa_tint">@color/ns_sky_tint</color>
+ <color name="ps_talasalitaan">@color/ns_mint</color>
+ <color name="ps_talasalitaan_tint">@color/ns_mint_tint</color>
+ <color name="ps_pagkilala">@color/ns_tangerine</color>
+ <color name="ps_pagkilala_tint">@color/ns_tangerine_tint</color>
+ <color name="ps_pagbigkas">@color/ns_bubblegum</color>
+ <color name="ps_pagbigkas_tint">@color/ns_bubblegum_tint</color>
+ <color name="ps_pagsusulit">@color/ns_violet</color>
+ <color name="ps_pagsusulit_tint">@color/ns_violet_tint</color>
+ <color name="ps_up">@color/ns_mint</color>
+ <color name="ps_up_tint">@color/ns_mint_tint</color>
+ <color name="ps_down">@color/ns_coral</color>
+ <color name="ps_down_tint">@color/ns_coral_tint</color>
+</resources>

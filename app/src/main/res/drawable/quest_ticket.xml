@@ -1,0 +1,4 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+ <solid android:color="@color/dash_surface"/><corners android:radius="20dp"/>
+ <stroke android:width="2dp" android:color="@color/dash_lecture_stroke"/>
+</shape>

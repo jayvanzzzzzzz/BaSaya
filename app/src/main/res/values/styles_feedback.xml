@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BASAya.StudioDialog" parent="Theme.Material3.DayNight.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">0dp</item>
+        <item name="android:windowMinWidthMinor">0dp</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:windowAnimationStyle">@style/Animation.BASAya.Feedback</item>
+        <item name="android:backgroundDimAmount">0.48</item>
+        <item name="colorPrimary">@color/fb_link</item>
+        <item name="colorOnPrimary">@color/fb_on_color</item>
+        <item name="colorSurface">@color/fb_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/fb_surface</item>
+        <item name="colorOnSurface">@color/fb_ink</item>
+        <item name="colorOnSurfaceVariant">@color/fb_body</item>
+        <item name="colorOutline">@color/fb_outline</item>
+    </style>
+    <style name="ThemeOverlay.BASAya.StudioAlert" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/fb_link</item>
+        <item name="colorSurface">@color/fb_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/fb_surface</item>
+        <item name="colorOnSurface">@color/fb_ink</item>
+        <item name="colorOnSurfaceVariant">@color/fb_body</item>
+        <item name="colorOutline">@color/fb_outline</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/Studio.DialogBody</item>
+        <item name="shapeAppearanceOverlay">@style/Studio.DialogShape</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Studio.AlertAction</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Studio.AlertSecondary</item>
+    </style>
+    <style name="Studio.DialogShape" parent="">
+        <item name="cornerFamily">rounded</item><item name="cornerSize">24dp</item>
+    </style>
+    <style name="Animation.BASAya.Feedback" parent="">
+        <item name="android:windowEnterAnimation">@anim/feedback_enter</item>
+        <item name="android:windowExitAnimation">@anim/feedback_exit</item>
+    </style>
+    <style name="Studio.DialogTitle" parent="">
+        <item name="android:layout_width">match_parent</item><item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/lexend</item><item name="android:textStyle">bold</item>
+        <item name="android:textSize">22sp</item><item name="android:textColor">@color/fb_ink</item>
+        <item name="android:accessibilityHeading">true</item>
+    </style>
+    <style name="Studio.DialogBody" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/be_vietnam_regular</item>
+        <item name="android:textSize">14sp</item><item name="android:textColor">@color/fb_body</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+    <style name="Studio.Action" parent="Widget.Material3.Button">
+        <item name="android:layout_width">match_parent</item><item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">56dp</item><item name="android:paddingTop">12dp</item><item name="android:paddingBottom">12dp</item>
+        <item name="android:textAllCaps">false</item><item name="android:fontFamily">@font/be_vietnam_bold</item>
+        <item name="android:textColor">@color/fb_action_text</item><item name="android:textSize">15sp</item>
+        <item name="backgroundTint">@color/fb_action_tint</item><item name="cornerRadius">16dp</item>
+        <item name="android:insetTop">0dp</item><item name="android:insetBottom">4dp</item>
+        <item name="android:stateListAnimator">@animator/feedback_press</item>
+    </style>
+    <style name="Studio.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">match_parent</item><item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item><item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item><item name="android:textColor">@color/fb_link</item>
+        <item name="android:paddingTop">12dp</item><item name="android:paddingBottom">12dp</item>
+        <item name="strokeColor">@color/fb_border</item><item name="cornerRadius">16dp</item>
+        <item name="android:stateListAnimator">@animator/feedback_press</item>
+    </style>
+    <style name="Studio.AlertAction" parent="Widget.Material3.Button">
+        <item name="android:minHeight">48dp</item><item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item><item name="backgroundTint">@color/fb_action_tint</item>
+        <item name="android:textColor">@color/fb_action_text</item><item name="cornerRadius">16dp</item>
+    </style>
+    <style name="Studio.AlertSecondary" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">48dp</item><item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">@font/be_vietnam_bold</item><item name="android:textColor">@color/fb_link</item>
+    </style>
+</resources>

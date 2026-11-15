@@ -1,0 +1,9 @@
+<resources>
+ <string name="quest_invitation">Tuklasin. Subukan. Matuto!</string>
+ <string name="quest_path">Ang iyong learning quest</string>
+ <string name="quest_book">BUKSAN ANG KAALAMAN</string>
+ <string name="quest_game">PUZZLE ZONE</string>
+ <string name="quest_activity">IDEYA MO, ISULAT MO</string>
+ <string name="quest_pronunciation">BOSES MO, BIDA!</string>
+ <string name="quest_quiz">HANDA SA HAMON?</string>
+</resources>

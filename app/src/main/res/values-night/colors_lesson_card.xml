@@ -4,10 +4,10 @@
     <color name="lesson_card_surface">@color/ns_surface</color>
     <color name="lesson_card_stroke">@color/ns_stroke</color>
     <color name="lesson_card_divider">@color/ns_divider</color>
-    <color name="lesson_card_ripple">#265EE0A0</color>
-    <color name="lesson_card_primary">@color/ns_mint</color>
+    <color name="lesson_card_ripple">#268EA2FF</color>
+    <color name="lesson_card_primary">@color/ns_periwinkle</color>
     <color name="lesson_card_primary_pressed">#4BC488</color>
-    <color name="lesson_card_eyebrow">@color/ns_mint</color>
+    <color name="lesson_card_eyebrow">@color/ns_periwinkle</color>
     <color name="lesson_card_title">@color/ns_ink</color>
     <color name="lesson_card_body">@color/ns_ink_soft</color>
     <color name="lesson_card_track">@color/ns_track</color>

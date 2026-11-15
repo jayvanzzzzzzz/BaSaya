@@ -7,7 +7,7 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -53,7 +53,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import android.app.Dialog
+import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import ph.basaya.app.ui.JoinClassActivity

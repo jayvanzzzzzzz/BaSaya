@@ -36,9 +36,7 @@ import ph.basaya.app.ui.notifications.NotificationsActivity
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
-import android.animation.PropertyValuesHolder
 import android.content.Context
-import android.view.animation.OvershootInterpolator
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -171,8 +169,11 @@ class MainActivity : AppCompatActivity() {
         val bottomNavContent = findViewById<View>(R.id.bottomNavContent)
 
         // Extend both bars to the screen edges while keeping controls clear of system navigation.
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { root, insets ->
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            // Chat uses its own compact header in place of the shared masthead.
+            root.setPadding(root.paddingLeft, if (selectedTab == TAB_CHAT) statusBarHeight else 0,
+                root.paddingRight, root.paddingBottom)
             appBar.setPadding(appBar.paddingLeft, statusBarHeight, appBar.paddingRight, appBar.paddingBottom)
             val navInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             bottomNavContent.setPadding(navInsets.left, 0, navInsets.right, navInsets.bottom)
@@ -200,7 +201,7 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { view -> showToolbarMenu(view) }
         }
 
-        // White status bar icons on the gradient top bar
+        // Both masthead palettes use a blue surface with light status-bar icons.
         WindowInsetsControllerCompat(window, window.decorView)
             .isAppearanceLightStatusBars = false
 
@@ -397,39 +398,29 @@ class MainActivity : AppCompatActivity() {
             tvNotifBadge.visibility = View.VISIBLE
             tvNotifBadge.scaleX = 0f
             tvNotifBadge.scaleY = 0f
-            tvNotifBadge.animate().scaleX(1f).scaleY(1f).setDuration(320)
-                .setInterpolator(OvershootInterpolator(3f)).start()
+            tvNotifBadge.animate().scaleX(1f).scaleY(1f).setDuration(220)
+                .setInterpolator(DecelerateInterpolator()).start()
+            startBellRinging()
         }
-        startBellRinging()
     }
 
-    /** While something is unread: the bell rings and the badge bounces every few seconds. */
+    /** A single, restrained nudge when the unread badge first appears. */
     private fun startBellRinging() {
         if (bellAnimator != null) return
         btnNotification.pivotX = btnNotification.width / 2f
         btnNotification.pivotY = btnNotification.height * 0.2f
 
         val ring = ObjectAnimator.ofFloat(
-            btnNotification, View.ROTATION, 0f, 18f, -16f, 12f, -8f, 4f, 0f
-        ).setDuration(900)
-        val bounce = ObjectAnimator.ofPropertyValuesHolder(
-            tvNotifBadge,
-            PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.3f, 0.9f, 1f),
-            PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.3f, 0.9f, 1f)
-        ).setDuration(600)
+            btnNotification, View.ROTATION, 0f, 5f, -3f, 0f
+        ).setDuration(220)
 
         bellAnimator = AnimatorSet().apply {
-            playTogether(ring, bounce)
-            startDelay = 1_800
+            playTogether(ring)
             interpolator = DecelerateInterpolator()
             addListener(object : AnimatorListenerAdapter() {
-                private var cancelled = false
-                override fun onAnimationCancel(animation: Animator) {
-                    cancelled = true
-                    btnNotification.rotation = 0f
-                }
                 override fun onAnimationEnd(animation: Animator) {
-                    if (!cancelled && !isFinishing) animation.start()
+                    btnNotification.rotation = 0f
+                    bellAnimator = null
                 }
             })
             start()
@@ -485,6 +476,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupBottomNav()
+        updateChatChrome()
         deliverHighlight()
         deliverOpenChat()
     }
@@ -595,7 +587,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun switchTo(fragment: Fragment) {
-        if (fragment === activeFragment) return
+        if (fragment === activeFragment) { updateChatChrome(); return }
         if (isDestroyed || isFinishing) return
 
         supportFragmentManager.beginTransaction()
@@ -608,6 +600,17 @@ class MainActivity : AppCompatActivity() {
             .commitAllowingStateLoss()
 
         activeFragment = fragment
+        updateChatChrome()
+    }
+
+    private fun updateChatChrome() {
+        val inChat = activeFragment === chatFragment
+        findViewById<View>(R.id.appBarLayout).visibility = if (inChat) View.GONE else View.VISIBLE
+        val root = findViewById<View>(R.id.main)
+        root.setBackgroundResource(if (inChat) R.color.ch_surface else R.color.home_bg)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+            inChat && (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
+        ViewCompat.requestApplyInsets(root)
     }
 
     private fun greetingForNow(): Int = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {

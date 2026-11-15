@@ -317,6 +317,11 @@ class PronunciationActivity : AppCompatActivity() {
     // Words
 
     private fun loadWords() {
+        if (ReadingSession.hasDraft(this, lessonId)) {
+            startActivity(Intent(this, ReadingActivity::class.java).putExtra("LESSON_ID", lessonId))
+            finish()
+            return
+        }
         if (lessonId.isEmpty()) {
             showInfo(getString(R.string.pr_no_lesson))
             finish()
@@ -324,8 +329,16 @@ class PronunciationActivity : AppCompatActivity() {
         }
 
         AssessmentUi.run(this) {
-            if (!PracticeLessons.refresh(this@PronunciationActivity, lessonId)) assessment = AssessmentSession.open(this@PronunciationActivity, lessonId)
             val fetched = pronunciationRepository.getActivity(lessonId)
+            if (fetched?.pages?.isNotEmpty() == true) {
+                startActivity(Intent(this@PronunciationActivity, ReadingActivity::class.java).apply {
+                    putExtra("LESSON_ID", lessonId)
+                    putExtra("READING_CONTENT", com.google.gson.Gson().toJson(fetched))
+                })
+                finish()
+                return@run
+            }
+            if (!PracticeLessons.refresh(this@PronunciationActivity, lessonId)) assessment = AssessmentSession.open(this@PronunciationActivity, lessonId)
 
             if (fetched == null || fetched.words.isEmpty()) {
                 showInfo(getString(R.string.pr_no_activity))

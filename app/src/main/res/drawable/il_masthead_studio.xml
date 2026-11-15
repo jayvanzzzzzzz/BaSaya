@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="104dp" android:height="48dp" android:viewportWidth="104" android:viewportHeight="48">
+<!-- Open learning journal with page folds, pencil and discovery sparkle. -->
+<path android:fillColor="@color/mh_surface" android:pathData="M9,34 L80,34 L88,40 L18,45 Z"/>
+<path android:fillColor="@color/mh_mint" android:pathData="M12,12 Q28,7 45,17 Q61,6 78,11 L82,37 Q63,33 46,43 Q29,35 9,39 Z"/>
+<path android:fillColor="@color/mh_paper" android:pathData="M14,8 Q31,6 45,16 L46,38 Q30,30 13,34 Z"/>
+<path android:fillColor="@color/mh_accent" android:pathData="M45,16 Q59,5 74,7 L77,32 Q60,29 46,38 Z"/>
+<path android:strokeColor="@color/mh_bg" android:strokeWidth="1.8" android:strokeLineCap="round" android:pathData="M21,15 Q31,15 38,20 M21,21 Q30,21 38,26 M55,18 L67,14 M55,24 L68,20"/>
+<path android:fillColor="@color/mh_peach" android:pathData="M70,29 L86,3 L92,7 L77,33 L70,36 Z"/>
+<path android:fillColor="@color/mh_avatar_ink" android:pathData="M70,29 L70,36 L77,33 Z"/>
+<path android:fillColor="@color/mh_paper" android:pathData="M85,5 L87,2 Q89,0 92,3 L94,5 L92,8 Z"/>
+<path android:fillColor="@color/mh_mint" android:pathData="M95,17 L97,22 L102,24 L97,26 L95,31 L93,26 L88,24 L93,22 Z"/>
+<path android:fillColor="@color/mh_accent" android:pathData="M5,3 L7,7 L11,8 L7,10 L5,14 L3,10 L0,8 L3,7 Z"/></vector>

@@ -28,7 +28,7 @@ object PronunciationScorer {
         var bestIndex = -1
 
         candidates.forEachIndexed { index, candidate ->
-            // The recognizer may hear extra words ("ang bahay") or split one ("ba hay"), so compare the target against each word, neighbouring pairs, and the whole phrase.
+            // Compare contiguous fragments too: "ang o pin yon" may be one word.
             val distance = candidateVariants(candidate).minOfOrNull { variant ->
                 levenshteinDistance(loose(normalizedTarget), loose(variant))
             } ?: Int.MAX_VALUE
@@ -91,13 +91,28 @@ object PronunciationScorer {
     private fun candidateVariants(candidate: String): List<String> {
         val words = candidate.trim().lowercase().split(Regex("[\\s\\-]+")).map(::normalize).filter { it.isNotEmpty() }
         if (words.isEmpty()) return emptyList()
-        val pairs = words.zipWithNext { a, b -> a + b }
-        return (words + pairs + words.joinToString("")).distinct()
+        return buildSet {
+            for (start in words.indices) {
+                var joined = ""
+                for (end in start until words.size) {
+                    joined += words[end]
+                    add(joined)
+                }
+            }
+        }.toList()
     }
 
-    /** Tagalog speakers (and recognizers) freely swap o/u and e/i ("puno"/"punu", "babae"/"babai"), so treat those vowels as the same sound when comparing. */
-    private fun loose(text: String): String =
-        text.replace('o', 'u').replace('e', 'i')
+    /** Transcript spelling tolerance, not a full acoustic pronunciation assessment.
+     * Fold consonant + i/iy + vowel and consonant + u/uw + vowel to glides.
+     * Apply before the existing vowel folding so vowel hiatus isn't rewritten by it.
+     * Keep in sync with the server's pronunciationScoring.js.
+     */
+    private fun loose(text: String): String {
+        val spelling = text
+            .replace(Regex("([bcdfghjklmnpqrstvwxz])iy?([aeo])"), "$1y$2")
+            .replace(Regex("([bcdfghjklmnpqrstvxyz])uw?([aei])"), "$1w$2")
+        return spelling.replace('o', 'u').replace('e', 'i')
+    }
 
     private fun levenshteinDistance(a: String, b: String): Int {
         val dp = Array(a.length + 1) { IntArray(b.length + 1) }

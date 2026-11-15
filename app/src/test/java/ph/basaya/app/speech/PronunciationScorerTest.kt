@@ -15,6 +15,54 @@ class PronunciationScorerTest {
     }
 
     @Test
+    fun opinyonAcceptsRecognizerSpelling() {
+        for (heard in listOf("opinyon", "Opinion!", "ang opinion", "o pin yon", "opi nion")) {
+            assertEquals(heard, ScoreBand.GREAT, band("opinyon", heard))
+        }
+        assertEquals(ScoreBand.GREAT, band("opinion", "opinyon"))
+    }
+
+    @Test
+    fun opinyonStillRejectsDifferentWordsAndEndings() {
+        for (heard in listOf("opinyong", "opisyon", "opinyan", "pinyon", "onion")) {
+            assertEquals(heard, ScoreBand.TRY_AGAIN, band("opinyon", heard))
+        }
+    }
+
+    @Test
+    fun glideSpellingRulesApplyAcrossWordsInBothDirections() {
+        val pairs = listOf(
+            "opinyon" to "opiniyon", "leksyon" to "leksiyon",
+            "leksyon" to "leksion", "aksyon" to "aksiyon",
+            "pasyon" to "pasion", "misyon" to "mision",
+            "dyaryo" to "diyaryo", "tyempo" to "tiempo",
+            "kwento" to "kuwento", "kwarto" to "kuarto",
+            "biskwit" to "biskuwit", "indibidwal" to "indibidual"
+        )
+        for ((target, heard) in pairs) {
+            assertEquals("$target / $heard", ScoreBand.GREAT, band(target, heard))
+            assertEquals("$heard / $target", ScoreBand.GREAT, band(heard, target))
+        }
+    }
+
+    @Test
+    fun multipleFragmentsInsideAPhraseAreJoinedWithoutSkippingWords() {
+        assertEquals(ScoreBand.GREAT, band("opinyon", "ang o pin yon po"))
+        assertEquals(ScoreBand.GREAT, band("leksyon", "ang lek si yon po"))
+        assertEquals(ScoreBand.GREAT, band("kwento", "ang ku wen to po"))
+        assertEquals(ScoreBand.TRY_AGAIN, band("opinyon", "o ibang pin yon"))
+    }
+
+    @Test
+    fun phoneticTolerancePreservesConsonantsAndVowelHiatus() {
+        for ((target, heard) in listOf(
+            "misyon" to "nasyon", "pasyon" to "pasyonko",
+            "kwento" to "kwenta", "bata" to "pata",
+            "leon" to "leyon", "buan" to "ban"
+        )) assertEquals("$target / $heard", ScoreBand.TRY_AGAIN, band(target, heard))
+    }
+
+    @Test
     fun punctuationCaseAndAccentsAreIgnored() {
         assertEquals(ScoreBand.GREAT, band("bahay", "Báhay."))
     }

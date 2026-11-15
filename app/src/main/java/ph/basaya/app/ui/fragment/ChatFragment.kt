@@ -18,7 +18,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -31,7 +31,8 @@ import ph.basaya.app.R
 import ph.basaya.app.adapter.ChatAdapter
 import ph.basaya.app.data.chat.ClassChat
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import ph.basaya.app.ui.feedback.StudioDialogBuilder as MaterialAlertDialogBuilder
+import ph.basaya.app.ui.feedback.FeedbackTone
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -45,7 +46,6 @@ import kotlin.math.max
 /** The Chat tab: the class's group chat with the teacher and classmates (see [ClassChat]). Firestore listeners run only while this tab is on screen. */
 class ChatFragment : Fragment() {
 
-    private lateinit var tvClassTile: TextView
     private lateinit var tvChatClass: TextView
     private lateinit var rvMessages: RecyclerView
     private lateinit var chatEmpty: View
@@ -98,7 +98,6 @@ class ChatFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
-        tvClassTile = view.findViewById(R.id.tvClassTile)
         tvChatClass = view.findViewById(R.id.tvChatClass)
         rvMessages = view.findViewById(R.id.rvMessages)
         chatEmpty = view.findViewById(R.id.chatEmpty)
@@ -126,6 +125,10 @@ class ChatFragment : Fragment() {
         rvMessages.layoutManager = LinearLayoutManager(requireContext()).apply { stackFromEnd = true }
         rvMessages.adapter = adapter
         rvMessages.itemAnimator = null
+
+        etMessage.setOnFocusChangeListener { _, focused ->
+            (etMessage.parent as View).isActivated = focused
+        }
 
         rvMessages.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) = updateJumpButton()
@@ -284,9 +287,8 @@ class ChatFragment : Fragment() {
 
     private fun showHeader(className: String, hasClass: Boolean) {
         this.className = className
-        tvChatClass.text = className
-        tvChatClass.visibility = if (hasClass && className.isNotBlank()) View.VISIBLE else View.GONE
-        tvClassTile.text = initials(className)
+        tvChatClass.text = className.takeIf { hasClass && it.isNotBlank() }
+            ?: getString(R.string.ch_title)
         btnMembers.visibility = if (hasClass) View.VISIBLE else View.GONE
     }
 
@@ -570,7 +572,7 @@ class ChatFragment : Fragment() {
 
     private fun confirmDelete(message: ClassChat.Message) {
         val id = classId ?: return
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), FeedbackTone.DANGER)
             .setTitle(R.string.ch_delete_title)
             .setMessage(R.string.ch_delete_body)
             .setNegativeButton(R.string.ch_delete_no, null)

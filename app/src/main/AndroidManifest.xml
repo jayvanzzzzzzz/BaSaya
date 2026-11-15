@@ -60,7 +60,10 @@
             android:name=".ui.JoinClassActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pronunciation.PronunciationActivity"
+            android:name=".ui.pronunciation.ReadingActivity"
+              android:exported="false" />
+          <activity
+              android:name=".ui.pronunciation.PronunciationActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activity.PracticeCompleteScreen"

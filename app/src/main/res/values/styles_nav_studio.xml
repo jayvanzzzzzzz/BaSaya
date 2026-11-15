@@ -1,0 +1,34 @@
+<resources>
+    <style name="NavStudioTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingHorizontal">2dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:background">@drawable/nav_studio_touch</item>
+        <item name="android:stateListAnimator">@animator/nav_studio_press</item>
+    </style>
+    <style name="NavStudioIcon">
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:padding">3dp</item>
+        <item name="android:background">@drawable/nav_studio_well</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="NavStudioLabel">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:fontFamily">@font/be_vietnam_semi_bold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/nav_inactive</item>
+        <item name="android:gravity">center</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+</resources>

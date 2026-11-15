@@ -2,14 +2,10 @@ package ph.basaya.app.adapter
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Typeface
-import android.view.animation.AccelerateDecelerateInterpolator
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import android.text.SpannableString
@@ -87,8 +83,8 @@ class LessonAdapter(
             bindSteps(lesson)
             bindDownloadState(lesson, animate = false)
             bindSchedule(tvSchedule, lesson)
-            // Locked lessons stay visible but dimmed; tapping explains why.
-            itemView.alpha = if (LessonSchedule.canOpen(itemView.context, lesson)) 1f else 0.6f
+            // The schedule explains availability; keep titles and dates fully readable.
+            itemView.alpha = 1f
             if (glowIds.remove(lesson.id)) playGlow(itemView as MaterialCardView)
 
             itemView.setOnClickListener {
@@ -279,38 +275,31 @@ class LessonAdapter(
         setSpan(StyleSpan(Typeface.BOLD), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
-    /** About 2.5 s of a gold-and-violet glowing outline and a gentle pulse, then back to normal. */
+    /** A short outline cue locates a lesson opened from a notification without moving its text. */
     private fun playGlow(card: MaterialCardView) {
         val context = card.context
+        val motionEnabled = if (android.os.Build.VERSION.SDK_INT >= 26) {
+            ValueAnimator.areAnimatorsEnabled()
+        } else {
+            android.provider.Settings.Global.getFloat(
+                context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+            ) != 0f
+        }
+        if (!motionEnabled) return
         val density = context.resources.displayMetrics.density
         val originalStroke = card.strokeColorStateList
         val originalWidth = card.strokeWidth
-        val gold = ContextCompat.getColor(context, R.color.tb_ring)
-        val violet = ContextCompat.getColor(context, R.color.tb_end)
+        val accent = ContextCompat.getColor(context, R.color.home_accent)
+        val outline = ContextCompat.getColor(context, R.color.lesson_card_stroke)
 
-        card.strokeWidth = (3 * density).toInt()
-        val glow = ValueAnimator.ofArgb(gold, violet, gold).apply {
-            duration = 850
-            repeatCount = 2
+        card.strokeWidth = (2 * density).toInt()
+        ValueAnimator.ofArgb(accent, outline).apply {
+            duration = 240
             addUpdateListener { card.setStrokeColor(ColorStateList.valueOf(it.animatedValue as Int)) }
-        }
-        val pulse = ObjectAnimator.ofPropertyValuesHolder(
-            card,
-            PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.035f, 1f),
-            PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.035f, 1f)
-        ).apply {
-            duration = 850
-            repeatCount = 2
-            interpolator = AccelerateDecelerateInterpolator()
-        }
-        AnimatorSet().apply {
-            playTogether(glow, pulse)
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     card.strokeWidth = originalWidth
                     card.setStrokeColor(originalStroke)
-                    card.scaleX = 1f
-                    card.scaleY = 1f
                 }
             })
             start()

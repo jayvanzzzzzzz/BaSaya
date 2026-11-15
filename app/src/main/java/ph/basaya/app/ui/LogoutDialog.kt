@@ -1,6 +1,6 @@
 package ph.basaya.app.ui
 
-import android.app.Dialog
+import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable

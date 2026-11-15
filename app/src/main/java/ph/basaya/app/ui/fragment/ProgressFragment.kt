@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
-import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -18,6 +17,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import ph.basaya.app.R
@@ -32,7 +32,6 @@ import ph.basaya.app.data.progress.SkillScoring
 import ph.basaya.app.data.progress.SkillSummary
 import ph.basaya.app.data.progress.StudentSummary
 import ph.basaya.app.data.progress.Trend
-import ph.basaya.app.ui.pronunciation.PronunciationBookView
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.firebase.Timestamp
@@ -43,7 +42,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/** The student's own progress: five separate skill cards (never one combined score). Scores come from [SkillScoring]; see README.md ("Paano kinukwenta ang progreso"). */
+/** Learning report with five separate skills. Scores come from [SkillScoring]. */
 class ProgressFragment : Fragment() {
 
     /** How each skill looks on its card. */
@@ -56,11 +55,11 @@ class ProgressFragment : Fragment() {
     )
 
     private val styles = mapOf(
-        Skill.PAG_UNAWA to SkillStyle(R.string.pg_skill_unawa, R.string.pg_skill_unawa_sub, R.drawable.ic_book, R.color.pg_unawa, R.color.pg_unawa_tint),
-        Skill.TALASALITAAN to SkillStyle(R.string.pg_skill_talasalitaan, R.string.pg_skill_talasalitaan_sub, R.drawable.ic_puzzle, R.color.pg_talasalitaan, R.color.pg_talasalitaan_tint),
-        Skill.PAGKILALA to SkillStyle(R.string.pg_skill_pagkilala, R.string.pg_skill_pagkilala_sub, R.drawable.ic_pencil, R.color.pg_pagkilala, R.color.pg_pagkilala_tint),
-        Skill.PAGBIGKAS to SkillStyle(R.string.pg_skill_pagbigkas, R.string.pg_skill_pagbigkas_sub, R.drawable.ic_mic, R.color.pg_pagbigkas, R.color.pg_pagbigkas_tint),
-        Skill.PAGSUSULIT to SkillStyle(R.string.pg_skill_pagsusulit, R.string.pg_skill_pagsusulit_sub, R.drawable.ic_clipboard_check, R.color.pg_pagsusulit, R.color.pg_pagsusulit_tint)
+        Skill.PAG_UNAWA to SkillStyle(R.string.pg_skill_unawa, R.string.pg_skill_unawa_sub, R.drawable.ic_book, R.color.ps_unawa, R.color.ps_unawa_tint),
+        Skill.TALASALITAAN to SkillStyle(R.string.pg_skill_talasalitaan, R.string.pg_skill_talasalitaan_sub, R.drawable.ic_puzzle, R.color.ps_talasalitaan, R.color.ps_talasalitaan_tint),
+        Skill.PAGKILALA to SkillStyle(R.string.pg_skill_pagkilala, R.string.pg_skill_pagkilala_sub, R.drawable.ic_pencil, R.color.ps_pagkilala, R.color.ps_pagkilala_tint),
+        Skill.PAGBIGKAS to SkillStyle(R.string.pg_skill_pagbigkas, R.string.pg_skill_pagbigkas_sub, R.drawable.ic_mic, R.color.ps_pagbigkas, R.color.ps_pagbigkas_tint),
+        Skill.PAGSUSULIT to SkillStyle(R.string.pg_skill_pagsusulit, R.string.pg_skill_pagsusulit_sub, R.drawable.ic_clipboard_check, R.color.ps_pagsusulit, R.color.ps_pagsusulit_tint)
     )
 
     /** What one card shows. */
@@ -76,7 +75,6 @@ class ProgressFragment : Fragment() {
         @param:StringRes val message: Int
     )
 
-    private lateinit var buddy: PronunciationBookView
     private lateinit var tvGreeting: TextView
     private lateinit var tvHeroMessage: TextView
     private lateinit var tvLessonsDone: TextView
@@ -87,6 +85,7 @@ class ProgressFragment : Fragment() {
     private lateinit var wordsContainer: FlexboxLayout
 
     private var loadJob: Job? = null
+    private val progressAnimations = mutableListOf<ValueAnimator>()
     private var allGamesSkipped = false
     private var allActivitiesSkipped = false
     /** The student's class lessons (from Room); the only lessons that count. */
@@ -99,7 +98,6 @@ class ProgressFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_progress, container, false)
-        buddy = view.findViewById(R.id.buddy)
         tvGreeting = view.findViewById(R.id.tvGreeting)
         tvHeroMessage = view.findViewById(R.id.tvHeroMessage)
         tvLessonsDone = view.findViewById(R.id.tvLessonsDone)
@@ -109,6 +107,20 @@ class ProgressFragment : Fragment() {
         wordsCard = view.findViewById(R.id.wordsCard)
         wordsContainer = view.findViewById(R.id.wordsContainer)
         return view
+    }
+
+    private fun motionEnabled(): Boolean = if (android.os.Build.VERSION.SDK_INT >= 26) {
+        ValueAnimator.areAnimatorsEnabled()
+    } else {
+        android.provider.Settings.Global.getFloat(
+            requireContext().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+        ) != 0f
+    }
+
+    override fun onDestroyView() {
+        progressAnimations.forEach { it.cancel() }
+        progressAnimations.clear()
+        super.onDestroyView()
     }
 
     // Reload whenever the student comes back, e.g. after finishing an activity.
@@ -198,19 +210,15 @@ class ProgressFragment : Fragment() {
         when {
             summary.needsHelp.isNotEmpty() -> {
                 tvHeroMessage.setText(R.string.pg_hero_help)
-                buddy.setMood(PronunciationBookView.Mood.CHEER)
             }
             SkillLevel.MAHUSAY in levels -> {
                 tvHeroMessage.setText(R.string.pg_hero_great)
-                buddy.setMood(PronunciationBookView.Mood.HAPPY)
             }
             hasData -> {
                 tvHeroMessage.setText(R.string.pg_hero_going)
-                buddy.setMood(PronunciationBookView.Mood.IDLE)
             }
             else -> {
                 tvHeroMessage.setText(R.string.pg_hero_start)
-                buddy.setMood(PronunciationBookView.Mood.IDLE)
             }
         }
 
@@ -220,15 +228,14 @@ class ProgressFragment : Fragment() {
         val finished = LessonCompletion.finishedCount(docs, countedLessons)
         tvLessonsDone.text = getString(R.string.pg_lessons_done, finished, total)
         lessonRing.contentDescription = getString(R.string.pg_lessons_cd, finished, total)
-        progressLessons.setProgressCompat(0, false)
-        progressLessons.postDelayed({
-            if (isAdded) progressLessons.setProgressCompat(if (total > 0) finished * 100 / total else 0, true)
-        }, 300)
+        progressLessons.setProgressCompat(if (total > 0) finished * 100 / total else 0, false)
     }
 
     // Skill cards
 
     private fun showSkills(docs: List<DocumentSnapshot>, summary: StudentSummary) {
+        progressAnimations.forEach { it.cancel() }
+        progressAnimations.clear()
         skillsContainer.removeAllViews()
         Skill.values().forEachIndexed { index, skill ->
             val skillSummary = summary.skills.getValue(skill)
@@ -251,16 +258,16 @@ class ProgressFragment : Fragment() {
         val score = summary.score
         if (summary.lessons == 0 || score == null) {
             return CardState(
-                null, "--", R.string.pg_level_not_started, R.color.pg_ink_soft, R.color.pg_track,
+                null, "--", R.string.pg_level_not_started, R.color.ps_ink_soft, R.color.ps_track,
                 stars = 0, trend = null, lessonScores = emptyList(), message = R.string.pg_msg_not_started
             )
         }
         val (level, text, bg, stars, message) = when (summary.level) {
-            SkillLevel.MAHUSAY -> Quint(R.string.pg_level_mahusay, R.color.pg_up, R.color.pg_up_tint, 3, R.string.pg_msg_mahusay)
-            SkillLevel.UMUUNLAD -> Quint(R.string.pg_level_umuunlad, R.color.pg_unawa, R.color.pg_unawa_tint, 2, R.string.pg_msg_umuunlad)
-            SkillLevel.NAGSISIMULA -> Quint(R.string.pg_level_nagsisimula, R.color.pg_pagkilala, R.color.pg_pagkilala_tint, 1, R.string.pg_msg_nagsisimula)
-            SkillLevel.KAILANGAN_NG_TULONG -> Quint(R.string.pg_level_tulong, R.color.pg_down, R.color.pg_down_tint, 0, R.string.pg_msg_tulong)
-            SkillLevel.KULANG_ANG_DATOS -> Quint(R.string.pg_level_kulang, R.color.pg_ink_soft, R.color.pg_track, 0, R.string.pg_msg_kulang)
+            SkillLevel.MAHUSAY -> Quint(R.string.pg_level_mahusay, R.color.ps_up, R.color.ps_up_tint, 3, R.string.pg_msg_mahusay)
+            SkillLevel.UMUUNLAD -> Quint(R.string.pg_level_umuunlad, R.color.ps_unawa, R.color.ps_unawa_tint, 2, R.string.pg_msg_umuunlad)
+            SkillLevel.NAGSISIMULA -> Quint(R.string.pg_level_nagsisimula, R.color.ps_pagkilala, R.color.ps_pagkilala_tint, 1, R.string.pg_msg_nagsisimula)
+            SkillLevel.KAILANGAN_NG_TULONG -> Quint(R.string.pg_level_tulong, R.color.ps_down, R.color.ps_down_tint, 0, R.string.pg_msg_tulong)
+            SkillLevel.KULANG_ANG_DATOS -> Quint(R.string.pg_level_kulang, R.color.ps_ink_soft, R.color.ps_track, 0, R.string.pg_msg_kulang)
         }
         return CardState(score, getString(R.string.pg_percent, score), level, text, bg, stars, summary.trend, summary.lessonScores, message)
     }
@@ -270,8 +277,8 @@ class ProgressFragment : Fragment() {
         percent = null,
         percentText = "--",
         level = R.string.pg_level_no_game,
-        levelText = R.color.pg_ink_soft,
-        levelBg = R.color.pg_track,
+        levelText = R.color.ps_ink_soft,
+        levelBg = R.color.ps_track,
         stars = null,
         trend = null,
         lessonScores = emptyList(),
@@ -292,7 +299,7 @@ class ProgressFragment : Fragment() {
         val finished = docs.count { it.id in ids && it.getBoolean("lectureFinished") == true }
         if (total == 0 || finished == 0) {
             return CardState(
-                null, "--", R.string.pg_level_not_started, R.color.pg_ink_soft, R.color.pg_track,
+                null, "--", R.string.pg_level_not_started, R.color.ps_ink_soft, R.color.ps_track,
                 stars = null, trend = null, lessonScores = emptyList(), message = R.string.pg_msg_not_started
             )
         }
@@ -301,8 +308,8 @@ class ProgressFragment : Fragment() {
             percent = finished * 100 / total,
             percentText = getString(R.string.pg_fraction, finished, total),
             level = if (done) R.string.pg_level_done else R.string.pg_level_in_progress,
-            levelText = if (done) R.color.pg_up else R.color.pg_unawa,
-            levelBg = if (done) R.color.pg_up_tint else R.color.pg_unawa_tint,
+            levelText = if (done) R.color.ps_up else R.color.ps_unawa,
+            levelBg = if (done) R.color.ps_up_tint else R.color.ps_unawa_tint,
             stars = null, trend = null, lessonScores = emptyList(),
             message = if (done) R.string.pg_msg_lecture_done else R.string.pg_msg_lecture_progress
         )
@@ -310,6 +317,10 @@ class ProgressFragment : Fragment() {
 
     private fun bindCard(card: View, style: SkillStyle, state: CardState, index: Int) {
         val accent = color(style.color)
+        card.findViewById<View>(R.id.skillAccent).backgroundTintList = ColorStateList.valueOf(accent)
+        card.setBackgroundResource(
+            if (index == Skill.values().lastIndex) android.R.color.transparent else R.drawable.ps_skill_divider
+        )
 
         card.findViewById<ImageView>(R.id.ivSkillIcon).apply {
             setImageResource(style.icon)
@@ -320,7 +331,7 @@ class ProgressFragment : Fragment() {
         card.findViewById<TextView>(R.id.tvSkillSource).setText(style.source)
         card.findViewById<TextView>(R.id.tvSkillPercent).apply {
             text = state.percentText
-            setTextColor(if (state.percent == null) color(R.color.pg_ink_soft) else accent)
+            setTextColor(if (state.percent == null) color(R.color.ps_ink_soft) else accent)
         }
         card.findViewById<TextView>(R.id.tvSkillLevel).apply {
             setText(state.level)
@@ -329,59 +340,59 @@ class ProgressFragment : Fragment() {
         }
         card.findViewById<TextView>(R.id.tvSkillTrend).apply {
             when (state.trend) {
-                Trend.UP -> show(R.string.pg_trend_up, R.color.pg_up, R.color.pg_up_tint)
-                Trend.DOWN -> show(R.string.pg_trend_down, R.color.pg_down, R.color.pg_down_tint)
+                Trend.UP -> show(R.string.pg_trend_up, R.color.ps_up, R.color.ps_up_tint)
+                Trend.DOWN -> show(R.string.pg_trend_down, R.color.ps_down, R.color.ps_down_tint)
                 else -> visibility = View.GONE
             }
         }
         card.findViewById<TextView>(R.id.tvSkillMessage).setText(state.message)
 
-        // Stars: earned ones turn gold and pop in
+        // Stars remain visible alongside the level, without delaying the result.
         val starsRow = card.findViewById<View>(R.id.starsRow)
         val stars = listOf<ImageView>(card.findViewById(R.id.star1), card.findViewById(R.id.star2), card.findViewById(R.id.star3))
         if (state.stars == null) {
-            starsRow.visibility = View.INVISIBLE
+            starsRow.visibility = View.GONE
         } else {
             stars.forEachIndexed { i, star ->
                 val earned = i < state.stars
-                star.imageTintList = ColorStateList.valueOf(color(if (earned) R.color.pg_star_on else R.color.pg_star_off))
-                star.scaleX = 0f
-                star.scaleY = 0f
-                star.animate().scaleX(1f).scaleY(1f)
-                    .setStartDelay(350L + index * 90L + i * 120L)
-                    .setDuration(380)
-                    .setInterpolator(OvershootInterpolator(if (earned) 3f else 1.2f))
-                    .start()
+                star.imageTintList = ColorStateList.valueOf(color(if (earned) R.color.ps_star_on else R.color.ps_star_off))
             }
         }
 
-        // Score bar fills up
+        // A brief fill reveals the result. Resizing keeps the same proportion.
         val track = card.findViewById<View>(R.id.scoreTrack)
         val fill = card.findViewById<View>(R.id.scoreFill)
         fill.backgroundTintList = ColorStateList.valueOf(accent)
         val target = (state.percent ?: 0).coerceIn(0, 100)
-        track.post {
-            ValueAnimator.ofInt(0, track.width * target / 100).apply {
-                startDelay = 250L + index * 90L
-                duration = 700
-                interpolator = DecelerateInterpolator()
-                addUpdateListener {
-                    fill.layoutParams = fill.layoutParams.apply { width = it.animatedValue as Int }
+        var fillAnimation: ValueAnimator? = null
+        track.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (oldRight > oldLeft && right - left != oldRight - oldLeft) {
+                fillAnimation?.cancel()
+                fill.layoutParams = fill.layoutParams.apply { width = (right - left) * target / 100 }
+            }
+        }
+        track.doOnLayout {
+            if (!isAdded || view == null) return@doOnLayout
+            val targetWidth = track.width * target / 100
+            if (!motionEnabled()) {
+                fill.layoutParams = fill.layoutParams.apply { width = targetWidth }
+            } else {
+                fillAnimation = ValueAnimator.ofInt(0, targetWidth).apply {
+                    duration = 240
+                    interpolator = DecelerateInterpolator()
+                    addUpdateListener {
+                        fill.layoutParams = fill.layoutParams.apply { width = it.animatedValue as Int }
+                    }
+                    progressAnimations.add(this)
+                    start()
                 }
-                start()
             }
         }
 
-        bindLessonBars(card.findViewById(R.id.lessonBars), state.lessonScores, accent, index)
-
-        // Card rises in, one after another
-        card.alpha = 0f
-        card.translationY = dp(24f).toFloat()
-        card.animate().alpha(1f).translationY(0f)
-            .setStartDelay(index * 90L)
-            .setDuration(380)
-            .setInterpolator(DecelerateInterpolator())
-            .start()
+        val history = card.findViewById<View>(R.id.lessonHistoryRow)
+        history.visibility = if (state.lessonScores.isEmpty()) View.GONE else View.VISIBLE
+        history.contentDescription = getString(R.string.ps_recent_scores, state.lessonScores.takeLast(6).joinToString(", "))
+        bindLessonBars(card.findViewById(R.id.lessonBars), state.lessonScores, accent)
 
         val starCount = state.stars ?: 0
         card.contentDescription = getString(
@@ -397,7 +408,7 @@ class ProgressFragment : Fragment() {
     }
 
     /** Mini chart: one bar per lesson (latest 6), newest in full color. */
-    private fun bindLessonBars(container: LinearLayout, scores: List<Int>, accent: Int, index: Int) {
+    private fun bindLessonBars(container: LinearLayout, scores: List<Int>, accent: Int) {
         container.removeAllViews()
         val recent = scores.takeLast(6)
         val maxHeight = dp(28f)
@@ -409,13 +420,8 @@ class ProgressFragment : Fragment() {
                 layoutParams = LinearLayout.LayoutParams(dp(7f), maxOf(dp(4f), maxHeight * score / 100)).apply {
                     marginStart = if (i == 0) 0 else dp(3f)
                 }
-                pivotY = maxHeight.toFloat()
-                scaleY = 0f
             }
             container.addView(bar)
-            bar.post { bar.pivotY = bar.height.toFloat() }
-            bar.animate().scaleY(1f).setStartDelay(500L + index * 90L + i * 50L)
-                .setDuration(320).setInterpolator(OvershootInterpolator(1.5f)).start()
         }
     }
 
@@ -441,25 +447,21 @@ class ProgressFragment : Fragment() {
             return
         }
         wordsCard.visibility = View.VISIBLE
-        words.forEachIndexed { i, word ->
+        words.forEach { word ->
             val chip = TextView(requireContext()).apply {
                 text = word
                 typeface = ResourcesCompat.getFont(requireContext(), R.font.be_vietnam_bold)
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-                setTextColor(color(R.color.pg_pagbigkas))
-                setBackgroundResource(R.drawable.pg_round)
-                backgroundTintList = ColorStateList.valueOf(color(R.color.pg_pagbigkas_tint))
-                setPadding(dp(14f), dp(6f), dp(14f), dp(7f))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                setTextColor(color(R.color.ps_pagbigkas))
+                setBackgroundResource(R.drawable.ps_label)
+                backgroundTintList = ColorStateList.valueOf(color(R.color.ps_surface))
+                setPadding(dp(12f), dp(8f), dp(12f), dp(8f))
                 layoutParams = FlexboxLayout.LayoutParams(
                     FlexboxLayout.LayoutParams.WRAP_CONTENT,
                     FlexboxLayout.LayoutParams.WRAP_CONTENT
                 ).apply { setMargins(0, dp(4f), dp(8f), dp(4f)) }
-                scaleX = 0f
-                scaleY = 0f
             }
             wordsContainer.addView(chip)
-            chip.animate().scaleX(1f).scaleY(1f).setStartDelay(700L + i * 60L)
-                .setDuration(300).setInterpolator(OvershootInterpolator(2.5f)).start()
         }
     }
 

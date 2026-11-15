@@ -11,7 +11,7 @@ import java.nio.ByteOrder
 import kotlin.math.sqrt
 
 /** Keeps the microphone warm; only an active hold retains audio. */
-class VoiceRecorder {
+class VoiceRecorder(private val maximumFrames: Int = 350) {
     sealed class Result {
         class Speech(val wav: ByteArray) : Result()
         object NoSpeech : Result()
@@ -63,7 +63,7 @@ class VoiceRecorder {
                 if (read == 0) continue
                 synchronized(lock) {
                     // Discard idle audio and any read spanning a cancelled/replaced hold.
-                    if (held != null && capture === held && worker === owner && held.frames < MAX_FRAMES) {
+                    if (held != null && capture === held && worker === owner && held.frames < maximumFrames) {
                         var squares = 0.0
                         for (i in 0 until read) {
                             val sample = frame[i].toInt()

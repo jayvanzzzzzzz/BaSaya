@@ -33,7 +33,7 @@
                 android:gravity="center"
                 android:importantForAccessibility="no"
                 android:paddingBottom="3dp"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/ch_on_action"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 tools:text="G4" />
@@ -109,7 +109,7 @@
                     android:layout_width="46dp"
                     android:layout_height="46dp"
                     android:background="@drawable/ch_avatar"
-                    android:backgroundTint="@color/ch_teacher"
+                    android:backgroundTint="@color/ch_avatar_teacher"
                     android:fontFamily="@font/lexend"
                     android:gravity="center"
                     android:importantForAccessibility="no"

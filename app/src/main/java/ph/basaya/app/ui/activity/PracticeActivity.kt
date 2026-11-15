@@ -1,7 +1,9 @@
 package ph.basaya.app.ui.activity
 
 import ph.basaya.app.data.assessment.*
-import ph.basaya.app.ui.AssessmentUi
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 import android.animation.ObjectAnimator
 import android.content.Intent
@@ -17,12 +19,13 @@ import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
+import ph.basaya.app.ui.feedback.StudioDialogBuilder
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -35,10 +38,8 @@ import androidx.lifecycle.lifecycleScope
 import ph.basaya.app.R
 import ph.basaya.app.data.model.ActivityPage
 import ph.basaya.app.data.model.PracticeActivityData
-import ph.basaya.app.data.progress.LessonResume
 import ph.basaya.app.data.progress.Skill
 import ph.basaya.app.data.progress.SkillProgressRepository
-import ph.basaya.app.data.repository.ActivityRepository
 import ph.basaya.app.ui.game.ConfettiView
 import ph.basaya.app.ui.pronunciation.PronunciationBookView
 import ph.basaya.app.ui.theme.useDarkStatusBarIconsInLightTheme
@@ -48,12 +49,15 @@ import kotlinx.coroutines.launch
 
 class PracticeActivity : AppCompatActivity() {
     private var assessment: AssessmentSession? = null
-    private var acceptedRight: Boolean? = null
-    private var submitting = false
+    private lateinit var preparedState: PreparedPractice
+    private lateinit var attempts: ActivityAttemptQueue
+    private lateinit var syncStatus: TextView
+    private var saveJob: Job? = null
+    private var saveRejected = false
+    private var finishQueued = false
 
 
     private lateinit var lessonId: String
-    private lateinit var activityRepository: ActivityRepository
     private lateinit var practiceData: PracticeActivityData
 
     private var currentPageIndex = 0
@@ -64,11 +68,9 @@ class PracticeActivity : AppCompatActivity() {
     private var retries = 0
     /** Lives left on the current page; at 0 the page counts as wrong and the answer is shown. */
     private var lives = MAX_LIVES
-    private var allAnswered = false
 
     private lateinit var tvPageTag: TextView
     private lateinit var tvActivityTitle: TextView
-    private lateinit var tvInstruction: TextView
     private lateinit var chipsContainer: FlexboxLayout
     private lateinit var feedbackContainer: LinearLayout
     private lateinit var feedbackBuddy: PronunciationBookView
@@ -120,9 +122,20 @@ class PracticeActivity : AppCompatActivity() {
             return
         }
 
+        val ready = PreparedPractice.take(intent.getStringExtra(EXTRA_PREPARED_ACTIVITY), lessonId)
+        if (ready == null) {
+            // Direct entry or process recreation must prepare on the dashboard as well.
+            startActivity(Intent(this, ph.basaya.app.ui.DashboardActivity::class.java).apply {
+                putExtra("LESSON_ID", lessonId)
+                putExtra(ph.basaya.app.ui.DashboardActivity.EXTRA_PREPARE_ACTIVITY, true)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            })
+            finish()
+            return
+        }
+
         tvPageTag = findViewById(R.id.tvPageTag)
         tvActivityTitle = findViewById(R.id.tvActivityTitle)
-        tvInstruction = findViewById(R.id.tvInstruction)
         chipsContainer = findViewById(R.id.chipsContainer)
         feedbackContainer = findViewById(R.id.feedbackContainer)
         feedbackBuddy = findViewById(R.id.feedbackBuddy)
@@ -136,78 +149,61 @@ class PracticeActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
         announceAsButton(btnAction)
 
-        activityRepository = ActivityRepository(this)
-
-        AssessmentUi.run(this) {
-            if (!ph.basaya.app.data.progress.PracticeLessons.refresh(this@PracticeActivity, lessonId) || ph.basaya.app.utils.Network.isOnline(this@PracticeActivity))
-                assessment = AssessmentSession.open(this@PracticeActivity, lessonId)
-            val fetched = activityRepository.getActivity(lessonId)
-
-            if (fetched == null || fetched.pages.isEmpty()) {
-                Toast.makeText(this@PracticeActivity, getString(R.string.ac_not_found), Toast.LENGTH_SHORT).show()
-                finish()
-                return@run
+        preparedState = ready
+        attempts = ActivityAttemptSaves.open(this, ready.queueKey, ready::isCurrent)
+        syncStatus = findViewById(R.id.acSyncStatus)
+        syncStatus.setOnClickListener { if (saveRejected) finish() else syncAttempts() }
+        assessment = ready.assessment
+        practiceData = ready.content
+        currentPageIndex = ready.pageIndex
+        score = ready.score
+        retries = ready.retries
+        lives = ready.lives
+        tvActivityTitle.text = practiceData.title
+        findViewById<View>(R.id.btnInstruction).apply {
+            visibility = if (practiceData.instruction.isBlank()) View.GONE else View.VISIBLE
+            setOnClickListener {
+                StudioDialogBuilder(this@PracticeActivity)
+                    .setTitle(R.string.ac_instruction_title)
+                    .setMessage(practiceData.instruction)
+                    .setPositiveButton(R.string.ac_close, null)
+                    .show()
             }
+        }
+        if (ready.completion != null) {
+            showCompletion(ready.completion)
+            return
+        }
 
-            if (assessment == null && fetched.pages.any { it.pickCount != null })
-                throw AssessmentFailure(0, "Kumonekta upang masuri ang mga sagot sa pagsasanay.")
+        setupProgressTrack()
+        setupLives()
+        showPage(currentPageIndex, animateIn = false)
 
-            practiceData = fetched
-            tvActivityTitle.text = practiceData.title
-            tvInstruction.text = practiceData.instruction
-
-            // Continue where the child closed the Gawain (here or on the website).
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val confirmed = assessment?.progress()
-            val progress = uid?.let { LessonResume.loadProgress(it, lessonId) }
-            if (confirmed?.flag("activityFinished") == true) {
-                finish()
-                return@run
-            }
-            confirmed?.getAsJsonObject("resume")?.getAsJsonObject("activity")?.let { saved ->
-                val resume = com.google.gson.Gson().fromJson(saved, Map::class.java)
-                currentPageIndex = ((resume["done"] as Number).toInt()).coerceAtMost(practiceData.pages.lastIndex)
-                score = (resume["score"] as? Number)?.toInt() ?: 0
-                retries = (resume["retries"] as? Number)?.toInt() ?: 0
-                // Places saved before lives existed only know whether the page was tried.
-                lives = ((resume["lives"] as? Number)?.toInt()
-                    ?: if (resume["tried"] == true) MAX_LIVES - 1 else MAX_LIVES)
-                    .coerceIn(1, MAX_LIVES)
-                allAnswered = ((resume["done"] as Number).toInt()) >= practiceData.pages.size
-            }
-
-            setupProgressTrack()
-            setupLives()
-            showPage(currentPageIndex, animateIn = false)
-
-            // Every page was answered before closing: only the result is left to save.
-            if (allAnswered) {
-                finishActivity()
-                return@run
-            }
-
-            btnAction.setOnClickListener {
-                pressBounce(btnAction)
-                if (submitting) return@setOnClickListener
-                if (!hasChecked) {
-                    if (assessment == null) checkAnswer() else {
-                        submitting = true
-                        btnAction.isEnabled = false
-                        val selection = selectedIndices.toList()
-                        AssessmentUi.run(this@PracticeActivity) {
-                            val result = assessment!!.request("answer", "activity", fields("index" to currentPageIndex, "selected" to selection))
-                            acceptedRight = result.flag("right")
-                            val indices = result.getAsJsonArray("correctIndices")?.map { it.asInt }.orEmpty()
-                            val pages = practiceData.pages.toMutableList()
-                            pages[currentPageIndex] = pages[currentPageIndex].copy(correctIndices = indices, explanation = result.text("explanation"))
-                            practiceData = practiceData.copy(pages = pages)
-                            submitting = false
-                            checkAnswer()
-                        }
+        btnAction.setOnClickListener {
+            pressBounce(btnAction)
+            if (saveRejected || finishQueued || !preparedState.isCurrent()) return@setOnClickListener
+            if (!hasChecked) {
+                val right = isPageCorrect(practiceData.pages[currentPageIndex])
+                val nextLives = if (right) lives else lives - 1
+                val over = right || nextLives == 0
+                if (assessment != null && assessment?.practice != true) {
+                    try {
+                        attempts.enqueue(fields("operation" to "answer", "index" to currentPageIndex,
+                            "selected" to selectedIndices.sorted(), "attemptId" to preparedState.attemptId,
+                            "contentVersion" to preparedState.contentVersion), fields(
+                            "right" to right, "done" to if (over) currentPageIndex + 1 else currentPageIndex,
+                            "score" to score + if (right) 1 else 0,
+                            "retries" to retries + if (right) 0 else 1,
+                            "lives" to if (over) MAX_LIVES else nextLives))
+                    } catch (e: Exception) {
+                        showSyncStatus(getString(R.string.ac_save_local_error))
+                        return@setOnClickListener
                     }
-                } else {
-                    goToNext()
                 }
+                checkAnswer()
+                syncAttempts()
+            } else {
+                goToNext()
             }
         }
     }
@@ -282,7 +278,6 @@ class PracticeActivity : AppCompatActivity() {
         val page = practiceData.pages[index]
 
         // Tell the child how many words to pick (pages can have more than one answer)
-        acceptedRight = null
         val pickCount = page.pickCount ?: page.correctIndices.distinct().size
         tvPickCount.visibility = if (pickCount > 0) View.VISIBLE else View.GONE
         tvPickCount.text = getString(R.string.ac_pick_count, pickCount)
@@ -293,6 +288,11 @@ class PracticeActivity : AppCompatActivity() {
         setButton(R.string.ac_check, R.drawable.ac_btn_check)
         btnAction.isEnabled = false
 
+        // A new page starts at its first choice, including after feedback auto-scroll.
+        findViewById<android.widget.ScrollView>(R.id.worksheetScroll).scrollTo(0, 0)
+        chipsContainer.animate().cancel()
+        chipsContainer.translationX = 0f
+        chipsContainer.alpha = 1f
         chipsContainer.removeAllViews()
 
         page.words.forEachIndexed { wordIndex, word ->
@@ -317,7 +317,7 @@ class PracticeActivity : AppCompatActivity() {
                 }
 
                 setOnClickListener {
-                    if (hasChecked || submitting) return@setOnClickListener
+                    if (hasChecked || saveRejected || finishQueued || !preparedState.isCurrent()) return@setOnClickListener
 
                     if (selectedIndices.contains(wordIndex)) {
                         selectedIndices.remove(wordIndex)
@@ -403,7 +403,7 @@ class PracticeActivity : AppCompatActivity() {
         return correctSet.isEmpty() || selectedIndices == correctSet
     }
 
-    private fun isCurrentAnswerCorrect(): Boolean = acceptedRight ?: isPageCorrect(practiceData.pages[currentPageIndex])
+    private fun isCurrentAnswerCorrect(): Boolean = isPageCorrect(practiceData.pages[currentPageIndex])
 
     /** The page is over once it's right or its lives ran out. */
     private fun isPageOver(): Boolean = hasChecked && (isCurrentAnswerCorrect() || lives == 0)
@@ -411,7 +411,7 @@ class PracticeActivity : AppCompatActivity() {
     private fun checkAnswer() {
         val page = practiceData.pages[currentPageIndex]
         val correctSet = page.correctIndices.toSet()
-        val isCorrect = acceptedRight ?: isPageCorrect(page)
+        val isCorrect = isPageCorrect(page)
         // Every pick is right, but some correct words are still missing
         val isIncomplete = !isCorrect && selectedIndices.isNotEmpty() && correctSet.containsAll(selectedIndices)
         val explanation = page.explanation ?: practiceData.explanation
@@ -501,21 +501,71 @@ class PracticeActivity : AppCompatActivity() {
     }
 
     private fun finishActivity() {
-        val total = practiceData.pages.size
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        btnAction.isEnabled = false
-
-        AssessmentUi.run(this) {
-            val accepted = assessment?.takeUnless { it.practice }?.finish("activity")
-            val intent = Intent(this@PracticeActivity, PracticeCompleteScreen::class.java).apply {
-                putExtra("SCORE", accepted?.number("score", score) ?: score)
-                putExtra("TOTAL", accepted?.number("total", total) ?: total)
-                putExtra("ACTIVITY_TITLE", practiceData.title)
-                putExtra("LESSON_ID", lessonId)
-            }
-            startActivity(intent)
-            finish()
+        if (finishQueued || saveRejected || !preparedState.isCurrent()) return
+        if (assessment == null || assessment?.practice == true) {
+            showCompletion(null)
+            return
         }
+        try {
+            attempts.enqueue(fields("operation" to "finish", "attemptId" to preparedState.attemptId,
+                "contentVersion" to preparedState.contentVersion))
+        } catch (e: Exception) {
+            showSyncStatus(getString(R.string.ac_save_local_error))
+            return
+        }
+        finishQueued = true
+        btnAction.isEnabled = false
+        showSyncStatus(getString(R.string.ac_sync_finishing))
+        syncAttempts()
+    }
+
+    private fun showSyncStatus(message: String) {
+        syncStatus.text = message
+        syncStatus.visibility = View.VISIBLE
+    }
+
+    private fun syncAttempts() {
+        val session = assessment?.takeUnless { it.practice } ?: return
+        if (saveJob?.isActive == true || saveRejected || !preparedState.isCurrent()) return
+        saveJob = lifecycleScope.launch {
+            var retry = 0
+            while (preparedState.isCurrent()) {
+                try {
+                    val result = attempts.drain { command ->
+                        session.request(command.text("operation"), "activity", command)
+                    }
+                    if (!preparedState.isCurrent()) { finish(); return@launch }
+                    syncStatus.visibility = View.GONE
+                    if (finishQueued && result?.flag("finished") == true) showCompletion(result)
+                    return@launch
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    if (!preparedState.isCurrent()) { finish(); return@launch }
+                    if (e is AssessmentFailure && !e.retryable) {
+                        saveRejected = true
+                        btnAction.isEnabled = false
+                        for (i in 0 until chipsContainer.childCount) chipsContainer.getChildAt(i).isEnabled = false
+                        showSyncStatus(getString(R.string.ac_sync_rejected))
+                        return@launch
+                    }
+                    showSyncStatus(getString(R.string.ac_sync_pending))
+                    delay((1000L shl retry.coerceAtMost(4)).coerceAtMost(10000L))
+                    retry++
+                }
+            }
+        }
+    }
+
+    private fun showCompletion(accepted: com.google.gson.JsonObject?) {
+        val intent = Intent(this, PracticeCompleteScreen::class.java).apply {
+            putExtra("SCORE", accepted?.number("score", score) ?: score)
+            putExtra("TOTAL", accepted?.number("total", practiceData.pages.size) ?: practiceData.pages.size)
+            putExtra("ACTIVITY_TITLE", practiceData.title)
+            putExtra("LESSON_ID", lessonId)
+        }
+        startActivity(intent)
+        finish()
     }
 
     // Feedback
@@ -605,7 +655,8 @@ class PracticeActivity : AppCompatActivity() {
         }
     }
 
-    private companion object {
-        const val MAX_LIVES = 3
+    companion object {
+        const val EXTRA_PREPARED_ACTIVITY = "PREPARED_ACTIVITY"
+        private const val MAX_LIVES = 3
     }
 }

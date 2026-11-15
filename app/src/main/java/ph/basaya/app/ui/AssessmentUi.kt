@@ -1,6 +1,7 @@
 package ph.basaya.app.ui
 
-import androidx.appcompat.app.AlertDialog
+import ph.basaya.app.ui.feedback.StudioDialogBuilder
+import ph.basaya.app.ui.feedback.FeedbackTone
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
@@ -12,7 +13,7 @@ import ph.basaya.app.data.assessment.AssessmentFailure
 object AssessmentUi {
     fun run(activity: AppCompatActivity, showPending: Boolean = true, action: suspend () -> Unit): kotlinx.coroutines.Job? {
         if (activity.isFinishing || activity.isDestroyed) return null
-        val pending = if (showPending) AlertDialog.Builder(activity)
+        val pending = if (showPending) StudioDialogBuilder(activity, FeedbackTone.WARNING)
             .setTitle("Kinukumpirma ang progreso")
             .setMessage("Hinihintay ang pagtanggap ng server. Hindi pa ito kumpirmadong tapos.")
             .setCancelable(false)
@@ -35,7 +36,7 @@ object AssessmentUi {
                             "Hindi makumpirma ang account. Mag-log in muli sa orihinal na account; hindi pa nakumpirma ang pagpapasa."
                         else "Nagbago ang aralin o pagtatangka. Hindi ito mamarkahang tapos. Buksan muli ang aralin para makita ang naitalang progreso."
                         pending?.dismiss()
-                        val dialog = AlertDialog.Builder(activity)
+                        val dialog = StudioDialogBuilder(activity, FeedbackTone.WARNING)
                             .setTitle(if (retryable) "Hinihintay ang pagpapasa" else "Hindi naitala ang resulta")
                             .setMessage(message)
                             .setCancelable(false)

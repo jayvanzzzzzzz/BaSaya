@@ -1,0 +1,1 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:drawable="@drawable/pf_studio_surface"/><item android:left="14dp" android:top="18dp" android:bottom="18dp" android:width="3dp"><shape><solid android:color="@color/pf_binding"/><corners android:radius="2dp"/></shape></item></layer-list>

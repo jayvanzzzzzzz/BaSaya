@@ -3,7 +3,7 @@ package ph.basaya.app.ui
 import ph.basaya.app.data.assessment.*
 import ph.basaya.app.ui.AssessmentUi
 
-import android.app.Dialog
+import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
@@ -25,7 +25,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -578,7 +578,6 @@ class LectureActivity : AppCompatActivity() {
         if (::ibAutoPlay.isInitialized) setAutoPlay(false) // no page turns behind the dialog
         val dialog = Dialog(this)
         val content = layoutInflater.inflate(R.layout.dialog_lecture_exit, null)
-        val card = content.findViewById<View>(R.id.lexCard)
         val buddy = content.findViewById<PronunciationBookView>(R.id.lexBuddy)
         val tvPage = content.findViewById<TextView>(R.id.lexPage)
         val dots = content.findViewById<LinearLayout>(R.id.lexDots)
@@ -614,24 +613,8 @@ class LectureActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        // Pop in: the card springs up, then the buddy drops onto it and starts thinking.
-        card.scaleX = 0.8f
-        card.scaleY = 0.8f
-        card.alpha = 0f
-        card.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(320)
-            .setInterpolator(OvershootInterpolator(1.6f)).start()
-        buddy.translationY = -40 * resources.displayMetrics.density
-        buddy.alpha = 0f
-        buddy.animate().translationY(0f).alpha(1f).setStartDelay(120).setDuration(420)
-            .setInterpolator(OvershootInterpolator(2.2f))
-            .withEndAction { buddy.setMood(PronunciationBookView.Mood.THINKING) }.start()
-        for (id in intArrayOf(R.id.lexSparkleLeft, R.id.lexSparkleRight)) {
-            val sparkle = content.findViewById<View>(id)
-            sparkle.scaleX = 0f
-            sparkle.scaleY = 0f
-            sparkle.animate().scaleX(1f).scaleY(1f).rotation(90f).setStartDelay(380).setDuration(360)
-                .setInterpolator(OvershootInterpolator(3f)).start()
-        }
+        buddy.setMood(PronunciationBookView.Mood.THINKING)
+
     }
 
     /** One dot per page on the exit dialog: read, here now (bigger, gold), still to read. */

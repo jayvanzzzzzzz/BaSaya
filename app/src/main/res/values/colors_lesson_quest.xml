@@ -1,0 +1,8 @@
+<resources>
+ <color name="quest_hero">@color/mh_bg</color><color name="quest_hero_ink">@color/mh_on</color>
+ <color name="quest_hero_soft">@color/mh_soft</color><color name="quest_gold">@color/mh_accent</color>
+ <color name="quest_gold_ink">#493312</color><color name="quest_mint">#C5F3D7</color>
+ <color name="quest_mint_ink">#174C39</color><color name="quest_pink">#FFE0EE</color>
+ <color name="quest_pink_ink">#76274F</color><color name="quest_paper">#FFF6DF</color>
+ <color name="quest_rule">#DAC9A3</color>
+</resources>

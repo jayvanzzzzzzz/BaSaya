@@ -1,0 +1,4 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="7dp"><shape><solid android:color="@color/pf_hero_lip"/><corners android:radius="28dp"/></shape></item>
+    <item android:bottom="7dp"><shape><solid android:color="@color/mh_bg"/><corners android:topLeftRadius="28dp" android:topRightRadius="28dp" android:bottomLeftRadius="28dp" android:bottomRightRadius="8dp"/></shape></item>
+</layer-list>

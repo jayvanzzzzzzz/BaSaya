@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Animated launch screen: the logo bounces in, "BaSaya" pops in as toy letter blocks, and stars and
+ * Animated launch screen: the logo bounces in, "BASAya" pops in as toy letter blocks, and stars and
  * bubbles drift around while the class lessons sync. Leaves once the sync is done (at least
  * [MIN_SHOW_MS], at most [MAX_WAIT_MS]) for Login or Main.
  */
@@ -125,7 +125,7 @@ class SplashActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
                 typeface = font
                 includeFontPadding = false
-                // Fixed size so the letter always fits its block; the row reads "BaSaya" as a whole.
+                // Fixed size so the letter always fits its block; the row reads "BASAya" as a whole.
                 setTextSize(TypedValue.COMPLEX_UNIT_DIP, 26f)
                 setTextColor(ContextCompat.getColor(context, block.ink))
                 background = blockDrawable(block, lip)

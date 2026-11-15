@@ -15,7 +15,7 @@
     <style name="Pf.RowIcon" parent="">
         <item name="android:layout_width">42dp</item>
         <item name="android:layout_height">42dp</item>
-        <item name="android:background">@drawable/pg_circle</item>
+        <item name="android:background">@drawable/pf_studio_icon</item>
         <item name="android:importantForAccessibility">no</item>
         <item name="android:padding">10dp</item>
     </style>
@@ -32,7 +32,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:fontFamily">@font/quicksand_medium</item>
-        <item name="android:textColor">@color/pg_ink_soft</item>
+        <item name="android:textColor">@color/pf_muted</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -42,7 +42,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">1dp</item>
         <item name="android:fontFamily">@font/lexend</item>
-        <item name="android:textColor">@color/pg_ink</item>
+        <item name="android:textColor">@color/pf_ink</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -55,8 +55,8 @@
         <item name="boxCornerRadiusTopEnd">14dp</item>
         <item name="boxCornerRadiusBottomStart">14dp</item>
         <item name="boxCornerRadiusBottomEnd">14dp</item>
-        <item name="boxStrokeColor">@color/tb_end</item>
-        <item name="hintTextColor">@color/tb_end</item>
+        <item name="boxStrokeColor">@color/pf_blue</item>
+        <item name="hintTextColor">@color/pf_blue</item>
     </style>
 
     <style name="Pf.InputText" parent="">
@@ -64,7 +64,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:fontFamily">@font/lexend</item>
         <item name="android:maxLines">1</item>
-        <item name="android:textColor">@color/pg_ink</item>
+        <item name="android:textColor">@color/pf_ink</item>
         <item name="android:textSize">16sp</item>
     </style>
 
@@ -84,7 +84,11 @@
     <!-- One segment of the System / Light / Dark picker -->
     <style name="Pf.ThemeOption" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:stateListAnimator">@animator/pf_studio_press</item>
         <item name="android:layout_weight">1</item>
         <item name="android:fontFamily">@font/be_vietnam_bold</item>
         <item name="android:insetTop">0dp</item>

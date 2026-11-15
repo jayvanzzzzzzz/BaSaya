@@ -1,7 +1,7 @@
 package ph.basaya.app.ui.fragment
 
 import android.app.Activity
-import android.app.Dialog
+import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -14,7 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
@@ -301,7 +301,7 @@ class ProfileFragment : Fragment() {
             content.findViewById<TextView>(R.id.tvLeaveMessage).text = getString(R.string.pf_leave_cancel_message, className)
             tilReason.visibility = View.GONE
             btnConfirm.setText(R.string.pf_leave_cancel_confirm)
-            btnConfirm.backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.pg_unawa)
+            btnConfirm.backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.fb_action_tint)
             btnCancel.setText(R.string.pf_leave_cancel_back)
         } else {
             content.findViewById<TextView>(R.id.tvLeaveTitle).setText(R.string.pf_leave_dialog_title)
@@ -381,7 +381,7 @@ class ProfileFragment : Fragment() {
     private fun setValue(view: TextView, value: String) {
         val empty = value.isBlank()
         view.text = if (empty) getString(R.string.pf_not_set) else value
-        view.setTextColor(ContextCompat.getColor(requireContext(), if (empty) R.color.pg_ink_soft else R.color.pg_ink))
+        view.setTextColor(ContextCompat.getColor(requireContext(), if (empty) R.color.pf_muted else R.color.pf_ink))
     }
 
     // Edit account
@@ -529,7 +529,7 @@ class ProfileFragment : Fragment() {
         null
     }
 
-    /** "2016-10-12" → "Oktubre 12, 2016". */
+    /** "2016-10-12" â†’ "Oktubre 12, 2016". */
     private fun formatBirthday(dob: String): String {
         val millis = parseDob(dob) ?: return ""
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }

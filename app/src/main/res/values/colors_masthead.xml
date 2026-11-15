@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mh_bg">#1463EB</color>
+    <color name="mh_surface">#2879F1</color>
+    <color name="mh_on">#FFFFFF</color>
+    <color name="mh_soft">#E5F1FF</color>
+    <color name="mh_border">#95C4FF</color>
+    <color name="mh_accent">#FFDA6A</color>
+    <color name="mh_avatar_ink">#102C50</color>
+    <color name="mh_ripple">#33000000</color>
+    <color name="mh_fold">#2879F1</color>
+    <color name="mh_mint">#85E5C8</color>
+    <color name="mh_peach">#FFBFA4</color>
+    <color name="mh_paper">#FFF8E9</color>
+</resources>

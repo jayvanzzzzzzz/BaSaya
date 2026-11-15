@@ -14,5 +14,11 @@ data class QuizQuestion(
         get() = answers?.takeIf { it.isNotEmpty() }?.toSet() ?: setOf(answer)
 
     /** Two or more correct answers: the student must tap all of them. */
-    val isMultiple: Boolean get() = if (!answers.isNullOrEmpty()) answers.distinct().size > 1 else multiple ?: (correctAnswers.size > 1)
+    val isMultiple: Boolean get() = when {
+        // Server-validated questions have no client answer key. Shuffling may
+        // remap the legacy placeholder, but the server owns the selection mode.
+        requiresServerValidation -> multiple == true
+        !answers.isNullOrEmpty() -> answers.distinct().size > 1
+        else -> multiple ?: (correctAnswers.size > 1)
+    }
 }

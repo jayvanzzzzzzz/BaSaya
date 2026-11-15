@@ -21,7 +21,7 @@
     <string name="pf_logout_confirm">Sigurado ka bang gusto mong mag-logout?</string>
     <string name="pf_yes">Oo</string>
     <string name="pf_no">Hindi</string>
-    <string name="pf_version">BaSaya v%1$s</string>
+    <string name="pf_version">BASAya v%1$s</string>
 
     <!-- Edit profile sheet -->
     <string name="pf_edit_title">I-edit ang account</string>

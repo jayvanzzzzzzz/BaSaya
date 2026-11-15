@@ -83,4 +83,14 @@ class SubmissionDispatcherTest {
         for (status in listOf(0, 408, 429, 500, 503)) assertTrue(AssessmentFailure(status, "test").retryable)
         for (status in listOf(400, 401, 403, 409)) assertFalse(AssessmentFailure(status, "test").retryable)
     }
+    @Test fun durableActivityAttemptIdsArePreserved() = runBlocking {
+        val store = Storage()
+        val command = answer().apply { addProperty("eventId", "persisted-activity-attempt") }
+        val dispatcher = SubmissionDispatcher(store, { true }) {
+            assertEquals("persisted-activity-attempt", it.get("eventId").asString)
+            JsonObject()
+        }
+        dispatcher.submit("activity", command)
+        assertTrue(store.values.isEmpty())
+    }
 }

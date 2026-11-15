@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ps_overview_label">ANG IYONG PAG-UNLAD</string>
+    <string name="ps_loading">Inihahanda ang iyong progreso…</string>
+    <string name="ps_pending">—</string>
+    <string
+        name="ps_lessons_finished">Mga araling natapos</string>
+    <string
+        name="ps_recent_lessons">Mga huling aralin</string>
+    <string
+        name="ps_recent_scores">Puntos sa mga huling aralin: %1$s</string>
+</resources>

@@ -1,111 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<!-- Lesson jacket: metadata, readable title, schedule, then progress and offline tools. -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="16dp"
     android:clickable="true"
     android:focusable="true"
+    android:stateListAnimator="@animator/home_press"
     app:cardBackgroundColor="@color/lesson_card_surface"
-    app:cardCornerRadius="16dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
     app:rippleColor="@color/lesson_card_ripple"
     app:strokeColor="@color/lesson_card_stroke"
     app:strokeWidth="1dp">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="top"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="14dp">
-
-        <LinearLayout
-            android:layout_width="0dp"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="8dp">
+        <com.google.android.flexbox.FlexboxLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
+            app:flexWrap="wrap"
+            app:alignItems="center">
+            <TextView
+                android:id="@+id/tvMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:fontFamily="@font/be_vietnam_semi_bold"
+                android:textColor="@color/lesson_card_body"
+                android:textSize="12sp"
+                tools:text="Aralin 3 · Beginner" />
             <TextView
                 android:id="@+id/tvContinueLesson"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
+                android:background="@drawable/bg_home_continue"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
                 android:fontFamily="@font/be_vietnam_semi_bold"
                 android:text="@string/home_continue"
                 android:textColor="@color/home_accent"
                 android:textSize="11sp"
                 android:visibility="gone" />
-
-            <!-- A. Title -->
+        </com.google.android.flexbox.FlexboxLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
             <TextView
                 android:id="@+id/tvTitle"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
+                android:layout_weight="1"
                 android:fontFamily="@font/lexend"
-                android:maxLines="1"
                 android:textColor="@color/lesson_card_title"
-                android:textSize="16sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
+                android:lineSpacingExtra="2dp"
                 tools:text="Mga Pangngalan sa Ating Paligid" />
-
-            <!-- B. Short metadata; practice remains explicitly labeled. -->
-            <TextView
-                android:id="@+id/tvMeta"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:ellipsize="end"
-                android:fontFamily="@font/public_sans"
-                android:maxLines="1"
-                android:textColor="@color/lesson_card_body"
-                android:textSize="12sp"
-                tools:text="Aralin 3 · Madali" />
-
-            <!-- C. Teacher's schedule: opens on / deadline / closed. Hidden when there is none. -->
-            <TextView
-                android:id="@+id/tvSchedule"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:ellipsize="end"
-                android:fontFamily="@font/public_sans"
-                android:maxLines="1"
-                android:textColor="@color/lesson_status_progress_fg"
-                android:textSize="12sp"
-                android:visibility="gone"
-                tools:text="Deadline: Okt 20, 11:59 PM"
-                tools:visibility="visible" />
-
-            <!-- D. One segment per lesson part; skipped parts are hidden. Gone for Practice lessons. -->
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="@color/home_accent"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
+        <TextView
+            android:id="@+id/tvSchedule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/be_vietnam_regular"
+            android:textColor="@color/lesson_status_progress_fg"
+            android:textSize="12sp"
+            android:lineSpacingExtra="2dp"
+            android:visibility="gone"
+            tools:text="Deadline: Okt 20, 11:59 PM"
+            tools:visibility="visible" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="4dp"
+            android:background="@color/lesson_card_divider"
+            android:importantForAccessibility="no" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end|center_vertical">
             <LinearLayout
                 android:id="@+id/progressRow"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginEnd="12dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
-
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="4dp"
+                    android:layout_height="5dp"
                     android:layout_weight="1"
                     android:importantForAccessibility="noHideDescendants"
                     android:orientation="horizontal">
-
                     <View
                         android:id="@+id/segLecture"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:background="@drawable/bg_lesson_segment" />
-
                     <View
                         android:id="@+id/segGame"
                         android:layout_width="0dp"
@@ -113,7 +126,6 @@
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_lesson_segment" />
-
                     <View
                         android:id="@+id/segActivity"
                         android:layout_width="0dp"
@@ -121,7 +133,6 @@
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_lesson_segment" />
-
                     <View
                         android:id="@+id/segQuiz"
                         android:layout_width="0dp"
@@ -130,69 +141,61 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_lesson_segment" />
                 </LinearLayout>
-
                 <TextView
                     android:id="@+id/tvProgressLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:fontFamily="@font/public_sans"
-                    android:maxLines="1"
+                    android:fontFamily="@font/be_vietnam_semi_bold"
                     android:textColor="@color/lesson_status_progress_fg"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     tools:text="2/4" />
             </LinearLayout>
+            <FrameLayout
+                android:id="@+id/downloadStatus"
+                android:layout_width="22dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="4dp"
+                android:importantForAccessibility="yes"
+                android:visibility="gone">
+                <ImageView
+                    android:id="@+id/ibDownload"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_lesson_downloaded" />
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/pbDownload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:indeterminate="true"
+                    android:max="100"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/lesson_card_primary"
+                    app:indicatorSize="22dp"
+                    app:trackColor="@color/lesson_card_track"
+                    app:trackCornerRadius="2dp"
+                    app:trackThickness="2.5dp" />
+            </FrameLayout>
+            <FrameLayout
+                android:id="@+id/downloadButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_home_toolbar_action"
+                android:clickable="true"
+                android:contentDescription="@string/lesson_card_download_options_cd"
+                android:focusable="true">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_lesson_more" />
+            </FrameLayout>
         </LinearLayout>
-
-        <!-- Download status is separate from the 48dp options target. -->
-        <FrameLayout
-            android:id="@+id/downloadStatus"
-            android:layout_width="22dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="4dp"
-            android:importantForAccessibility="yes"
-            android:visibility="gone">
-
-            <ImageView
-                android:id="@+id/ibDownload"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_lesson_downloaded" />
-
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:id="@+id/pbDownload"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no"
-                android:indeterminate="true"
-                android:max="100"
-                android:visibility="gone"
-                app:indicatorColor="@color/lesson_card_primary"
-                app:indicatorSize="22dp"
-                app:trackColor="@color/lesson_card_track"
-                app:trackCornerRadius="2dp"
-                app:trackThickness="2.5dp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/downloadButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:contentDescription="@string/lesson_card_download_options_cd"
-            android:focusable="true">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_lesson_more" />
-        </FrameLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

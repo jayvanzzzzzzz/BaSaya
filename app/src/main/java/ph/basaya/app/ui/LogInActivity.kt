@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
+import ph.basaya.app.ui.feedback.StudioToast as Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -30,7 +30,8 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.view.inputmethod.EditorInfo
 import androidx.core.widget.doAfterTextChanged
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import ph.basaya.app.ui.feedback.StudioDialogBuilder as MaterialAlertDialogBuilder
+import ph.basaya.app.ui.feedback.FeedbackTone
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Patterns
@@ -332,7 +333,7 @@ class LogInActivity : AppCompatActivity() {
 
     private fun showResetSentDialog(email: String) {
         if (isFinishing || isDestroyed) return
-        MaterialAlertDialogBuilder(this)
+        MaterialAlertDialogBuilder(this, FeedbackTone.SUCCESS)
             .setTitle(R.string.forgot_sent_title)
             .setMessage(getString(R.string.forgot_sent_message, email))
             .setPositiveButton(R.string.forgot_sent_ok, null)
@@ -342,7 +343,7 @@ class LogInActivity : AppCompatActivity() {
     private fun showStudentsOnlyDialog() {
         if (isFinishing || isDestroyed) return
         etPassword.text?.clear()
-        MaterialAlertDialogBuilder(this)
+        MaterialAlertDialogBuilder(this, FeedbackTone.WARNING)
             .setTitle(R.string.login_students_only_title)
             .setMessage(R.string.login_students_only_message)
             .setPositiveButton(R.string.login_students_only_ok, null)

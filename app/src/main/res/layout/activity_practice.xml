@@ -68,6 +68,20 @@
                 android:orientation="horizontal" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/acSyncStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="6dp"
+            android:fontFamily="@font/quicksand_medium"
+            android:textColor="@color/ac_ink"
+            android:textSize="13sp"
+            android:accessibilityLiveRegion="polite"
+            android:visibility="gone" />
+
         <LinearLayout
             android:id="@+id/llProgressBars"
             android:layout_width="match_parent"
@@ -90,60 +104,46 @@
             android:textStyle="bold"
             tools:text="Hanapin ang Pangngalan" />
 
-        <LinearLayout
+        <!-- Compact help and the current page's answer count. Wrap for large text. -->
+        <com.google.android.flexbox.FlexboxLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
-            android:background="@drawable/ac_instruction_pill"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="10dp">
+            app:alignItems="center"
+            app:flexWrap="wrap">
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ac_ic_pencil"
-                app:tint="@color/ac_check" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnInstruction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:minHeight="48dp"
+                android:background="@drawable/ac_btn_instruction"
+                android:fontFamily="@font/be_vietnam_bold"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:text="@string/ac_instruction_title"
+                android:textAllCaps="false"
+                android:textColor="@color/ac_ink"
+                android:textSize="14sp"
+                app:backgroundTint="@null" />
 
             <TextView
-                android:id="@+id/tvInstruction"
-                android:layout_width="0dp"
+                android:id="@+id/tvPickCount"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/quicksand_medium"
-                android:lineSpacingExtra="2dp"
+                android:layout_marginStart="12dp"
+                android:fontFamily="@font/be_vietnam_bold"
+                android:paddingVertical="8dp"
                 android:textColor="@color/ac_ink_soft"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                tools:text="Piliin ang mga salitang pangngalan sa pangungusap." />
-        </LinearLayout>
-
-        <!-- How many words to pick on this page -->
-        <TextView
-            android:id="@+id/tvPickCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/pg_round"
-            android:backgroundTint="@color/ac_check"
-            android:fontFamily="@font/be_vietnam_bold"
-            android:paddingStart="14dp"
-            android:paddingTop="5dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="6dp"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:visibility="gone"
-            tools:text="Pumili ng 2 salita"
-            tools:visibility="visible" />
+                android:textSize="14sp"
+                android:visibility="gone"
+                tools:text="Pumili ng 2 salita"
+                tools:visibility="visible" />
+        </com.google.android.flexbox.FlexboxLayout>
 
         <!-- Worksheet -->
         <ScrollView
@@ -151,8 +151,8 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:clipChildren="false"
-            android:clipToPadding="false"
+            android:clipChildren="true"
+            android:clipToPadding="true"
             android:fillViewport="true"
             android:scrollbars="none">
 
