@@ -1,5 +1,7 @@
 package ph.basaya.app.ui
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -116,7 +118,7 @@ class RegisterActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvBackToLogin).setOnClickListener { finish() }
     }
 
-    private fun submit() {
+    private fun submit(confirmed: Boolean = false) {
         val firstName = etFirstName.text.toString().trim()
         val middleName = etMiddleName.text.toString().trim()
         val lastName = etLastName.text.toString().trim()
@@ -150,6 +152,10 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
+        if (!confirmed) {
+            ActionConfirmation.show(this, "Gumawa ng account?", "Gagawin ang student account gamit ang impormasyong inilagay mo.", "Gumawa ng account") { submit(true) }
+            return
+        }
         setLoading(true)
 
         // Create Firebase Auth account

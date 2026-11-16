@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <solid
+                android:color="@color/wi_hero_lip"/>
+            <corners
+                android:bottomLeftRadius="30dp"
+                android:bottomRightRadius="30dp"/>
+        </shape>
+    </item>
+    <item
+        android:bottom="6dp">
+        <shape>
+            <solid
+                android:color="@color/wi_hero"/>
+            <corners
+                android:bottomLeftRadius="30dp"
+                android:bottomRightRadius="30dp"/>
+        </shape>
+    </item>
+</layer-list>

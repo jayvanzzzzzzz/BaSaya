@@ -1,5 +1,7 @@
 package ph.basaya.app.ui.fragment
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import ph.basaya.app.data.progress.ProgressSession
 
 import android.animation.AnimatorSet
@@ -566,6 +568,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun handleRemoveDownload(lesson: LessonEntity, onResult: (Boolean) -> Unit) {
+        ActionConfirmation.show(requireContext(), "Alisin ang na-download na aralin?", "Kailangan mo ng internet para i-download muli ito. Mananatili ang iyong mga resulta.", "Alisin", danger = true, onCancel = { onResult(false) }) {
+            if (isAdded && view != null) removeConfirmedDownload(lesson, onResult) else onResult(false)
+        }
+    }
+
+    private fun removeConfirmedDownload(lesson: LessonEntity, onResult: (Boolean) -> Unit) {
         updateDownloadAllButton()
         lifecycleScope.launch {
             val repo = LessonRepository(requireContext())

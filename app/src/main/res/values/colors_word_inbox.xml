@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="wi_bg">#F5F3FB</color>
+    <color name="wi_surface">#FFFFFF</color>
+    <color name="wi_ink">#24223F</color>
+    <color name="wi_muted">#655F79</color>
+    <color name="wi_line">#DED9EB</color>
+    <color name="wi_hero">#5136BB</color>
+    <color name="wi_hero_lip">#352078</color>
+    <color name="wi_hero_soft">#E8E0FF</color>
+    <color name="wi_action">#5739BD</color>
+    <color name="wi_on_action">#FFFFFF</color>
+    <color name="wi_violet_soft">#EEE8FC</color>
+    <color name="wi_mint">#ACEFD9</color>
+    <color name="wi_mint_ink">#17614E</color>
+    <color name="wi_mint_soft">#E1F7EF</color>
+    <color name="wi_amber">#FFD165</color>
+    <color name="wi_amber_ink">#854A08</color>
+    <color name="wi_amber_soft">#FFF0CF</color>
+    <color name="wi_urgent">#AD3439</color>
+    <color name="wi_urgent_soft">#FCE8EB</color>
+</resources>

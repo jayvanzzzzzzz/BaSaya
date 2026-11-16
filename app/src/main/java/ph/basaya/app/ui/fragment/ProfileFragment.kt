@@ -1,5 +1,7 @@
 package ph.basaya.app.ui.fragment
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import android.app.Activity
 import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.content.Context
@@ -433,7 +435,9 @@ class ProfileFragment : Fragment() {
                 gender = genderLabelFor(genderGroup.checkedChipId),
                 dob = dob
             )
-            saveProfile(updated, btnSave) { sheet.dismiss() }
+            ActionConfirmation.show(requireContext(), "I-save ang mga pagbabago?", "Maa-update ang impormasyon sa iyong account.", "I-save") {
+                if (isAdded && view != null && sheet.isShowing) saveProfile(updated, btnSave) { sheet.dismiss() }
+            }
         }
 
         sheet.show()
@@ -569,7 +573,9 @@ class ProfileFragment : Fragment() {
             tilConfirm.error = if (confirm != new) getString(R.string.pf_password_error_match) else null
             if (tilCurrent.error != null || tilNew.error != null || tilConfirm.error != null) return@setOnClickListener
 
-            changePassword(current, new, btnSave, tilCurrent, tilNew) { sheet.dismiss() }
+            ActionConfirmation.show(requireContext(), "Palitan ang password?", "Gamitin ang bagong password sa susunod mong pag-sign in.", "Palitan") {
+                if (isAdded && view != null && sheet.isShowing) changePassword(current, new, btnSave, tilCurrent, tilNew) { sheet.dismiss() }
+            }
         }
 
         sheet.show()

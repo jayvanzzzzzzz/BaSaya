@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val EXTRA_HIGHLIGHT_LESSONS = "highlightLessonIds"
+        const val EXTRA_ASSISTANT_TAB = "assistantTab"
         private const val EXTRA_OPEN_CHAT = "openChat"
         private const val TAB_CHAT = 2
         private const val STATE_TAB = "selectedTab"
@@ -158,7 +159,9 @@ class MainActivity : AppCompatActivity() {
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        selectedTab = savedInstanceState?.getInt(STATE_TAB, 0) ?: 0
+        selectedTab = if (intent.hasExtra(EXTRA_ASSISTANT_TAB)) {
+            intent.getIntExtra(EXTRA_ASSISTANT_TAB, 0).coerceIn(0, 3).also { intent.removeExtra(EXTRA_ASSISTANT_TAB) }
+        } else savedInstanceState?.getInt(STATE_TAB, 0) ?: 0
         savedFirstName = savedInstanceState?.getString(STATE_FIRST_NAME)
         ThemeReveal.playIfPending(this)
 
@@ -226,6 +229,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        findViewById<View>(R.id.btnAssistant).apply {
+            TooltipCompat.setTooltipText(this, getString(R.string.assistant_title))
+            setOnClickListener { startActivity(Intent(this@MainActivity, ph.basaya.app.ui.assistant.AssistantActivity::class.java)) }
+        }
+
         // Icon only: long-press (or a mouse hover) shows "Diksiyonaryo".
         findViewById<View>(R.id.btnDictionary).apply {
             TooltipCompat.setTooltipText(this, getString(R.string.dict_title))
@@ -258,6 +266,11 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.hasExtra(EXTRA_ASSISTANT_TAB)) {
+            selectedTab = intent.getIntExtra(EXTRA_ASSISTANT_TAB, 0).coerceIn(0, 3)
+            intent.removeExtra(EXTRA_ASSISTANT_TAB)
+            if (isUserReady) bottomNavController?.selectTab(selectedTab, animate = true)
+        }
         highlightIds(intent)?.let { ids ->
             pendingHighlight = ids
             if (isUserReady) deliverHighlight()
@@ -562,6 +575,10 @@ class MainActivity : AppCompatActivity() {
             setBackgroundDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_account_menu))
             elevation = 16 * density
             isOutsideTouchable = true
+        }
+        content.findViewById<View>(R.id.accountMenuAssistant).setOnClickListener {
+            popup.dismiss()
+            startActivity(Intent(this, ph.basaya.app.ui.assistant.AssistantActivity::class.java))
         }
         accountMenu = popup
         content.findViewById<View>(R.id.accountMenuLogout).setOnClickListener {

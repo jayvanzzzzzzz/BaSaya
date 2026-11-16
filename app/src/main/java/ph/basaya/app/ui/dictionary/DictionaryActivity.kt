@@ -45,6 +45,7 @@ import ph.basaya.app.data.dictionary.Dictionary
 import ph.basaya.app.data.dictionary.DictionaryAudio
 import ph.basaya.app.data.dictionary.Syllables
 import ph.basaya.app.ui.pronunciation.PronunciationBookView
+import ph.basaya.app.ui.feedback.WordInboxMotion
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.CancellationException
@@ -96,6 +97,9 @@ class DictionaryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_dictionary)
+        ViewCompat.setAccessibilityHeading(findViewById(R.id.tvScreenTitle), true)
+        ViewCompat.setAccessibilityHeading(findViewById(R.id.tvHeroTitle), true)
+        if (resources.configuration.fontScale >= 1.3f) findViewById<View>(R.id.heroArtwork).visibility = View.GONE
 
         val header = findViewById<View>(R.id.header)
         val statusStrip = findViewById<View>(R.id.statusStrip)
@@ -119,6 +123,12 @@ class DictionaryActivity : AppCompatActivity() {
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
 
         etSearch = findViewById(R.id.etSearch)
+        etSearch.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) appBar.setExpanded(false, WordInboxMotion.enabled(etSearch))
+        }
+        findViewById<View>(R.id.btnClearSearch).setOnClickListener {
+            etSearch.text.clear()
+        }
         recycler = findViewById(R.id.recyclerWords)
         detailScroll = findViewById(R.id.detailScroll)
         detailCard = findViewById(R.id.detailCard)
@@ -128,7 +138,7 @@ class DictionaryActivity : AppCompatActivity() {
         progress = findViewById(R.id.progress)
         buddy = findViewById(R.id.buddy)
         buddy.setMood(PronunciationBookView.Mood.HAPPY)
-        findViewById<View>(R.id.btnBack).setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        findViewById<View>(R.id.btnBack).setOnClickListener { navigateBack() }
 
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
@@ -136,7 +146,7 @@ class DictionaryActivity : AppCompatActivity() {
         // Back from a word goes to the list first, then closes the screen.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (showingEntry) showList() else finish()
+                navigateBack()
             }
         })
 
@@ -144,6 +154,7 @@ class DictionaryActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
+                findViewById<View>(R.id.btnClearSearch).visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
                 if (etSearch.tag == true) return // set from code (letter, synonym)
                 search(s?.toString().orEmpty(), SEARCH_DELAY_MS)
             }
@@ -160,6 +171,10 @@ class DictionaryActivity : AppCompatActivity() {
     }
 
     // loading
+
+    private fun navigateBack() {
+        if (showingEntry) showList() else finish()
+    }
 
     private fun setQuery(text: String) {
         etSearch.tag = true
@@ -219,9 +234,11 @@ class DictionaryActivity : AppCompatActivity() {
     // showing
 
     private fun showOnly(view: View?) {
+        val newlyVisible = view?.visibility != View.VISIBLE
         listOf(recycler, detailScroll, emptyState, progress).forEach {
             it.visibility = if (it === view) View.VISIBLE else View.GONE
         }
+        if (newlyVisible && view != null && view !== progress) WordInboxMotion.reveal(view)
     }
 
     private fun showLoading() = showOnly(progress)
@@ -238,7 +255,7 @@ class DictionaryActivity : AppCompatActivity() {
     /** [paged]: word lists get the page nav at the bottom; root suggestions don't. */
     private fun showList(entries: List<Dictionary.Entry>, heading: String?, paged: Boolean = false) {
         showingEntry = false
-        adapter.submit(entries, heading, paged)
+        adapter.submit(entries, heading ?: getString(R.string.wi_word_count, "%,d".format(entries.size)), paged)
         recycler.scrollToPosition(0)
         showOnly(recycler)
     }
@@ -258,13 +275,15 @@ class DictionaryActivity : AppCompatActivity() {
         // Back to the list
         detailCard.addView(TextView(this).apply {
             text = getString(R.string.dict_back_to_list)
-            setTextColor(ContextCompat.getColor(context, R.color.pg_section_ink))
+            setTextColor(ContextCompat.getColor(context, R.color.wi_action))
             typeface = font(R.font.be_vietnam_bold)
             textSize = 14f
             setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.cw_ic_back, 0, 0, 0)
             compoundDrawablePadding = dp(4)
-            compoundDrawableTintList = ContextCompat.getColorStateList(context, R.color.pg_section_ink)
+            compoundDrawableTintList = ContextCompat.getColorStateList(context, R.color.wi_action)
             gravity = Gravity.CENTER_VERTICAL
+            minHeight = dp(48)
+            WordInboxMotion.press(this)
             setPadding(0, dp(6), dp(12), dp(6))
             isClickable = true
             isFocusable = true
@@ -275,10 +294,12 @@ class DictionaryActivity : AppCompatActivity() {
         val wordRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
+            background = ContextCompat.getDrawable(context, R.drawable.wi_index_tile)
+            setPadding(dp(14), dp(14), dp(14), dp(14))
         }
         wordRow.addView(TextView(this).apply {
             text = entry.shown
-            setTextColor(ContextCompat.getColor(context, R.color.pg_ink))
+            setTextColor(ContextCompat.getColor(context, R.color.wi_ink))
             typeface = font(R.font.lexend)
             setTypeface(typeface, Typeface.BOLD)
             textSize = 30f
@@ -286,14 +307,15 @@ class DictionaryActivity : AppCompatActivity() {
             ViewCompat.setAccessibilityHeading(this, true)
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         wordRow.addView(ImageButton(this).apply {
-            background = ContextCompat.getDrawable(context, R.drawable.pr_btn_speaker)
+            background = ContextCompat.getDrawable(context, R.drawable.wi_speaker)
             setImageResource(R.drawable.ic_speaker_on)
             imageTintList = ContextCompat.getColorStateList(context, android.R.color.white)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(dp(14), dp(13), dp(14), dp(15))
             contentDescription = getString(R.string.dict_play_word, entry.shown)
+            WordInboxMotion.press(this)
             setOnClickListener { speak(this, entry) }
-        }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
+        }, LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(8) })
         detailCard.addView(wordRow, fill(top = 6))
 
         // Pantig under the word: ba·hay (a teacher's fix, or split automatically)
@@ -302,7 +324,7 @@ class DictionaryActivity : AppCompatActivity() {
             detailCard.addView(TextView(this).apply {
                 text = syllables
                 contentDescription = getString(R.string.dict_syllables_cd, syllables)
-                setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
                 typeface = font(R.font.be_vietnam_bold)
                 textSize = 17f
                 letterSpacing = 0.04f
@@ -312,14 +334,23 @@ class DictionaryActivity : AppCompatActivity() {
         if (entry.fromTeacher) {
             detailCard.addView(TextView(this).apply {
                 text = getString(R.string.dict_from_teacher)
-                setTextColor(ContextCompat.getColor(context, R.color.pg_talasalitaan))
-                background = ContextCompat.getDrawable(context, R.drawable.nt_section_pill)
-                backgroundTintList = ContextCompat.getColorStateList(context, R.color.pg_talasalitaan_tint)
+                setTextColor(ContextCompat.getColor(context, R.color.wi_mint_ink))
+                background = ContextCompat.getDrawable(context, R.drawable.wi_mint_tile)
+                backgroundTintList = ContextCompat.getColorStateList(context, R.color.wi_mint_soft)
                 typeface = font(R.font.be_vietnam_bold)
                 textSize = 12f
                 setPadding(dp(10), dp(3), dp(10), dp(4))
             }, wrap(top = 6))
         }
+
+        detailCard.addView(TextView(this).apply {
+            text = getString(R.string.wi_meaning)
+            setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
+            typeface = font(R.font.be_vietnam_bold)
+            textSize = 11f
+            letterSpacing = 0.1f
+            ViewCompat.setAccessibilityHeading(this, true)
+        }, wrap(top = 24))
 
         for (sense in entry.senses) {
             // A teacher can leave the part of speech empty; the meanings then start the group.
@@ -327,7 +358,7 @@ class DictionaryActivity : AppCompatActivity() {
             if (hasPos) {
                 detailCard.addView(TextView(this).apply {
                     text = sense.pos
-                    setTextColor(ContextCompat.getColor(context, R.color.pg_pagsusulit))
+                    setTextColor(ContextCompat.getColor(context, R.color.wi_action))
                     typeface = font(R.font.be_vietnam_bold)
                     setTypeface(typeface, Typeface.BOLD_ITALIC)
                     textSize = 13f
@@ -335,20 +366,40 @@ class DictionaryActivity : AppCompatActivity() {
             }
 
             sense.definitions.forEachIndexed { i, definition ->
-                detailCard.addView(bodyText("${i + 1}. $definition"), fill(top = if (i == 0 && !hasPos) 18 else 6))
+                val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                row.addView(TextView(this).apply {
+                    text = java.text.NumberFormat.getIntegerInstance().format(i + 1)
+                    gravity = Gravity.CENTER
+                    background = ContextCompat.getDrawable(context, R.drawable.wi_mint_tile)
+                    setTextColor(ContextCompat.getColor(context, R.color.wi_mint_ink))
+                    typeface = font(R.font.be_vietnam_bold)
+                    textSize = 13f
+                    minWidth = dp(28)
+                    minHeight = dp(32)
+                    setPadding(dp(4), dp(4), dp(4), dp(4))
+                }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(10) })
+                row.addView(bodyText(definition), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                detailCard.addView(row, fill(top = 12))
             }
 
             if (sense.examples.isNotEmpty()) {
                 val box = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
-                    background = ContextCompat.getDrawable(context, R.drawable.dc_example)
+                    background = ContextCompat.getDrawable(context, R.drawable.wi_amber_tile)
                     setPadding(dp(14), dp(10), dp(12), dp(10))
                 }
-                sense.examples.forEachIndexed { i, example ->
+                box.addView(TextView(this).apply {
+                    text = getString(R.string.wi_example)
+                    setTextColor(ContextCompat.getColor(context, R.color.wi_amber_ink))
+                    typeface = font(R.font.be_vietnam_bold)
+                    textSize = 11f
+                    letterSpacing = 0.08f
+                }, fill())
+                sense.examples.forEach { example ->
                     box.addView(bodyText("“$example”").apply {
                         setTypeface(typeface, Typeface.ITALIC)
-                        setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
-                    }, fill(top = if (i == 0) 0 else 6))
+                        setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
+                    }, fill(top = 8))
                 }
                 detailCard.addView(box, fill(top = 10))
             }
@@ -356,7 +407,7 @@ class DictionaryActivity : AppCompatActivity() {
 
         if (entry.synonyms.isNotEmpty()) {
             detailCard.addView(View(this).apply {
-                setBackgroundColor(ContextCompat.getColor(context, R.color.pg_divider))
+                setBackgroundColor(ContextCompat.getColor(context, R.color.wi_line))
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1)).apply { topMargin = dp(18) })
 
             val chips = FlexboxLayout(this).apply {
@@ -365,7 +416,7 @@ class DictionaryActivity : AppCompatActivity() {
             }
             chips.addView(TextView(this).apply {
                 text = getString(R.string.dict_synonyms)
-                setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
                 typeface = font(R.font.be_vietnam_bold)
                 textSize = 13f
             }, chipParams())
@@ -453,8 +504,8 @@ class DictionaryActivity : AppCompatActivity() {
                 setQuery(letter)
                 search(letter, 0)
             }.apply {
-                minWidth = dp(44)
-                minHeight = dp(40)
+                minWidth = dp(48)
+                minHeight = dp(48)
                 gravity = Gravity.CENTER
                 typeface = font(R.font.lexend)
                 setTypeface(typeface, Typeface.BOLD)
@@ -471,9 +522,11 @@ class DictionaryActivity : AppCompatActivity() {
         val typed = query.trim().lowercase()
         for ((letter, chip) in letterChips) {
             val on = letter == typed
+            val newlySelected = on && !chip.isSelected
             chip.isSelected = on
-            chip.background = ContextCompat.getDrawable(this, if (on) R.drawable.dc_chip_active else R.drawable.dc_chip)
-            chip.setTextColor(ContextCompat.getColor(this, if (on) R.color.pg_surface else R.color.pg_section_ink))
+            chip.background = ContextCompat.getDrawable(this, if (on) R.drawable.wi_tab_selected else R.drawable.wi_tab)
+            chip.setTextColor(ContextCompat.getColor(this, if (on) R.color.wi_on_action else R.color.wi_action))
+            if (newlySelected) WordInboxMotion.reveal(chip)
         }
     }
 
@@ -481,23 +534,26 @@ class DictionaryActivity : AppCompatActivity() {
 
     private fun chip(label: String, onClick: () -> Unit) = TextView(this).apply {
         text = label
-        background = ContextCompat.getDrawable(context, R.drawable.dc_chip)
+        background = ContextCompat.getDrawable(context, R.drawable.wi_tab)
         foreground = with(TypedValue()) {
             context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
             ContextCompat.getDrawable(context, resourceId)
         }
-        setTextColor(ContextCompat.getColor(context, R.color.pg_section_ink))
+        setTextColor(ContextCompat.getColor(context, R.color.wi_action))
         typeface = font(R.font.be_vietnam_semi_bold)
         textSize = 14f
         setPadding(dp(12), dp(8), dp(12), dp(8))
         isClickable = true
         isFocusable = true
+        minHeight = dp(48)
+        gravity = Gravity.CENTER
+        WordInboxMotion.press(this)
         setOnClickListener { onClick() }
     }
 
     private fun bodyText(value: String) = TextView(this).apply {
         text = value
-        setTextColor(ContextCompat.getColor(context, R.color.pg_ink))
+        setTextColor(ContextCompat.getColor(context, R.color.wi_ink))
         typeface = font(R.font.public_sans)
         textSize = 15f
         setLineSpacing(0f, 1.25f)
@@ -600,7 +656,7 @@ class DictionaryActivity : AppCompatActivity() {
                     layoutParams = RecyclerView.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                     )
-                    setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                    setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
                     typeface = ResourcesCompat.getFont(context, R.font.be_vietnam_bold)
                     textSize = 12f
                     letterSpacing = 0.06f
@@ -619,6 +675,7 @@ class DictionaryActivity : AppCompatActivity() {
             } else if (holder is WordHolder) {
                 val entry = entries[start + position - offset]
                 holder.word.text = entry.shown
+                holder.initial.text = entry.shown.take(1).uppercase()
                 val first = entry.senses.firstOrNull()
                 holder.summary.text = listOfNotNull(first?.pos, first?.definitions?.firstOrNull())
                     .filter { it.isNotBlank() }
@@ -647,6 +704,7 @@ class DictionaryActivity : AppCompatActivity() {
         }
 
         private class WordHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val initial: TextView = view.findViewById(R.id.tvInitial)
             val word: TextView = view.findViewById(R.id.tvWord)
             val summary: TextView = view.findViewById(R.id.tvSummary)
         }
@@ -658,7 +716,7 @@ class DictionaryActivity : AppCompatActivity() {
 
             val summary = TextView(context).apply {
                 gravity = Gravity.CENTER
-                setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
                 typeface = ResourcesCompat.getFont(context, R.font.public_sans)
                 textSize = 13f
             }
@@ -671,7 +729,7 @@ class DictionaryActivity : AppCompatActivity() {
             init {
                 (itemView as LinearLayout).apply {
                     orientation = LinearLayout.VERTICAL
-                    background = ContextCompat.getDrawable(context, R.drawable.dc_pager)
+                    background = ContextCompat.getDrawable(context, R.drawable.wi_status_panel)
                     setPadding(dp(10), dp(12), dp(10), dp(10))
                     layoutParams = RecyclerView.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -683,17 +741,18 @@ class DictionaryActivity : AppCompatActivity() {
                 }
             }
 
-            fun slot() = FlexboxLayout.LayoutParams(dp(38), dp(38)).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) }
+            fun slot() = FlexboxLayout.LayoutParams(dp(48), dp(48)).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) }
 
             fun number(page: Int, current: Boolean, onClick: () -> Unit) = TextView(itemView.context).apply {
                 text = page.toString()
                 gravity = Gravity.CENTER
-                background = ContextCompat.getDrawable(context, if (current) R.drawable.dc_page_current else R.drawable.dc_chip)
-                setTextColor(ContextCompat.getColor(context, if (current) android.R.color.white else R.color.pg_ink_soft))
+                background = ContextCompat.getDrawable(context, if (current) R.drawable.wi_tab_selected else R.drawable.wi_tab)
+                setTextColor(ContextCompat.getColor(context, if (current) R.color.wi_on_action else R.color.wi_muted))
                 typeface = ResourcesCompat.getFont(context, R.font.be_vietnam_bold)
                 textSize = 14f
                 contentDescription = context.getString(R.string.dict_page_cd, page)
                 isSelected = current
+                WordInboxMotion.press(this)
                 if (!current) {
                     foreground = with(TypedValue()) {
                         context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
@@ -706,20 +765,21 @@ class DictionaryActivity : AppCompatActivity() {
             fun gap() = TextView(itemView.context).apply {
                 text = "…"
                 gravity = Gravity.CENTER
-                setTextColor(ContextCompat.getColor(context, R.color.pg_ink_soft))
+                setTextColor(ContextCompat.getColor(context, R.color.wi_muted))
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }
 
             fun arrow(next: Boolean, enabled: Boolean, onClick: () -> Unit) = ImageButton(itemView.context).apply {
-                background = ContextCompat.getDrawable(context, R.drawable.dc_chip)
+                background = ContextCompat.getDrawable(context, R.drawable.wi_tab)
                 setImageResource(R.drawable.ic_chevron_right)
-                imageTintList = ContextCompat.getColorStateList(context, R.color.pg_section_ink)
+                imageTintList = ContextCompat.getColorStateList(context, R.color.wi_action)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setPadding(dp(9), dp(9), dp(9), dp(9))
-                if (!next) scaleX = -1f
+                if (!next) rotation = 180f
                 contentDescription = context.getString(if (next) R.string.dict_page_next else R.string.dict_page_prev)
                 isEnabled = enabled
                 alpha = if (enabled) 1f else 0.4f
+                WordInboxMotion.press(this)
                 setOnClickListener { onClick() }
             }
         }

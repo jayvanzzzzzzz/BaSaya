@@ -9,10 +9,12 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import ph.basaya.app.R
 import ph.basaya.app.data.notifications.LessonInbox
 import ph.basaya.app.data.notifications.LessonInbox.Kind
+import ph.basaya.app.ui.feedback.WordInboxMotion
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -29,8 +31,7 @@ class NotificationAdapter(
 
     private var rows: List<Row> = emptyList()
     private var now: Long = 0L
-    // Cards slide in once, on the first load only.
-    private var animateFirstLoad = true
+    private val revealed = mutableSetOf<Int>()
 
     fun submit(newRows: List<Row>, nowMillis: Long) {
         rows = newRows
@@ -53,30 +54,30 @@ class NotificationAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        holder.itemView.animate().cancel()
+        holder.itemView.alpha = 1f
+        holder.itemView.translationY = 0f
         when (val row = rows[position]) {
             is Row.Section -> (holder as SectionHolder).label.text = row.label
             is Row.Entry -> (holder as EntryHolder).bind(row)
         }
-        if (animateFirstLoad) slideIn(holder.itemView, position)
-    }
-
-    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
-        super.onViewAttachedToWindow(holder)
-        if (holder.bindingAdapterPosition >= FIRST_SCREEN) animateFirstLoad = false
+        if (position < FIRST_SCREEN && revealed.add(position)) slideIn(holder.itemView, position)
     }
 
     private fun slideIn(view: View, position: Int) {
-        if (position >= FIRST_SCREEN) return
+        if (position >= FIRST_SCREEN || !WordInboxMotion.enabled(view)) return
         val d = view.resources.displayMetrics.density
         view.alpha = 0f
         view.translationY = 18 * d
         view.animate().alpha(1f).translationY(0f)
-            .setStartDelay(position * 45L).setDuration(320)
+            .setStartDelay(minOf(position, 3) * 35L).setDuration(220)
             .setInterpolator(DecelerateInterpolator()).start()
     }
 
     private class SectionHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val label: TextView = view.findViewById(R.id.tvSection)
+        val label: TextView = view.findViewById<TextView>(R.id.tvSection).also {
+            ViewCompat.setAccessibilityHeading(it, true)
+        }
     }
 
     private inner class EntryHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -87,6 +88,7 @@ class NotificationAdapter(
         private val tvDay: TextView = view.findViewById(R.id.tvDay)
         private val tvTime: TextView = view.findViewById(R.id.tvTime)
         private val unreadDot: View = view.findViewById(R.id.unreadDot)
+        private val tvKind: TextView = view.findViewById(R.id.tvKind)
 
         fun bind(row: Row.Entry) {
             val context = itemView.context
@@ -97,7 +99,10 @@ class NotificationAdapter(
             iconTile.backgroundTintList = ContextCompat.getColorStateList(context, style.tint)
             ivKind.setImageResource(style.icon)
             ivKind.imageTintList = ColorStateList.valueOf(accent)
-            tvTitle.text = item.title
+            tvKind.setText(style.label)
+            tvKind.setTextColor(accent)
+            // The icon and kind label replace decorative emoji in notification payloads.
+            tvTitle.text = item.title.replace(Regex("^[\\p{So}\\p{Sk}\\uFE0F\\u200D\\s]+"), "")
             tvBody.text = item.body
 
             val (day, time) = whenLabel(context, item.time, now)
@@ -106,21 +111,22 @@ class NotificationAdapter(
             tvTime.text = time
 
             itemView.setBackgroundResource(
-                if (row.unread) R.drawable.nt_card_unread else R.drawable.nt_card
+                if (row.unread) R.drawable.wi_notification_new else R.drawable.wi_notification_read
             )
             unreadDot.visibility = if (row.unread) View.VISIBLE else View.GONE
-            itemView.contentDescription = "${item.title}. ${item.body}. $day $time"
+            val description = "${context.getString(style.label)}. ${tvTitle.text}. ${item.body}. $day $time"
+            itemView.contentDescription = if (row.unread) context.getString(R.string.wi_unread_cd, description) else description
             itemView.setOnClickListener { onClick(item) }
         }
     }
 
-    private data class KindStyle(val icon: Int, val accent: Int, val tint: Int)
+    private data class KindStyle(val icon: Int, val accent: Int, val tint: Int, val label: Int)
 
     private fun styleFor(kind: Kind) = when (kind) {
-        Kind.NEW_LESSON -> KindStyle(R.drawable.ic_book, R.color.pg_pagsusulit, R.color.pg_pagsusulit_tint)
-        Kind.DEADLINE_DAY -> KindStyle(R.drawable.ic_alarm, R.color.pg_pagkilala, R.color.pg_pagkilala_tint)
-        Kind.DEADLINE_HOUR -> KindStyle(R.drawable.ic_alarm, R.color.pg_pagbigkas, R.color.pg_pagbigkas_tint)
-        Kind.CLOSED -> KindStyle(R.drawable.ic_lock_small, R.color.pg_ink_soft, R.color.pg_track)
+        Kind.NEW_LESSON -> KindStyle(R.drawable.ic_book, R.color.wi_action, R.color.wi_violet_soft, R.string.wi_kind_lesson)
+        Kind.DEADLINE_DAY -> KindStyle(R.drawable.ic_alarm, R.color.wi_amber_ink, R.color.wi_amber_soft, R.string.wi_kind_day)
+        Kind.DEADLINE_HOUR -> KindStyle(R.drawable.ic_alarm, R.color.wi_urgent, R.color.wi_urgent_soft, R.string.wi_kind_hour)
+        Kind.CLOSED -> KindStyle(R.drawable.ic_lock_small, R.color.wi_muted, R.color.wi_violet_soft, R.string.wi_kind_closed)
     }
 
     companion object {

@@ -1,5 +1,7 @@
 package ph.basaya.app.ui
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -107,7 +109,7 @@ class CompleteProfileActivity : AppCompatActivity() {
             }
     }
 
-    private fun saveProfile() {
+    private fun saveProfile(confirmed: Boolean = false) {
         if (!profileVerified) return
 
         val firstName = etFirstName.text.toString().trim()
@@ -134,6 +136,10 @@ class CompleteProfileActivity : AppCompatActivity() {
             return
         }
 
+        if (!confirmed) {
+            ActionConfirmation.show(this, "I-save ang iyong impormasyon?", "Tatapusin nito ang pag-set up ng iyong account.", "I-save") { saveProfile(true) }
+            return
+        }
         setLoading(true)
         val profile = User(
             uid = user.uid,

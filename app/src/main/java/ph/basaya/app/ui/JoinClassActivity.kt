@@ -1,5 +1,7 @@
 package ph.basaya.app.ui
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.View
@@ -92,7 +94,7 @@ class JoinClassActivity : AppCompatActivity() {
                 showCodeError(getString(R.string.jc_error_empty))
             } else {
                 tilClassCode.error = null
-                joinClass(code)
+                ActionConfirmation.show(this, "Ipadala ang kahilingan?", "Susuriin ng guro ang iyong kahilingang sumali sa klase.", "Ipadala") { if (!submitting && !pending) joinClass(code) }
             }
         }
 

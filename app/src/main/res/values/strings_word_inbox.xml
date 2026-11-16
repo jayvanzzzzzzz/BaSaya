@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wi_dict_kicker">TUKLAS-SALITA</string>
+    <string name="wi_dict_hero">Bawat salita,\nbagong tuklas.</string>
+    <string name="wi_dict_intro">Hanapin. Unawain. Bigkasin.</string>
+    <string name="wi_alphabet">TUKLASIN SA TITIK</string>
+    <string name="wi_clear_search">Burahin ang hinanap</string>
+    <string name="wi_example">SA PANGUNGUSAP</string>
+    <string name="wi_meaning">KAHULUGAN</string>
+    <string name="wi_inbox_kicker">SULAT PARA SA IYO</string>
+    <string name="wi_inbox_hero">Balita sa\npag-aaral.</string>
+    <string name="wi_inbox_intro">Mga aralin at paalala, nasa iisang lugar.</string>
+    <string name="wi_filter_all">Lahat</string>
+    <string name="wi_filter_new">Bago</string>
+    <string name="wi_no_new_title">Wala nang bagong abiso</string>
+    <string name="wi_no_new_body">Piliin ang Lahat para balikan ang mga aralin at paalala.</string>
+    <string name="wi_open_lesson">Tingnan ang aralin</string>
+    <string name="wi_unread_cd">Bago. %1$s</string>
+    <string name="wi_kind_lesson">BAGONG ARALIN</string>
+    <string name="wi_kind_day">PAALALA SA DEADLINE</string>
+    <string name="wi_kind_hour">1 ORAS NA LANG</string>
+    <string name="wi_kind_closed">SARADONG ARALIN</string>
+    <string name="wi_notif_summary_read">Nabasa mo na ang lahat ng abiso.</string>
+    <string name="wi_word_count">%1$s salita</string>
+</resources>

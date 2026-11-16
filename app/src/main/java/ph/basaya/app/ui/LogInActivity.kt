@@ -1,5 +1,7 @@
 package ph.basaya.app.ui
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
@@ -89,7 +91,9 @@ class LogInActivity : AppCompatActivity() {
             } catch (e: ApiException) {
                 Log.e("LOGIN_DEBUG", "Google account selection failed", e)
                 setLoading(false)
-                Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
+                if (e.statusCode != com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                    Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -375,8 +379,10 @@ class LogInActivity : AppCompatActivity() {
             row.findViewById<View>(R.id.recentAccountRemove).apply {
                 contentDescription = getString(R.string.recent_accounts_remove_cd, account.name)
                 setOnClickListener {
-                    if (RecentAccounts.remove(this@LogInActivity, account.uid)) showRecentAccounts()
-                    else Toast.makeText(this@LogInActivity, R.string.recent_accounts_remove_failed, Toast.LENGTH_SHORT).show()
+                    ActionConfirmation.show(this@LogInActivity, "Alisin ang account sa device?", "Mawawala ito sa listahan ng mga kamakailang account. Hindi mabubura ang mismong account.", "Alisin", danger = true) {
+                        if (RecentAccounts.remove(this@LogInActivity, account.uid)) showRecentAccounts()
+                        else Toast.makeText(this@LogInActivity, R.string.recent_accounts_remove_failed, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             list.addView(row)
@@ -442,6 +448,7 @@ class LogInActivity : AppCompatActivity() {
     }
 
     private fun startGoogleSignIn() {
+        if (loginBusy) return
         val clientIdResource = resources.getIdentifier("default_web_client_id", "string", packageName)
         val webClientId = clientIdResource.takeIf { it != 0 }?.let(::getString)
         if (webClientId.isNullOrBlank()) {
@@ -462,7 +469,13 @@ class LogInActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
                 return@addOnCompleteListener
             }
-            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+            try {
+                googleSignInLauncher.launch(googleSignInClient.signInIntent)
+            } catch (error: RuntimeException) {
+                Log.e("LOGIN_DEBUG", "Could not open Google account selection", error)
+                setLoading(false)
+                Toast.makeText(this, R.string.register_google_failed, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

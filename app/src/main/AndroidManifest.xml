@@ -49,6 +49,10 @@
             android:name=".ui.notifications.NotificationsActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.assistant.AssistantActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.dictionary.DictionaryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

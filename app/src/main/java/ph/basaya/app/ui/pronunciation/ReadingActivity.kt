@@ -1,5 +1,7 @@
 package ph.basaya.app.ui.pronunciation
 
+import ph.basaya.app.ui.feedback.ActionConfirmation
+
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
@@ -338,11 +340,16 @@ class ReadingActivity : AppCompatActivity() {
         if(preview) {
             column.addView(button("Bumasa muli",false) { stopAudio(); retakingPage=pageIndex; message=""; render(); column.post { val stageView=readingText?.parent?.parent as? View; scroll.smoothScrollTo(0,stageView?.top ?: 0) } })
             column.addView(button(if(busy) "Ipinapasa…" else if(pageIndex == total - 1) "Tapusin at ipasa" else "Susunod na pahina") {
-                stopAudio()
-                lifecycleScope.launch {
-                    try { if(pageIndex < total - 1) { session.act("next"); render(); sync() } else { busy=true; render(); session.submit(); busy=false; render() } }
-                    catch(error:Exception) { busy=false; message=error.message.orEmpty(); render() }
+                val advance = {
+                    stopAudio()
+                    lifecycleScope.launch {
+                        try { if(pageIndex < total - 1) { session.act("next"); render(); sync() } else { busy=true; render(); session.submit(); busy=false; render() } }
+                        catch(error:Exception) { busy=false; message=error.message.orEmpty(); render() }
+                    }
                 }
+                if (pageIndex == total - 1) {
+                    ActionConfirmation.show(this, "Ipasa ang iyong pagbasa?", "Ipapasa ang mga recording sa iyong guro para mabigyan ng marka.", "Ipasa") { if (!busy) { advance(); } }
+                } else { advance(); }
             })
         }
         if(retaking) column.addView(button("Bumalik sa dating recording",false) { stopAudio(); retakingPage=-1; message=""; render() })

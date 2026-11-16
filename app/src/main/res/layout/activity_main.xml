@@ -94,6 +94,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/be_vietnam_regular"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="@string/tb_greeting_morning"
                         android:textColor="@color/mh_soft"
                         android:textSize="12sp"
@@ -110,6 +112,18 @@
                         android:textSize="20sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnAssistant"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_assistant_launcher"
+                    android:stateListAnimator="@animator/masthead_press"
+                    android:focusable="true"
+                    android:contentDescription="@string/assistant_title"
+                    android:padding="11dp"
+                    android:src="@drawable/ic_assistant_robot"
+                    app:tint="@color/mh_avatar_ink" />
                 <!-- Dictionary: tactile book tab. -->
                 <ImageButton
                     android:id="@+id/btnDictionary"
