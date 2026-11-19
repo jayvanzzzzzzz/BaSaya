@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="register_terms_title">Mga Tuntunin at Kondisyon</string>
+    <string name="register_terms_agree">Sumasang-ayon ako sa Mga Tuntunin at Kondisyon.</string>
+    <string name="register_terms_required_title">Kailangan ang iyong pagsang-ayon</string>
+    <string name="register_terms_required">Kailangan mong sumang-ayon sa Mga Tuntunin at Kondisyon bago gumawa ng account.</string>
+    <string name="register_terms_understood">Nauunawaan ko</string>
+    <string name="register_terms_text">Ang BaSaya ay isang plataporma para sa pag-aaral ng pagbasa at wikang Filipino. Basahin ang mga tuntuning ito bago gumawa ng account.\n\n1. Impormasyon ng account\nMagbigay ng tama at kumpletong impormasyon. Panatilihing pribado ang iyong password at huwag ipagamit sa iba ang iyong account.\n\n2. Wastong paggamit\nGamitin ang BaSaya para sa pag-aaral. Igalang ang iyong guro at kapwa mag-aaral. Iwasan ang panlilinlang, pang-aabuso, at paglalagay ng mapanakit o hindi angkop na nilalaman.\n\n3. Mga aralin at gawain\nSundin ang panuto ng guro at sagutan nang tapat ang mga gawain. Huwag baguhin o sirain ang nilalaman, account, o resulta ng ibang gumagamit.\n\n4. Impormasyon at pagkatuto\nGinagamit ang impormasyon ng account, pagsali sa klase, at mga resulta ng gawain upang maihatid ang mga aralin at masubaybayan ang pagkatuto. Maaaring makita ng awtorisadong guro at school admin ang impormasyong kailangan nila para sa klase. Para sa mga detalye, basahin ang Patakaran sa Privacy o magtanong sa school admin.\n\n5. Tulong at mga alalahanin\nKung may problema sa account, nilalaman, o personal na impormasyon, humingi ng tulong sa iyong guro o school admin. Kung may bahaging hindi malinaw, magtanong muna sa iyong guro, magulang, o tagapag-alaga bago sumang-ayon.\n\nSa paglalagay ng tsek sa kahon, pinatutunayan mong nabasa at sumasang-ayon ka sa mga tuntuning ito.</string>
+</resources>

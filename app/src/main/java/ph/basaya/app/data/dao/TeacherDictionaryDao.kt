@@ -12,7 +12,7 @@ abstract class TeacherDictionaryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun upsertAll(entries: List<TeacherDictionaryEntity>)
 
-    @Query("SELECT * FROM teacher_dictionary WHERE `key` = :key LIMIT 1")
+    @Query("SELECT * FROM teacher_dictionary WHERE `key` = :key COLLATE NOCASE LIMIT 1")
     abstract suspend fun getByKey(key: String): TeacherDictionaryEntity?
 
     @Query("SELECT * FROM teacher_dictionary")

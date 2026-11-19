@@ -31,16 +31,14 @@ internal data class PreparedQuiz(
         suspend fun prepare(context: Context, lessonId: String): PreparedQuiz {
             val owner = FirebaseAuth.getInstance().currentUser?.uid
                 ?: throw AssessmentFailure(401, "Mag-log in muli.")
-            val assessment = if (!PracticeLessons.refresh(context, lessonId) || Network.isOnline(context))
-                AssessmentSession.open(context.applicationContext, lessonId) else null
+            val assessment = AssessmentSession.open(context.applicationContext, lessonId)
             val stamp = ProgressSession.stamp(owner, emptyMap())
             val quiz = QuizRepository(context).getQuiz(lessonId)
                 ?.takeIf { it.questions.isNotEmpty() } ?: error("No quiz content is available")
-            if (assessment == null && quiz.questions.any { it.requiresServerValidation })
-                throw AssessmentFailure(0, "Kumonekta upang masuri ang mga sagot sa pagsasanay.")
-            val graded = assessment?.takeUnless { it.practice }
+            val graded = assessment.takeUnless { it.practice }
             if (graded?.progress()?.flag("quizFinished") == true) throw QuizAlreadyFinished()
-            val begin = graded?.request("begin", "quiz")
+            val begin = if (assessment.practice && !Network.isOnline(context)) assessment.request("begin", "quiz")
+                else graded?.request("begin", "quiz")
             if (begin?.flag("finished") == true) throw QuizAlreadyFinished()
             val resume = begin?.getAsJsonObject("resume")
             val answered = resume?.getAsJsonArray("answered")?.map { it.asInt }.orEmpty()

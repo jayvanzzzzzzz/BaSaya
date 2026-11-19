@@ -12,6 +12,7 @@ class BaSayaApp : Application() {
         super.onCreate()
         // Apply the theme before the first screen appears.
         ProgressSession.initialize(this)
+        ph.basaya.app.data.assessment.OfflineLessons.initialize(this)
         ThemeMode.applySaved(this)
         TeacherDictionarySync.initialize(this)
     }

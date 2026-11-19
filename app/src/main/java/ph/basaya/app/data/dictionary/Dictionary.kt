@@ -81,7 +81,7 @@ object Dictionary {
                     val word = row.word ?: return@mapNotNull null
                     Entry(
                         word = word,
-                        key = row.key ?: DictionaryWords.normalize(word),
+                        key = DictionaryWords.normalize(row.key ?: word),
                         accent = row.accent.orEmpty(),
                         senses = row.senses.orEmpty().map {
                             Sense(it.pos.orEmpty(), it.definitions.orEmpty(), it.examples.orEmpty())
@@ -111,7 +111,7 @@ object Dictionary {
         val synonymsType = object : TypeToken<List<String>>() {}.type
         return Entry(
             word = entity.word,
-            key = entity.key,
+            key = DictionaryWords.normalize(entity.key),
             accent = entity.accent,
             senses = gson.fromJson(entity.sensesJson, sensesType) ?: emptyList(),
             synonyms = gson.fromJson(entity.synonymsJson, synonymsType) ?: emptyList(),

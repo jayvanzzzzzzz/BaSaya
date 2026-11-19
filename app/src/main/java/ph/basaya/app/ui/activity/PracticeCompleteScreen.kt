@@ -93,6 +93,12 @@ class PracticeCompleteScreen : AppCompatActivity() {
         }
 
         playEntrance(score, total, starCount, celebrate = percent >= 50)
+        if (intent.getBooleanExtra("PENDING_SYNC", false)) {
+            findViewById<TextView>(R.id.tvPracticeNote).apply {
+                visibility = View.VISIBLE
+                setText(R.string.lesson_offline_progress_saved)
+            }
+        }
     }
 
     private fun playEntrance(score: Int, total: Int, starCount: Int, celebrate: Boolean) {

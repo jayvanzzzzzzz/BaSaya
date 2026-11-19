@@ -33,7 +33,7 @@ class LectureRepository(private val context: Context) {
         if (isDownloaded) {
             val saved = savedLecture(lessonId)
             if (saved != null) {
-                DownloadedLessonRefresh.launch("lecture:$lessonId") {
+                DownloadedLessonRefresh.launch(context, lessonId, "lecture:$lessonId") {
                     val fresh = fetchFromFirestore(lessonId) ?: return@launch
                     refreshSaved(lessonId, fresh, saved)
                 }

@@ -29,9 +29,9 @@
             <TextView style="@style/Dl.Step" android:text="1" tools:ignore="HardcodedText" />
           </FrameLayout>
           <com.google.android.material.card.MaterialCardView android:id="@+id/lectureCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/dash_lecture_tint" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="22dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp" android:background="@drawable/quest_book_panel">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/quest_book_panel">
               <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_book" android:textSize="10sp" android:textColor="@color/dash_lecture" android:textStyle="bold" android:letterSpacing="0.06" />
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
                 <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_book" app:tint="@color/dash_lecture" />
                 <LinearLayout style="@style/Dl.Texts">
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_lecture_title" android:textSize="25sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
@@ -58,9 +58,8 @@
             <TextView style="@style/Dl.Step" android:text="2" tools:ignore="HardcodedText" />
           </FrameLayout>
           <com.google.android.material.card.MaterialCardView android:id="@+id/gameCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/quest_mint" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="28dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp" android:background="@drawable/quest_puzzle_ticket">
-              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_game" android:textSize="10sp" android:textColor="@color/quest_mint_ink" android:textStyle="bold" android:letterSpacing="0.06" />
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp" android:background="@drawable/quest_puzzle_ticket">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                 <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_puzzle" app:tint="@color/quest_mint_ink" android:rotation="-8" />
                 <LinearLayout style="@style/Dl.Texts">
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_game_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
@@ -88,12 +87,9 @@
             <TextView android:id="@+id/stepActivity" style="@style/Dl.Step" android:text="3" tools:ignore="HardcodedText" />
           </FrameLayout>
           <com.google.android.material.card.MaterialCardView android:id="@+id/activityCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/quest_paper" app:strokeWidth="1dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="8dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                 <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_pencil" app:tint="@color/dash_gawain" />
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/quest_activity" android:textColor="@color/dash_gawain" android:textSize="10sp" android:fontFamily="@font/be_vietnam_bold" />
-              </LinearLayout>
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
                 <LinearLayout style="@style/Dl.Texts">
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_activity_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_activity_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" />
@@ -111,8 +107,8 @@
                   <ProgressBar android:id="@+id/activityPreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/dash_gawain" android:importantForAccessibility="no" android:visibility="gone" />
                 </FrameLayout>
               </LinearLayout>
-              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:background="@color/quest_rule" android:importantForAccessibility="no" />
-              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:background="@color/quest_rule" android:importantForAccessibility="no" />
+              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="6dp" android:background="@color/quest_rule" android:importantForAccessibility="no" />
+              <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="6dp" android:background="@color/quest_rule" android:importantForAccessibility="no" />
             </LinearLayout>
           </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
@@ -122,14 +118,13 @@
             <TextView android:id="@+id/stepPronunciation" style="@style/Dl.Step" android:text="4" tools:ignore="HardcodedText" />
           </FrameLayout>
           <com.google.android.material.card.MaterialCardView android:id="@+id/pronunciationCard" style="@style/Dl.Card" app:cardBackgroundColor="@color/quest_pink" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="22dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
-              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_pronunciation" android:textSize="10sp" android:textColor="@color/quest_pink_ink" android:textStyle="bold" android:letterSpacing="0.06" />
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_horizontal" android:layout_marginTop="12dp">
-                <ImageView style="@style/Dl.Icon" android:layout_width="64dp" android:layout_height="64dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_mic" app:tint="@color/quest_pink_ink" />
-                <LinearLayout style="@style/Dl.Texts" android:layout_width="match_parent" android:layout_weight="0" android:layout_marginStart="0dp" android:layout_marginTop="12dp" android:gravity="center_horizontal">
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_pron_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" android:gravity="center" />
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_pron_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" android:gravity="center" />
-                  <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta" android:gravity="center" app:justifyContent="center">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_mic" app:tint="@color/quest_pink_ink" />
+                <LinearLayout style="@style/Dl.Texts">
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_pron_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_pron_sub" android:textSize="13sp" android:textColor="@color/dash_text_secondary" android:layout_marginTop="4dp" />
+                  <com.google.android.flexbox.FlexboxLayout style="@style/Dl.Meta">
                     <TextView android:id="@+id/tvPronunciationCount" style="@style/Dl.Count" />
                     <TextView android:id="@+id/pronunciationPreparingText" style="@style/Dl.Count" android:text="@string/lesson_dash_preparing" android:visibility="gone" android:accessibilityLiveRegion="polite" />
                     <LinearLayout android:id="@+id/pronunciationCompletedBadge" style="@style/Dl.Badge">
@@ -138,7 +133,7 @@
                     </LinearLayout>
                   </com.google.android.flexbox.FlexboxLayout>
                 </LinearLayout>
-                <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp" android:layout_marginTop="8dp">
+                <FrameLayout android:layout_width="24dp" android:layout_height="32dp" android:layout_marginStart="8dp">
                   <ImageView android:id="@+id/pronunciationPlayIcon" style="@style/Dl.Play" app:tint="@color/quest_pink_ink" />
                   <ProgressBar android:id="@+id/pronunciationPreparing" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:indeterminateTint="@color/quest_pink_ink" android:importantForAccessibility="no" android:visibility="gone" />
                 </FrameLayout>
@@ -153,9 +148,8 @@
           </FrameLayout>
           <FrameLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content">
             <com.google.android.material.card.MaterialCardView android:id="@+id/quizCard" style="@style/Dl.Card" android:layout_width="match_parent" app:cardBackgroundColor="@color/dash_quiz_tint" app:strokeWidth="0dp" app:strokeColor="@color/quest_rule" app:cardCornerRadius="22dp">
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/quest_quiz" android:textSize="10sp" android:textColor="@color/dash_quiz" android:textStyle="bold" android:letterSpacing="0.06" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                   <ImageView style="@style/Dl.Icon" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="@drawable/quest_icon" android:src="@drawable/ic_clipboard_check" app:tint="@color/dash_quiz" />
                   <LinearLayout style="@style/Dl.Texts">
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_quiz_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />
@@ -176,7 +170,7 @@
                 </LinearLayout>
               </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-            <LinearLayout android:id="@+id/quizLockOverlay" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="150dp" android:layout_marginBottom="12dp" android:background="@drawable/bg_dashboard_lock" android:foreground="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:contentDescription="@string/lesson_dash_locked_cd" android:gravity="center_vertical" android:orientation="horizontal" android:padding="18dp">
+            <LinearLayout android:id="@+id/quizLockOverlay" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginBottom="12dp" android:background="@drawable/bg_dashboard_lock" android:foreground="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:contentDescription="@string/lesson_dash_locked_cd" android:gravity="center_vertical" android:orientation="horizontal" android:padding="14dp">
               <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/ic_lock_small" app:tint="@color/dash_lock_icon" android:importantForAccessibility="no" />
               <LinearLayout style="@style/Dl.Texts" android:importantForAccessibility="noHideDescendants">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="@font/lexend" android:text="@string/lesson_dash_quiz_title" android:textSize="21sp" android:textColor="@color/dash_text_primary" android:textStyle="bold" />

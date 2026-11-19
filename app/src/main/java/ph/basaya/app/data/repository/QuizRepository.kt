@@ -32,7 +32,7 @@ class QuizRepository(private val context: Context) {
         if (isDownloaded) {
             val saved = db.quizDao().getQuiz(lessonId)?.toQuiz()
             if (saved != null) {
-                DownloadedLessonRefresh.launch("quiz:$lessonId") {
+                DownloadedLessonRefresh.launch(context, lessonId, "quiz:$lessonId") {
                     fetchFromFirestore(lessonId)?.let { db.quizDao().insert(it.toEntity(lessonId)) }
                 }
                 return saved

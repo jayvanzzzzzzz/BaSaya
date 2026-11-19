@@ -37,14 +37,13 @@ internal data class PreparedPractice(
         suspend fun prepare(context: Context, lessonId: String): PreparedPractice {
             val owner = FirebaseAuth.getInstance().currentUser?.uid
                 ?: throw AssessmentFailure(401, "Mag-log in muli.")
-            val assessment = if (!PracticeLessons.refresh(context, lessonId) || Network.isOnline(context))
-                AssessmentSession.open(context, lessonId) else null
+            val assessment = AssessmentSession.open(context, lessonId)
             val stamp = ProgressSession.stamp(owner, emptyMap())
             fun ownsSession() = FirebaseAuth.getInstance().currentUser?.uid == owner &&
                 ProgressSession.stamp(owner, emptyMap()) == stamp
             check(ownsSession()) { "The activity account or session changed" }
             val key = "$owner:${stamp["classId"]}:${stamp["progressSession"]}:$lessonId"
-            if (assessment != null && !assessment.practice) {
+            if (!assessment.practice) {
                 ActivityAttemptSaves.open(context, key, ::ownsSession).drain { command ->
                     assessment.request(command.text("operation"), "activity", command)
                 }

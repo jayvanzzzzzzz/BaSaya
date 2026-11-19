@@ -5,9 +5,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -61,6 +58,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ph.basaya.app.data.cache.ContentCountsCache
 import ph.basaya.app.data.database.AppDatabase
 import ph.basaya.app.data.schedule.LessonSchedule
+import ph.basaya.app.utils.Network
+import ph.basaya.app.data.assessment.OfflineLessons
+import com.google.firebase.firestore.Source
+import com.google.gson.Gson
 import android.app.Activity
 import ph.basaya.app.ui.feedback.StudioDialog as Dialog
 import android.graphics.Color
@@ -359,6 +360,13 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
+            if (OfflineLessons.pending(this@DashboardActivity, lessonId)) {
+                val local = OfflineLessons.progress(this@DashboardActivity, lessonId)
+                lectureFinished = local?.get("lectureFinished")?.asBoolean == true
+                quizIsFinished = local?.get("quizFinished")?.asBoolean == true
+                setQuizLocked(!lectureFinished && !quizIsFinished)
+                return@launch
+            }
             val isFinished = lectureRepository.checkCompletion(uid, lessonId)
             if (isFinished != null) {
                 lectureFinished = isFinished
@@ -395,6 +403,16 @@ class DashboardActivity : AppCompatActivity() {
         ).filter { (card, _) -> (card.parent as View).visibility != View.GONE }
         val done = parts.count { it.second }
         label.text = getString(R.string.dash_progress_count, done, parts.size)
+        val pending = OfflineLessons.pending(this, lessonId)
+        if (pending) {
+            label.setText(if (OfflineLessons.issue(this, lessonId)) R.string.lesson_sync_needs_attention_title
+                else R.string.lesson_offline_pending_title)
+            label.setOnClickListener {
+                showLessonDialog(R.drawable.ic_download_modern,
+                    getString(if (OfflineLessons.issue(this, lessonId)) R.string.lesson_sync_needs_attention_title else R.string.lesson_offline_pending_title),
+                    getString(if (OfflineLessons.issue(this, lessonId)) R.string.lesson_sync_needs_attention_message else R.string.lesson_offline_progress_saved))
+            }
+        } else label.setOnClickListener(null)
         progress.visibility = View.VISIBLE
         val target = if (parts.isEmpty()) 0 else done * 100 / parts.size
         val motionEnabled = questMotionEnabled()
@@ -476,13 +494,18 @@ class DashboardActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val doc = firestore
+                val local = OfflineLessons.progress(this@DashboardActivity, lessonId)
+                val remote = try { firestore
                     .collection("users")
                     .document(uid)
                     .collection("assignedLessons")
                     .document(lessonId)
-                    .get()
+                    .get(if (hasInternetConnection()) Source.DEFAULT else Source.CACHE)
                     .await()
+                } catch (e: Exception) { if (local == null) throw e else null }
+                val useLocal = OfflineLessons.pending(this@DashboardActivity, lessonId) || !hasInternetConnection() || remote == null
+                val doc = DashboardProgress(if (useLocal && local != null)
+                    Gson().fromJson(local, Map::class.java) as Map<String, Any?> else remote?.data.orEmpty())
 
                 // Lecture check only not close
                 lectureFinished = doc.getBoolean("lectureFinished") ?: false
@@ -574,6 +597,12 @@ class DashboardActivity : AppCompatActivity() {
 
                 showStartedParts(doc)
                 updateDashboardProgress()
+                if (OfflineLessons.pending(this@DashboardActivity, lessonId)) {
+                    if (quizIsFinished && doc.getLong("quizScore") == null) {
+                        tvQuizCount.setText(R.string.lesson_offline_pending_score)
+                        hasQuizScore = true
+                    }
+                }
 
                 completionCache.save(
                     lessonId,
@@ -604,10 +633,11 @@ class DashboardActivity : AppCompatActivity() {
      * A part left halfway (see LessonResume) shows how far the child got, e.g. "2/5 pages",
      * until it has a score. The has* flags keep loadContentCounts() from writing "0/5" over it.
      */
-    private fun showStartedParts(doc: DocumentSnapshot) {
+    private fun showStartedParts(doc: DashboardProgress) {
         fun started(part: String): Pair<Int, Int>? {
-            val total = LessonResume.total(doc, part) ?: return null
-            return LessonResume.done(doc, part).coerceAtMost(total) to total
+            val state = (doc.get("resume") as? Map<*, *>)?.get(part) as? Map<*, *> ?: return null
+            val total = (state["total"] as? Number)?.toInt() ?: return null
+            return ((state["done"] as? Number)?.toInt() ?: 0).coerceAtMost(total) to total
         }
         if (lectureFinished) {
             // Just finished: back to the plain page count.
@@ -776,16 +806,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun hasInternetConnection(): Boolean {
-        val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities =
-            connectivityManager.getNetworkCapabilities(network) ?: return false
-
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
+    private fun hasInternetConnection(): Boolean = Network.isOnline(this)
 
     private fun openContentIfAvailable(destination: Class<out Activity>, reviewing: Boolean = false) {
         if (isPreparingContent) return
@@ -827,7 +848,14 @@ class DashboardActivity : AppCompatActivity() {
                 throw e
             } catch (e: Exception) {
                 Log.e("DashboardActivity", "Failed to prepare lesson content", e)
-                showLessonDialog(
+                if (!hasInternetConnection()) {
+                    showOfflineContentDialog(db.lessonDao().isLessonDownloaded(lessonId) == true,
+                        destination == PronunciationActivity::class.java || destination == ReadingActivity::class.java)
+                } else if (e is ph.basaya.app.data.assessment.AssessmentFailure && !e.retryable) {
+                    showLessonDialog(iconRes = R.drawable.ic_download_modern,
+                        title = getString(R.string.lesson_sync_needs_attention_title),
+                        message = getString(R.string.lesson_sync_needs_attention_message))
+                } else showLessonDialog(
                     iconRes = R.drawable.ic_speaker_mute,
                     title = "Hindi maihanda ang aralin",
                     message = getString(R.string.lesson_dash_content_load_failed),
@@ -980,14 +1008,28 @@ class DashboardActivity : AppCompatActivity() {
         val isDownloaded = db.lessonDao()
             .isLessonDownloaded(lessonId) ?: false
 
-        if (isDownloaded || hasInternetConnection()) return true
+        if (hasInternetConnection()) return true
+        if (isDownloaded) {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            if (!PracticeLessons.isPractice(lessonId) && (uid == null || !OfflineLessons.journal(this, lessonId, uid).exists())) {
+                showOfflineContentDialog(downloaded = true)
+                return false
+            }
+            return true
+        }
+        showOfflineContentDialog(downloaded = false)
+        return false
+    }
+
+    private fun showOfflineContentDialog(downloaded: Boolean, speech: Boolean = false) {
         showLessonDialog(
             iconRes = R.drawable.ic_download_modern,
-            title = "Hindi available offline",
-            message = "Walang internet at hindi pa na-download ang aralin na ito.",
+            title = getString(R.string.lesson_internet_required_title),
+            message = getString(if (downloaded && speech) R.string.lesson_downloaded_internet_required
+                else if (downloaded) R.string.lesson_download_update_required
+                else R.string.lesson_internet_required_message),
             primaryText = "OK"
         )
-        return false
     }
 
     // Lecture: opens only once its first page's audio is ready
@@ -1031,6 +1073,15 @@ class DashboardActivity : AppCompatActivity() {
 
     /** The teacher's schedule: nothing opens before the open date, and after the deadline only finished parts can be reviewed. Shows why and returns true when blocked. */
     private fun showLectureAudioDialog(wait: AudioWait, reviewing: Boolean) {
+        if (!hasInternetConnection()) {
+            showLessonDialog(iconRes = R.drawable.ic_speaker_mute,
+                title = getString(R.string.lesson_internet_required_title),
+                message = getString(R.string.lesson_offline_audio_missing),
+                primaryText = "Buksan nang walang tunog",
+                onPrimary = { launchContent(LectureActivity::class.java, muted = true) },
+                secondaryText = "Isara")
+            return
+        }
         showLessonDialog(
             iconRes = R.drawable.ic_speaker_mute,
             title = if (wait == AudioWait.SLOW) "Matagal ma-load ang tunog" else "Hindi ma-load ang tunog",
@@ -1143,4 +1194,11 @@ class DashboardActivity : AppCompatActivity() {
         )
     }
 
+}
+
+private class DashboardProgress(private val values: Map<String, Any?>) {
+    fun get(name: String): Any? = values[name]
+    fun getBoolean(name: String) = values[name] as? Boolean
+    fun getLong(name: String) = (values[name] as? Number)?.toLong()
+    fun getString(name: String) = values[name] as? String
 }

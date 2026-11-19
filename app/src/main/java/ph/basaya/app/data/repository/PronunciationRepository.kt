@@ -33,7 +33,7 @@ class PronunciationRepository(private val context: Context) {
         if (isDownloaded) {
             val saved = db.pronunciationDao().getActivity(lessonId)?.toPronunciationActivityData()
             if (saved != null) {
-                DownloadedLessonRefresh.launch("pronunciation:$lessonId") {
+                DownloadedLessonRefresh.launch(context, lessonId, "pronunciation:$lessonId") {
                     val fresh = fetchFromFirestore(lessonId) ?: return@launch
                     if (fresh.audioRefs != saved.audioRefs) {
                         try {
@@ -43,7 +43,7 @@ class PronunciationRepository(private val context: Context) {
                             return@launch
                         }
                     }
-                    db.pronunciationDao().insert(fresh.toEntity(lessonId))
+                    saveDownloaded(lessonId, fresh)
                 }
                 return saved
             }
@@ -58,10 +58,17 @@ class PronunciationRepository(private val context: Context) {
         onAudioFile: (done: Int, total: Int) -> Unit = { _, _ -> }
     ): Boolean {
         val fetched = fetchFromFirestore(lessonId) ?: return false
-        if (fetched.words.isEmpty()) return false
+        if (fetched.words.isEmpty() && fetched.pages.isEmpty()) return false
         PronunciationAudioStore.download(context, lessonId, fetched.audioRefs, onAudioFile)
-        db.pronunciationDao().insert(fetched.toEntity(lessonId))
+        saveDownloaded(lessonId, fetched)
         return true
+    }
+
+    private suspend fun saveDownloaded(lessonId: String, content: PronunciationActivityData) {
+        // Publish page metadata only after its matching audio has finished downloading.
+        check(context.getSharedPreferences("pronunciation_reading_pages", Context.MODE_PRIVATE)
+            .edit().putString(lessonId, gson.toJson(content.pages)).commit()) { "Could not save reading pages" }
+        db.pronunciationDao().insert(content.toEntity(lessonId))
     }
 
     private suspend fun fetchFromFirestore(lessonId: String): PronunciationActivityData? {
@@ -92,7 +99,6 @@ class PronunciationRepository(private val context: Context) {
             }
 
             val readingPages = readingPages(doc.get("pages"), words, audioRefs)
-            context.getSharedPreferences("pronunciation_reading_pages", Context.MODE_PRIVATE).edit().putString(lessonId, gson.toJson(readingPages)).apply()
             PronunciationActivityData(
                 id = lessonId,
                 title = title,

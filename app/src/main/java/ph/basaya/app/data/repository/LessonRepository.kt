@@ -288,7 +288,14 @@ class LessonRepository(private val context: Context) {
     }
 
     suspend fun getLessons(userId: String): List<LessonEntity> {
-        return db.lessonDao().getLessonsForUser(userId).also { lessons ->
+        return db.lessonDao().getLessonsForUser(userId).map { lesson ->
+            val local = ph.basaya.app.data.assessment.OfflineLessons.progress(context, lesson.id)
+                ?.takeIf { ph.basaya.app.data.assessment.OfflineLessons.pending(context, lesson.id) }
+            fun finished(part: String, saved: Boolean) = saved || local?.get("${part}Finished")?.asBoolean == true
+            lesson.copy(lectureFinished = finished("lecture", lesson.lectureFinished),
+                gameFinished = finished("game", lesson.gameFinished), activityFinished = finished("activity", lesson.activityFinished),
+                quizFinished = finished("quiz", lesson.quizFinished), started = lesson.started || local != null)
+        }.also { lessons ->
             PracticeLessons.set(lessons.filter { it.practice }.map { it.id })
         }
     }
@@ -315,6 +322,12 @@ class LessonRepository(private val context: Context) {
         return try {
             val lesson = db.lessonDao().getLesson(lessonId)
                 ?: error("Lesson assignment is no longer available")
+            if (ph.basaya.app.data.assessment.OfflineLessons.pending(context, lessonId)) {
+                ph.basaya.app.data.assessment.AssessmentSession.open(context, lessonId).syncOfflineWork()
+                check(!ph.basaya.app.data.assessment.OfflineLessons.pending(context, lessonId)) {
+                    "Sync saved answers before replacing the offline lesson"
+                }
+            }
             val lectureRepo = LectureRepository(context)
             val crosswordRepo = CrosswordRepository(context)
             val activityRepo = ActivityRepository(context)
@@ -343,6 +356,11 @@ class LessonRepository(private val context: Context) {
             }
 
             downloadContext.ensureActive()
+            ph.basaya.app.data.assessment.OfflineLessons.prepareDownload(context, lessonId)
+            check(com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid == lesson.userId &&
+                ProgressSession.stamp(lesson.userId, emptyMap())["classId"] == lesson.classId) {
+                "The account or class changed before the download finished"
+            }
             check(db.lessonDao().completeDownload(lessonId, lesson.userId, lesson.classId)) {
                 "Lesson assignment changed before the download finished"
             }

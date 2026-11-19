@@ -563,6 +563,7 @@ class PracticeActivity : AppCompatActivity() {
             putExtra("TOTAL", accepted?.number("total", practiceData.pages.size) ?: practiceData.pages.size)
             putExtra("ACTIVITY_TITLE", practiceData.title)
             putExtra("LESSON_ID", lessonId)
+            putExtra("PENDING_SYNC", accepted?.flag("pendingSync") == true)
         }
         startActivity(intent)
         finish()

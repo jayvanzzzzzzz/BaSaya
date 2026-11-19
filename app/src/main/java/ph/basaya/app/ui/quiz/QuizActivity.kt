@@ -457,12 +457,13 @@ class QuizActivity : AppCompatActivity() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
         AssessmentUi.run(this) {
-            val accepted = assessment?.takeUnless { it.practice }?.finish("quiz", fields("attemptId" to attemptId))
+            val accepted = assessment?.takeIf { !it.practice || it.pendingOfflineWork }?.finish("quiz", fields("attemptId" to attemptId))
             val intent = Intent(this@QuizActivity, QuizCompleteScreen::class.java).apply {
                 putExtra("SCORE", accepted?.number("score", score) ?: score)
                 putExtra("TOTAL", accepted?.number("total", total) ?: total)
                 putExtra("QUIZ_TITLE", quiz.title)
                 putExtra("LESSON_ID", lessonId)
+                putExtra("PENDING_SYNC", accepted?.flag("pendingSync") == true)
             }
             startActivity(intent)
             finish()

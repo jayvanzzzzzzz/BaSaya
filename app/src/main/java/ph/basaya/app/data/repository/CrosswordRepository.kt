@@ -36,7 +36,7 @@ class CrosswordRepository(private val context: Context) {
         if (isDownloaded) {
             val saved = db.crosswordLevelDao().getLevelsForLesson(lessonId)
             if (saved.isNotEmpty()) {
-                DownloadedLessonRefresh.launch("crossword:$lessonId") {
+                DownloadedLessonRefresh.launch(context, lessonId, "crossword:$lessonId") {
                     fetchLevelEntities(lessonId)?.let { replaceSavedLevels(lessonId, it) }
                 }
                 return saved

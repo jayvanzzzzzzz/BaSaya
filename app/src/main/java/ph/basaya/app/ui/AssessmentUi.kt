@@ -28,7 +28,9 @@ object AssessmentUi {
                         val retryable = (e as? AssessmentFailure)?.retryable ?: true
                         if (retryable && attempt++ < 2) { delay(1000L * attempt); continue }
                         if (activity.isFinishing || activity.isDestroyed) return@launch
-                        val message = if (retryable)
+                        val message = if ((e as? AssessmentFailure)?.status == 412)
+                            "Kumonekta sa internet at i-download muli ang aralin upang magamit at ma-save ang progreso offline."
+                        else if (retryable)
                             "Hindi pa nakumpirma ang pagpapasa. Kung may sagot nang naipadala, nakatala ito sa telepono at susubukan muli kapag binuksan ang aralin. Kumonekta at subukan muli."
                         else if ((e as? AssessmentFailure)?.status == 403)
                             "Hindi tinanggap ng server ang pagpapasa. Maaaring lumipas na ang deadline o nagbago ang pagkaka-assign. Hindi ito mamarkahang tapos. Bumalik sa aralin upang makita ang naitalang progreso; kausapin ang guro kung kailangan itong buksan muli."

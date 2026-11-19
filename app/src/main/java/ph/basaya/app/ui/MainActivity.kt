@@ -63,6 +63,12 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_TAB = "selectedTab"
         private const val STATE_FIRST_NAME = "firstName"
 
+        /** Returns to Home, including when another tab is currently selected. */
+        fun homeIntent(context: Context): Intent =
+            Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_ASSISTANT_TAB, 0)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
         /** Opens the Chat tab (reusing the running screen); from a class chat notification. */
         fun chatIntent(context: Context): Intent =
             Intent(context, MainActivity::class.java)

@@ -104,7 +104,17 @@ class QuizCompleteScreen : AppCompatActivity() {
             }
         }
 
-        playEntrance(score, total, percent, starCount)
+        if (intent.getBooleanExtra("PENDING_SYNC", false)) {
+            findViewById<TextView>(R.id.tvScore).text = "—"
+            findViewById<TextView>(R.id.tvScorePercent).setText(R.string.lesson_offline_pending_score)
+            findViewById<TextView>(R.id.tvRemark).setText(R.string.lesson_offline_pending_title)
+            findViewById<TextView>(R.id.tvPracticeNote).apply {
+                visibility = View.VISIBLE
+                setText(R.string.lesson_offline_quiz_pending)
+            }
+            findViewById<View>(R.id.starsRow).visibility = View.GONE
+            findViewById<CircularProgressIndicator>(R.id.scoreRing).setProgressCompat(0, false)
+        } else playEntrance(score, total, percent, starCount)
     }
 
     private fun playEntrance(score: Int, total: Int, percent: Int, starCount: Int) {

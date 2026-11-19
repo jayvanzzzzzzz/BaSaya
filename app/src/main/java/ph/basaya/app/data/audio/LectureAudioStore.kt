@@ -110,6 +110,10 @@ object LectureAudioStore {
                     }
                 }
                 currentCoroutineContext().ensureActive()
+                if (temp.length() == 0L) {
+                    temp.delete()
+                    throw IOException("Empty audio download")
+                }
                 if (!temp.renameTo(target)) {
                     temp.delete()
                     throw IOException("Could not save " + target.name)

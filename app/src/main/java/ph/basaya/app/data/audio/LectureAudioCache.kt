@@ -33,7 +33,7 @@ object LectureAudioCache {
     private val locks = ConcurrentHashMap<String, Mutex>()
 
     /** The cached copy of [url], or null when it isn't downloaded yet. */
-    fun file(context: Context, url: String): File? = target(context, url).takeIf { it.exists() }
+    fun file(context: Context, url: String): File? = target(context, url).takeIf { it.length() > 0L }
 
     /** Makes every sentence of [page] ready to play: downloaded lessons already are, the rest are fetched into the cache. Completes with false when any file failed. */
     fun preparePage(context: Context, lessonId: String, page: LecturePage): Deferred<Boolean> {
@@ -43,7 +43,7 @@ object LectureAudioCache {
                 page.audioUrls.orEmpty().mapIndexed { index, url ->
                     async {
                         url.isBlank() ||
-                            LectureAudioStore.localFile(app, lessonId, page.pageNumber, index).exists() ||
+                            LectureAudioStore.localFile(app, lessonId, page.pageNumber, index).length() > 0L ||
                             fetch(app, url)
                     }
                 }.awaitAll().all { it }
@@ -65,7 +65,8 @@ object LectureAudioCache {
     private suspend fun fetch(context: Context, url: String): Boolean =
         locks.getOrPut(url) { Mutex() }.withLock {
             val target = target(context, url)
-            if (target.exists()) return@withLock true
+            if (target.length() > 0L) return@withLock true
+            if (!ph.basaya.app.utils.Network.isOnline(context)) return@withLock false
             try {
                 target.parentFile?.mkdirs()
                 LectureAudioStore.downloadFile(url, target)

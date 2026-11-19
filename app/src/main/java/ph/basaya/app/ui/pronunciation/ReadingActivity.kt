@@ -28,10 +28,6 @@ import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -40,6 +36,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.flexbox.FlexboxLayout
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.JustifyContent
+import ph.basaya.app.data.dictionary.Dictionary
+import ph.basaya.app.data.dictionary.Syllables
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -76,6 +78,9 @@ class ReadingActivity : AppCompatActivity() {
     private var started = false
     private var active = true
     private var audioPlaying = false
+    private var exampleSpeaking = false
+    private var audioGeneration = 0
+    private var readingBuddy: PronunciationBookView? = null
     private var retakingPage = -1
     private var voiceBars: List<View> = emptyList()
     private var checking = false
@@ -91,7 +96,7 @@ class ReadingActivity : AppCompatActivity() {
     private var feedbackBox: LinearLayout? = null
     private var messageKind = "info"
     private var readingText: TextView? = null
-    private var highlightedText: TextView? = null
+    private var highlightedText: ReadAlongTextView? = null
     private var highlightTicker: Runnable? = null
     private val handler = Handler(Looper.getMainLooper())
     private var ticker: Runnable? = null
@@ -143,6 +148,47 @@ class ReadingActivity : AppCompatActivity() {
             }
         }
     }
+    private fun showWordMeaning(word: String) {
+        val sheet = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_word_info, null)
+        sheet.setContentView(view)
+        view.findViewById<TextView>(R.id.tvInfoWord).text = word
+        val meaning = view.findViewById<TextView>(R.id.tvInfoMeanings)
+        meaning.setText(R.string.pr_meaning_loading)
+        listOf(R.id.tvInfoSyllables, R.id.tvInfoPos, R.id.tvInfoExamples).forEach {
+            view.findViewById<View>(it).visibility = View.GONE
+        }
+        view.findViewById<View>(R.id.btnInfoClose).setOnClickListener { sheet.dismiss() }
+        sheet.show()
+        val lookup = lifecycleScope.launch {
+            try {
+                val entry = Dictionary.lookup(this@ReadingActivity, word)
+                val sense = entry?.senses?.firstOrNull()
+                view.findViewById<TextView>(R.id.tvInfoWord).text = entry?.shown ?: word
+                view.findViewById<TextView>(R.id.tvInfoSyllables).apply {
+                    text = entry?.syllables.orEmpty()
+                    contentDescription = getString(R.string.dict_syllables_cd, text)
+                    visibility = if (Syllables.hasBreaks(text.toString())) View.VISIBLE else View.GONE
+                }
+                view.findViewById<TextView>(R.id.tvInfoPos).apply {
+                    text = sense?.pos.orEmpty()
+                    visibility = if (text.isBlank()) View.GONE else View.VISIBLE
+                }
+                meaning.text = sense?.definitions.orEmpty().mapIndexed { i, value -> "${i + 1}. $value" }
+                    .joinToString("\n").ifBlank { getString(R.string.pr_meaning_missing) }
+                view.findViewById<TextView>(R.id.tvInfoExamples).apply {
+                    text = sense?.examples.orEmpty().joinToString("\n")
+                    visibility = if (text.isBlank()) View.GONE else View.VISIBLE
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                meaning.setText(R.string.pr_meaning_error)
+            }
+        }
+        sheet.setOnDismissListener { lookup.cancel() }
+    }
+
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
     private fun shape(color: Int, radius: Int = 20, stroke: Int? = null) = GradientDrawable().apply {
         setColor(color); cornerRadius = dp(radius).toFloat(); if (stroke != null) setStroke(dp(1), stroke)
@@ -207,15 +253,68 @@ class ReadingActivity : AppCompatActivity() {
         column.addView(text(if (warm) "Handa, bigkas!" else if (preview) "Pakinggan ang iyong pagbasa" else "Ikaw naman ang bumasa", 27f, ink, true).apply { gravity = Gravity.CENTER })
         column.addView(text("1 Get Ready    →    2 Basahin    →    3 Pakinggan", 12f, muted, true).apply { gravity = Gravity.CENTER })
         val stageRow = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-        stageRow.addView(PronunciationBookView(this), LinearLayout.LayoutParams(dp(66),dp(105)))
+        readingBuddy = PronunciationBookView(this).apply {
+            setMood(if (exampleSpeaking) PronunciationBookView.Mood.TALKING else PronunciationBookView.Mood.IDLE)
+        }
+        stageRow.addView(readingBuddy, LinearLayout.LayoutParams(dp(66),dp(105)))
         val readingCard = card()
         wordCard = if (warm) readingCard else null
         readingCard.background = shape(paper,20,Color.parseColor(if(dark) "#68573E" else "#E7BC75"))
         val word = if (warm) page.getAsJsonArray("words")[state.number("word")].asJsonObject else null
-        readingCard.addView(text(if (warm) "SALITA ${state.number("word") + 1}/${page.getAsJsonArray("words").size()}" else "PAGBASA ${pageIndex + 1}",11f,muted,true))
-        readingText = text(word?.text("word") ?: page.text("sentence"),if(warm) 30f else 23f,ink,true)
+        readingCard.addView(text(if (warm) "SALITA ${state.number("word") + 1}/${page.getAsJsonArray("words").size()}" else "PAGBASA ${pageIndex + 1}",11f,muted,true).apply {
+            if (warm) gravity = Gravity.CENTER
+        })
+        readingText = ReadAlongTextView(this).apply {
+            setSentence(word?.text("word") ?: page.text("sentence"))
+            textSize = if (warm) 30f else 23f
+            setTextColor(ink)
+            setTypeface(typeface, Typeface.BOLD)
+            setLineSpacing(dp(4).toFloat(), 1f)
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) }
+            if (warm) {
+                gravity = Gravity.CENTER
+                minimumHeight = dp(72)
+            }
+        }
         readingCard.addView(readingText)
-        readingCard.addView(button(if(warm) "Pakinggan ang salita" else "Pakinggan ang halimbawa",false) { listen(word ?: page, !warm && stage == "sentence") })
+        if (warm) {
+            val actions = FlexboxLayout(this).apply {
+                flexWrap = FlexWrap.WRAP
+                justifyContent = JustifyContent.CENTER
+            }
+            actions.addView(button(getString(R.string.pr_word_info_chip), false) {
+                if (!held && !busy) showWordMeaning(word!!.text("word"))
+            }.apply {
+                id = R.id.btnWordInfo
+                contentDescription = getString(R.string.pr_word_info)
+                setIconResource(R.drawable.ic_info_bold)
+                iconTint = ColorStateList.valueOf(purple)
+                minimumHeight = dp(48)
+            }, FlexboxLayout.LayoutParams(-2, dp(48)).apply { marginEnd = dp(8) })
+            actions.addView(ImageButton(this).apply {
+                setImageResource(R.drawable.ic_speaker_on)
+                imageTintList = ColorStateList.valueOf(purple)
+                background = shape(ColorUtils.blendARGB(paper, purple, .12f), 16)
+                val feedback = android.util.TypedValue()
+                theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, feedback, true)
+                foreground = ContextCompat.getDrawable(this@ReadingActivity, feedback.resourceId)
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                contentDescription = getString(R.string.pr_play_word)
+                tooltipText = contentDescription
+                setOnClickListener { if (!held && !busy) listen(word!!, false) }
+            }, FlexboxLayout.LayoutParams(dp(48), dp(48)))
+            readingCard.addView(actions, LinearLayout.LayoutParams(-1, -2).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                topMargin = dp(6)
+            })
+        } else {
+            readingCard.addView(button("Pakinggan ang halimbawa") { listen(page, stage == "sentence") }.apply {
+                setIconResource(R.drawable.ic_speaker_on)
+                iconTint = ColorStateList.valueOf(if (dark) canvas else Color.WHITE)
+                iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+                minimumHeight = dp(52)
+            })
+        }
         stageRow.addView(readingCard, LinearLayout.LayoutParams(0,-2,1f))
         column.addView(stageRow)
         if (preview) {
@@ -363,16 +462,16 @@ class ReadingActivity : AppCompatActivity() {
     }
     private fun clearHighlight() {
         highlightTicker?.let(handler::removeCallbacks); highlightTicker=null
-        highlightedText?.let { it.text=it.text.toString() }; highlightedText=null
+        highlightedText?.endReading(); highlightedText=null
     }
     private fun showSpokenWord(line:TextView,index:Int) {
-        val plain=line.text.toString()
-        val range=Regex("\\S+").findAll(plain).elementAtOrNull(index)?.range ?: return
-        line.text=SpannableString(plain).apply {
-            setSpan(BackgroundColorSpan(Color.parseColor("#FFE7A1")),range.first,range.last+1,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            setSpan(ForegroundColorSpan(Color.parseColor("#352B16")),range.first,range.last+1,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val reader = line as? ReadAlongTextView ?: return
+        if (highlightedText !== reader) {
+            highlightedText?.endReading()
+            reader.beginReading()
+            highlightedText = reader
         }
-        highlightedText=line
+        reader.showWord(index)
     }
     private fun followExample(mp:MediaPlayer,item:JsonObject) {
         val line=readingText ?: return
@@ -391,14 +490,18 @@ class ReadingActivity : AppCompatActivity() {
         }
         handler.post(highlightTicker!!)
     }
-    private fun stopAudio() { clearHighlight(); audioPlaying=false; player?.release(); player=null; tts?.stop(); ticker?.let(handler::removeCallbacks) }
+    private fun setExampleSpeaking(speaking: Boolean) {
+        exampleSpeaking = speaking
+        readingBuddy?.setMood(if (speaking) PronunciationBookView.Mood.TALKING else PronunciationBookView.Mood.IDLE)
+    }
+    private fun stopAudio() { audioGeneration++; setExampleSpeaking(false); clearHighlight(); audioPlaying=false; player?.release(); player=null; tts?.stop(); ticker?.let(handler::removeCallbacks) }
     private fun play(source:String,onComplete:()->Unit,onReady:(MediaPlayer)->Unit = {}) {
         stopAudio(); audioPlaying=true
         player=MediaPlayer().apply {
             setDataSource(source)
-            setOnPreparedListener { it.start(); onReady(it) }
-            setOnCompletionListener { clearHighlight(); audioPlaying=false; onComplete() }
-            setOnErrorListener { _,_,_ -> clearHighlight(); audioPlaying=false; message="Hindi mapatugtog ang audio. Subukan muli."; render(); true }
+            setOnPreparedListener { if (active && player === it) { it.start(); onReady(it) } }
+            setOnCompletionListener { if (player === it) { setExampleSpeaking(false); clearHighlight(); audioPlaying=false; onComplete() } }
+            setOnErrorListener { media,_,_ -> if (player === media) { stopAudio(); message="Hindi mapatugtog ang audio. Subukan muli."; render() }; true }
             prepareAsync()
         }
     }
@@ -408,15 +511,27 @@ class ReadingActivity : AppCompatActivity() {
         if(url.isNotBlank()) {
             val index = content?.audioRefs?.indexOf(url) ?: -1
             val local = if(index>=0) PronunciationAudioStore.localFile(this,lessonId,index) else null
-            play(local?.takeIf { it.exists() }?.absolutePath ?: url,complete) { followExample(it,item) }
+            try {
+                play(local?.takeIf { it.exists() }?.absolutePath ?: url,complete) {
+                    setExampleSpeaking(true)
+                    followExample(it,item)
+                }
+            } catch (error: Exception) {
+                stopAudio(); message="Hindi mapatugtog ang audio. Subukan muli."; render()
+            }
         } else if(ttsReady && item.has("word")) {
             stopAudio(); audioPlaying=true
+            val generation = audioGeneration
             tts?.setOnUtteranceProgressListener(object:UtteranceProgressListener() {
-                override fun onStart(id:String?) { runOnUiThread { if(active && audioPlaying) readingText?.let { showSpokenWord(it,0) } } }
-                override fun onDone(id:String?) { runOnUiThread { clearHighlight(); audioPlaying=false; complete() } }
-                @Deprecated("Deprecated in Java") override fun onError(id:String?) { runOnUiThread { clearHighlight(); audioPlaying=false; message="Hindi mapatugtog ang salita."; render() } }
+                private fun current(id: String?) = generation == audioGeneration && id == "ready-word-$generation"
+                override fun onStart(id:String?) { runOnUiThread { if(current(id) && active && audioPlaying) { setExampleSpeaking(true); readingText?.let { showSpokenWord(it,0) } } } }
+                override fun onDone(id:String?) { runOnUiThread { if(current(id)) { setExampleSpeaking(false); clearHighlight(); audioPlaying=false; complete() } } }
+                override fun onStop(id:String?, interrupted:Boolean) { runOnUiThread { if(current(id)) { setExampleSpeaking(false); clearHighlight(); audioPlaying=false } } }
+                @Deprecated("Deprecated in Java") override fun onError(id:String?) { runOnUiThread { if(current(id)) { stopAudio(); message="Hindi mapatugtog ang salita."; render() } } }
             })
-            tts?.speak(item.text("word"),TextToSpeech.QUEUE_FLUSH,null,"ready-word")
+            if (tts?.speak(item.text("word"),TextToSpeech.QUEUE_FLUSH,null,"ready-word-$generation") != TextToSpeech.SUCCESS) {
+                stopAudio(); message="Hindi mapatugtog ang salita."; render()
+            }
         } else { message="Hindi mapatugtog ang halimbawa. Subukan muli."; render() }
     }
     private fun beginHold(mic:View,hint:TextView) {

@@ -27,6 +27,7 @@ import ph.basaya.app.data.auth.RecentAccounts
 import ph.basaya.app.data.auth.AuthHelper
 import ph.basaya.app.data.auth.PasswordRule
 import ph.basaya.app.ui.JoinClassActivity
+import ph.basaya.app.ui.MainActivity
 import ph.basaya.app.ui.LogInActivity
 import ph.basaya.app.ui.LogoutDialog
 import ph.basaya.app.ui.theme.ThemeMode
@@ -127,6 +128,10 @@ class ProfileFragment : Fragment() {
             joinClassLauncher.launch(Intent(requireContext(), JoinClassActivity::class.java))
         }
         btnLeaveStatusAction.setOnClickListener {
+            if (profile.classId.isBlank() && joinStatus == "pending") {
+                startActivity(MainActivity.homeIntent(requireContext()))
+                return@setOnClickListener
+            }
             if (profile.classId.isBlank() && joinStatus.isNotBlank()) {
                 joinClassLauncher.launch(Intent(requireContext(), JoinClassActivity::class.java))
                 return@setOnClickListener

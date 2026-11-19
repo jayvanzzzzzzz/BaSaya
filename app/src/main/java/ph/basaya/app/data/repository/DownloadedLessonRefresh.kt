@@ -7,6 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
+import android.content.Context
+import ph.basaya.app.utils.Network
+import ph.basaya.app.data.assessment.OfflineLessons
 
 object DownloadedLessonRefresh {
 
@@ -14,7 +17,8 @@ object DownloadedLessonRefresh {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val refreshing = ConcurrentHashMap.newKeySet<String>()
 
-    fun launch(key: String, refresh: suspend () -> Unit) {
+    fun launch(context: Context, lessonId: String, key: String, refresh: suspend () -> Unit) {
+        if (!Network.isOnline(context) || OfflineLessons.pending(context, lessonId)) return
         if (!refreshing.add(key)) return
 
         scope.launch {

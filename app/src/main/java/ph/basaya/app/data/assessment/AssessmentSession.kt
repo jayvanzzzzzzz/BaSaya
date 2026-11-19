@@ -17,6 +17,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import ph.basaya.app.BuildConfig
 import ph.basaya.app.data.progress.PracticeLessons
 import ph.basaya.app.data.progress.ProgressSession
+import ph.basaya.app.utils.Network
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 fun JsonObject.number(name: String, fallback: Int = 0) = get(name)?.takeUnless { it.isJsonNull }?.asInt ?: fallback
@@ -25,14 +27,29 @@ fun JsonObject.text(name: String) = get(name)?.takeUnless { it.isJsonNull }?.asS
 fun fields(vararg values: Pair<String, Any?>): JsonObject = Gson().toJsonTree(mapOf(*values)).asJsonObject
 
 class AssessmentSession private constructor(
-    context: Context, val lessonId: String, val uid: String,
+    private val context: Context, val lessonId: String, val uid: String,
     private val classId: String, private val session: String, val practice: Boolean
 ) {
     companion object {
         private val http = OkHttpClient.Builder().callTimeout(25, TimeUnit.SECONDS).build()
         suspend fun open(context: Context, lessonId: String): AssessmentSession {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: throw AssessmentFailure(401, "Mag-log in muli.")
-            val profile = FirebaseFirestore.getInstance().collection("users").document(uid).get(Source.SERVER).await()
+            suspend fun savedSession(): AssessmentSession {
+                val stamp = ProgressSession.stamp(uid, emptyMap())
+                val journal = OfflineLessons.journal(context, lessonId, uid)
+                if (!journal.exists()) throw AssessmentFailure(412, "I-download muli ang aralin habang may internet upang ma-save ang offline na progreso.")
+                return AssessmentSession(context.applicationContext, lessonId, uid,
+                    stamp["classId"].toString(), stamp["progressSession"].toString(), PracticeLessons.refresh(context, lessonId))
+            }
+            if (!Network.isOnline(context)) return savedSession()
+            val profile = try {
+                FirebaseFirestore.getInstance().collection("users").document(uid).get(Source.SERVER).await()
+            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                if (e.code in listOf(com.google.firebase.firestore.FirebaseFirestoreException.Code.UNAVAILABLE,
+                        com.google.firebase.firestore.FirebaseFirestoreException.Code.DEADLINE_EXCEEDED) &&
+                    OfflineLessons.journal(context, lessonId, uid).exists()) return savedSession()
+                throw e
+            }
             if (FirebaseAuth.getInstance().currentUser?.uid != uid) throw AssessmentFailure(401, "Nagbago ang account.")
             ProgressSession.bind(uid, profile)
             val practice = PracticeLessons.refresh(context, lessonId)
@@ -44,6 +61,8 @@ class AssessmentSession private constructor(
     }
 
     private val preferences = context.applicationContext.getSharedPreferences("assessment_submissions_v1", Context.MODE_PRIVATE)
+    private val offline by lazy { OfflineLessons.journal(context, lessonId, uid) }
+    val pendingOfflineWork: Boolean get() = offline.exists() && offline.pending()
     private fun key(part: String) = "$uid:$classId:$session:$lessonId:$part"
     private fun ownsSession() = FirebaseAuth.getInstance().currentUser?.uid == uid &&
         ProgressSession.stamp(uid, emptyMap())["classId"] == classId &&
@@ -62,6 +81,7 @@ class AssessmentSession private constructor(
         if (!ownsSession()) throw AssessmentFailure(401, "Nagbago ang account o klase.")
         val user = FirebaseAuth.getInstance().currentUser ?: throw AssessmentFailure(401, "Mag-log in muli.")
         val token = try { user.getIdToken(false).await().token }
+        catch (e: com.google.firebase.FirebaseNetworkException) { throw AssessmentFailure(0, "Naka-save ang progreso. Hinihintay ang internet.") }
         catch (e: com.google.firebase.auth.FirebaseAuthException) { throw AssessmentFailure(401, "Mag-log in muli.") }
             ?: throw AssessmentFailure(401, "Mag-log in muli.")
         if (!ownsSession()) throw AssessmentFailure(401, "Nagbago ang account o klase.")
@@ -91,11 +111,39 @@ class AssessmentSession private constructor(
             body.addProperty("entryId", lessonId)
         }
         extra.entrySet().forEach { body.add(it.key, it.value) }
+        if (offline.exists() && (!practice || !Network.isOnline(context)) && (operation in listOf("content", "prepare-activity", "begin") ||
+                part in listOf("lecture", "quiz", "activity", "game"))) {
+            if (operation == "answer" && !body.has("eventId")) body.addProperty("eventId", UUID.randomUUID().toString())
+            val result = offline.exchange(body, Network.isOnline(context), ::send)
+            if (offline.pending()) OfflineLessons.schedule(context)
+            return result
+        }
         return if (!practice && operation in listOf("answer", "speech", "resume", "finish")) dispatcher.submit(key(part), body) else send(body)
     }
 
     suspend fun progress(): JsonObject {
         if (practice) return JsonObject()
+        if (offline.exists()) {
+            if (!Network.isOnline(context)) return offline.snapshot()
+            try { syncOfflineWork(); return offline.snapshot() }
+            catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: java.io.IOException) { if (e is AssessmentFailure && !e.retryable) throw e; return offline.snapshot() }
+            catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                if (e.code in listOf(com.google.firebase.firestore.FirebaseFirestoreException.Code.UNAVAILABLE,
+                        com.google.firebase.firestore.FirebaseFirestoreException.Code.DEADLINE_EXCEEDED)) return offline.snapshot()
+                throw e
+            }
+        }
+        return remoteProgress()
+    }
+
+    internal suspend fun syncOfflineWork() {
+        if (!offline.exists()) return
+        offline.replay(::send)
+        if (!practice) offline.recordProgress(remoteProgress())
+    }
+
+    private suspend fun remoteProgress(): JsonObject {
         val doc = FirebaseFirestore.getInstance().collection("users").document(uid)
             .collection("assignedLessons").document(PracticeLessons.contentId(lessonId)).get(Source.SERVER).await()
         if (!ownsSession()) throw AssessmentFailure(401, "Nagbago ang account o klase.")

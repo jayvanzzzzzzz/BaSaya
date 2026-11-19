@@ -108,6 +108,17 @@
     <string name="lesson_dash_preparing">Inihahanda…</string>
     <string name="lesson_dash_loading_content">Inihahanda ang nilalaman ng aralin…</string>
     <string name="lesson_dash_content_load_failed">Hindi maihanda ang nilalaman ngayon. Suriin ang koneksyon at subukan muli.</string>
+    <string name="lesson_internet_required_title">Kailangan ng internet</string>
+    <string name="lesson_internet_required_message">Kumonekta sa internet upang buksan ang aralin. Para magamit ito offline, i-download muna ang aralin habang may internet.</string>
+    <string name="lesson_downloaded_internet_required">Naka-download ang aralin, ngunit kailangan ng internet para masuri ang mga sagot at makumpirma ang progreso sa gawaing ito. Maaari mong basahin at pakinggan ang na-download na lektura offline.</string>
+    <string name="lesson_offline_progress_saved">Naka-save ang progreso sa telepono. Awtomatikong ipapasa kapag may internet.</string>
+    <string name="lesson_offline_quiz_pending">Naka-save ang iyong mga sagot. Ipapasa at mamarkahan ang pagsusulit kapag may internet.</string>
+    <string name="lesson_offline_pending_title">Naka-save sa telepono</string>
+    <string name="lesson_offline_pending_score">Hinihintay ang marka</string>
+    <string name="lesson_download_update_required">Hindi pa kumpleto ang offline na kopya. Kumonekta sa internet at i-download muli ang aralin para magamit at ma-save ang progreso offline.</string>
+    <string name="lesson_offline_audio_missing">Hindi naka-save ang ilang tunog. Maaari mong basahin ang lektura nang walang tunog. Kumonekta at i-download muli ang aralin para mapakinggan ito offline.</string>
+    <string name="lesson_sync_needs_attention_title">Hindi pa maipasa ang progreso</string>
+    <string name="lesson_sync_needs_attention_message">Naka-save pa sa telepono ang iyong mga sagot. Maaaring nagbago ang aralin, klase, o deadline. Kumonekta at buksan muli ang aralin; kausapin ang guro kung hindi pa rin maipasa.</string>
     <string name="lesson_dash_locked_cd">Naka-lock. Tapusin muna ang aralin para mabuksan ang pagsusulit</string>
     <string name="lesson_dash_count_placeholder">…</string>
 
@@ -147,7 +158,7 @@
     <string name="register_error_last_name">Kailangan ang last name.</string>
     <string name="register_error_email_invalid">Mukhang mali ang email.</string>
     <string name="register_error_password_short">Dapat hindi bababa sa 8 karakter.</string>
-    <string name="register_success">Matagumpay! Maaari ka nang mag-login.</string>
+    <string name="register_success">Matagumpay ang pagpaparehistro! Maligayang pagdating!</string>
     <string name="register_failed">Hindi nagawa ang account. Subukan muli.</string>
     <string name="register_save_failed">Hindi na-save ang iyong impormasyon. Subukan muli.</string>
     <string name="complete_profile_heading">Kumpletuhin ang iyong account</string>

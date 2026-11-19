@@ -201,7 +201,9 @@ class LectureActivity : AppCompatActivity() {
         lectureRepository = LectureRepository(this)
 
         AssessmentUi.run(this) {
-            if (!PracticeLessons.refresh(this@LectureActivity, lessonId)) assessment = AssessmentSession.open(this@LectureActivity, lessonId)
+            val practice = PracticeLessons.refresh(this@LectureActivity, lessonId)
+            val online = Network.isOnline(this@LectureActivity)
+            if (!practice) assessment = AssessmentSession.open(this@LectureActivity, lessonId)
             val fetchedLecture = lectureRepository.getLecture(lessonId)
 
             if (fetchedLecture == null || fetchedLecture.pages.isEmpty()) {
@@ -217,6 +219,9 @@ class LectureActivity : AppCompatActivity() {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             val confirmed = assessment?.progress()
             tracking = assessment != null && confirmed?.flag("lectureFinished") != true
+            if (!practice && !online) {
+                Toast.makeText(this@LectureActivity, R.string.lesson_offline_progress_saved, Toast.LENGTH_LONG).show()
+            }
             currentPageIndex = if (tracking) confirmed?.getAsJsonObject("resume")?.getAsJsonObject("lecture")?.number("done")?.coerceAtMost(lecture.pages.lastIndex) ?: 0 else 0
             // Fetch every page's audio now, so the pages keep their sound if the connection drops.
             LectureAudioCache.prepareAll(this@LectureActivity, lessonId, lecture.pages, currentPageIndex)
@@ -457,7 +462,7 @@ class LectureActivity : AppCompatActivity() {
         val onStarted = { player: MediaPlayer -> startReadAlong(player, page, sentenceIndex) }
         val onFailed = { autoNextAfterReading(page, sentenceIndex) }
         when {
-            localFile.exists() -> playFromSource(localFile.absolutePath, onStarted, onFailed)
+            localFile.length() > 0L -> playFromSource(localFile.absolutePath, onStarted, onFailed)
             cachedFile != null -> playFromSource(cachedFile.absolutePath, onStarted, onFailed)
             cloudUrl.isNotBlank() && !Network.isOnline(this) -> noteAudioOffline()
             cloudUrl.isNotBlank() -> playFromSource(cloudUrl, onStarted, onFailed)

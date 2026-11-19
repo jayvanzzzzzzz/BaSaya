@@ -36,7 +36,7 @@ class ActivityRepository(private val context: Context) {
         if (isDownloaded) {
             val saved = db.activityDao().getActivity(lessonId)?.toPracticeActivityData()
             if (saved != null) {
-                DownloadedLessonRefresh.launch("activity:$lessonId") {
+                DownloadedLessonRefresh.launch(context, lessonId, "activity:$lessonId") {
                     fetchFromFirestore(lessonId)?.let { db.activityDao().insert(it.toEntity(lessonId)) }
                 }
                 return saved

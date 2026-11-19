@@ -25,7 +25,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.Source
 import ph.basaya.app.ui.pronunciation.PronunciationBookView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -87,7 +86,11 @@ class JoinClassActivity : AppCompatActivity() {
 
         val submit = submit@{
             if (submitting) return@submit
-            if (pending) { refreshStatus(); return@submit }
+            if (pending) {
+                startActivity(MainActivity.homeIntent(this))
+                finish()
+                return@submit
+            }
             val code = etClassCode.text?.toString()?.trim()?.uppercase().orEmpty()
 
             if (code.isEmpty()) {
@@ -158,14 +161,6 @@ class JoinClassActivity : AppCompatActivity() {
             else -> getString(R.string.jc_request_instruction)
         }
         if (!submitting) btnJoin.setText(if (pending) R.string.jc_request_check else R.string.jc_request_send)
-    }
-
-    private fun refreshStatus() {
-        val uid = authHelper.getCurrentUser()?.uid ?: return
-        setJoining(true)
-        db.collection("users").document(uid).get(Source.SERVER)
-            .addOnSuccessListener { if (!isFinishing) { setJoining(false); showMembership(it) } }
-            .addOnFailureListener { if (!isFinishing) { setJoining(false); Toast.makeText(this, R.string.jc_connection, Toast.LENGTH_SHORT).show() } }
     }
 
     private fun joinClass(code: String) {

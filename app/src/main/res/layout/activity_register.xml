@@ -345,6 +345,26 @@
 
                         <include layout="@layout/view_password_rules" />
 
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/agreeTerms"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:checked="false"
+                            android:minHeight="48dp"
+                            android:text="@string/register_terms_agree"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textAppearance="@style/TextAppearance.BaSaya.Login.Body" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/viewTerms"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="48dp"
+                            android:textAllCaps="false"
+                            android:text="@string/register_terms_title" />
+
                         <!-- Primary action. imgRegisterArrow / progressRegister overlay the button and are swapped by RegisterActivity.setLoading(). -->
                         <FrameLayout
                             android:layout_width="match_parent"

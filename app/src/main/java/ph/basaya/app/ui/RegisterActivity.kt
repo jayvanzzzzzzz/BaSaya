@@ -3,6 +3,8 @@ package ph.basaya.app.ui
 import ph.basaya.app.ui.feedback.ActionConfirmation
 
 import android.content.Intent
+import com.google.android.material.checkbox.MaterialCheckBox
+import ph.basaya.app.ui.feedback.StudioDialogBuilder
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
@@ -22,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
 import ph.basaya.app.R
 import ph.basaya.app.data.auth.AuthHelper
+import ph.basaya.app.data.auth.RecentAccounts
 import ph.basaya.app.data.auth.PasswordRule
 import ph.basaya.app.data.model.User
 import com.google.android.material.button.MaterialButton
@@ -32,6 +35,8 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var imgBgBookLeft: ImageView
     private lateinit var imgBgBookRight: ImageView
+
+    private lateinit var agreeTerms: MaterialCheckBox
 
     private lateinit var btnRegister: MaterialButton
     private lateinit var imgRegisterArrow: ImageView
@@ -82,6 +87,14 @@ class RegisterActivity : AppCompatActivity() {
         etLastName = findViewById(R.id.etLastName)
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
+        agreeTerms = findViewById(R.id.agreeTerms)
+        findViewById<TextView>(R.id.viewTerms).setOnClickListener {
+            StudioDialogBuilder(this)
+                .setTitle(R.string.register_terms_title)
+                .setMessage(R.string.register_terms_text)
+                .setPositiveButton(R.string.register_terms_understood, null)
+                .show()
+        }
         btnRegister = findViewById(R.id.btnRegister)
         btnRegister = findViewById(R.id.btnRegister)
         imgRegisterArrow = findViewById(R.id.imgRegisterArrow)
@@ -119,6 +132,15 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun submit(confirmed: Boolean = false) {
+        if (!btnRegister.isEnabled) return
+        if (!agreeTerms.isChecked) {
+            StudioDialogBuilder(this)
+                .setTitle(R.string.register_terms_required_title)
+                .setMessage(R.string.register_terms_required)
+                .setPositiveButton(R.string.register_terms_understood) { _, _ -> agreeTerms.requestFocus() }
+                .show()
+            return
+        }
         val firstName = etFirstName.text.toString().trim()
         val middleName = etMiddleName.text.toString().trim()
         val lastName = etLastName.text.toString().trim()
@@ -197,6 +219,9 @@ class RegisterActivity : AppCompatActivity() {
                 .document(uid)
                 .set(userData)
                 .addOnSuccessListener {
+                    RecentAccounts.remember(this, authHelper.getCurrentUser(), mapOf(
+                        "firstName" to firstName, "middleName" to middleName, "lastName" to lastName
+                    ))
                     // Lessons come from the class the student joins (classes/{classId}/classLessons); nothing is assigned at registration.
                     setLoading(false)
 
@@ -207,8 +232,9 @@ class RegisterActivity : AppCompatActivity() {
                     ).show()
 
                     startActivity(
-                        Intent(this@RegisterActivity, LogInActivity::class.java)
-                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        Intent(this@RegisterActivity, MainActivity::class.java)
+                            .putExtra("uid", uid)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     )
                     finish()
                 }
@@ -227,6 +253,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun setLoading(isLoading: Boolean) {
         btnRegister.isEnabled = !isLoading
+        agreeTerms.isEnabled = !isLoading
 
         imgRegisterArrow.visibility = if (isLoading) View.GONE else View.VISIBLE
         progressRegister.visibility = if (isLoading) View.VISIBLE else View.GONE

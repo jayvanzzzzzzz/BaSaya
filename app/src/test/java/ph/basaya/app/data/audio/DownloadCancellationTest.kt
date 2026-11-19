@@ -54,7 +54,25 @@ class DownloadCancellationTest {
         } finally { root.deleteRecursively() }
     }
 
-    private class AudioServer(stalled: Boolean) : Closeable {
+    @Test fun emptyAudioCannotReplaceAPreviouslyDownloadedLesson() = runBlocking {
+        val root = Files.createTempDirectory("basaya-empty-audio").toFile()
+        try {
+            val lesson = File(root, "lesson").apply { mkdirs() }
+            File(lesson, "audio.mp3").writeText("previous download")
+            AudioServer(stalled = false, empty = true).use { server ->
+                try {
+                    LectureAudioStore.replaceDir(lesson) { staging ->
+                        LectureAudioStore.downloadFile(server.url, File(staging, "audio.mp3"))
+                    }
+                    fail("Empty audio must fail the download")
+                } catch (_: java.io.IOException) { }
+            }
+            assertEquals("previous download", File(lesson, "audio.mp3").readText())
+            assertFalse(File(root, "lesson.new").exists())
+        } finally { root.deleteRecursively() }
+    }
+
+    private class AudioServer(stalled: Boolean, empty: Boolean = false) : Closeable {
         private val server = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
         val url = "http://127.0.0.1:" + server.localPort + "/audio.mp3"
         val started = CountDownLatch(1)
@@ -65,7 +83,7 @@ class DownloadCancellationTest {
                     socket.soTimeout = 3000
                     val input = socket.getInputStream().bufferedReader()
                     while (!input.readLine().isNullOrEmpty()) { }
-                    val body = if (stalled) ByteArray(1024) else "aralin".toByteArray()
+                    val body = if (stalled) ByteArray(1024) else if (empty) ByteArray(0) else "aralin".toByteArray()
                     val size = if (stalled) 1024 * 1024 else body.size
                     val output = socket.getOutputStream()
                     output.write(("HTTP/1.1 200 OK\r\nContent-Length: " + size + "\r\nConnection: close\r\n\r\n").toByteArray())

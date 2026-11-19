@@ -1,0 +1,5 @@
+<resources>
+    <string name="pr_meaning_loading">Hinahanap ang kahulugan…</string>
+    <string name="pr_meaning_missing">Wala pang kahulugan sa Diksiyonaryo para sa salitang ito.</string>
+    <string name="pr_meaning_error">Hindi makuha ang kahulugan. Isara at subukan muli.</string>
+</resources>
